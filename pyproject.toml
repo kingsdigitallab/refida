@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "refida"
+version = "0.1.0"
+description = ""
+authors = ["Miguel Vieira <jmvieira@pm.me>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+beautifulsoup4 = "^4.10"
+streamlit = "^1.3.1"
+watchdog = "^2.1.6"
+txtai = {extras = ["pipeline"], version = "^4.0.0"}
+nltk = "^3.7"
+typer = "^0.4.0"
+
+[tool.poetry.dev-dependencies]
+autoflake = "*"
+black = "*"
+ipython = "*"
+isort = "*"
+pytest= "*"
+flake8 = "^4.0.1"
+
+[tool.flake8]
+max-line-length = 88
+exclude = ".tox,.git,*/migrations/*,*/static/CACHE/*,docs,edtf,node_modules"
+
+[tool.pycodestyle]
+max-line-length = 88
+exclude = ".tox,.git,*/migrations/*,*/static/CACHE/*,docs,node_modules"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
