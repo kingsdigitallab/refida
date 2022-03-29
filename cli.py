@@ -48,3 +48,7 @@ def error(msg: str):
     typer.echo()
     typer.secho(f"Error: {msg}", fg=typer.colors.RED)
     raise typer.Abort()
+
+
+if __name__ == "__main__":
+    app()
