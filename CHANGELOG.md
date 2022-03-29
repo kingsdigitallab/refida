@@ -9,4 +9,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Module to extract, transform and load data.
+- Command and module to extract, transform and load data.
+- Topic classification.

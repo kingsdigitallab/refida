@@ -9,8 +9,12 @@ if not DATA_DIR.is_dir():
 
 PROJECT_TITLE = "REF Impact Data Analysis"
 
-UOA_PATTERN: re.Pattern = re.compile(r"(\d+)")
 
+PARAGRAPH_EXCLUDE_PATTERN: re.Pattern = re.compile(
+    r"^(Page \d+)|(Impact case study \(REF3\))$"
+)
+
+UOA_PATTERN: re.Pattern = re.compile(r"(\d+)")
 UOA = {
     "1": "Clinical Medicine",
     "2": "Public Health",
@@ -39,9 +43,21 @@ UOA = {
     "34": "Communication, Cultural and Media Studies",
 }
 
-PARAGRAPH_EXCLUDE_PATTERN: re.Pattern = re.compile(
-    r"^(Page \d+)|(Impact case study \(REF3\))$"
-)
+# model used for topic modelling
+TOPIC_CLASSIFICATION_MODEL = "joeddav/bart-large-mnli-yahoo-answers"
+# labels used for topic modelling
+TOPIC_CLASSIFICATION_TOPICS = [
+    "Cultural",
+    "Economic",
+    "Environmental",
+    "Global",
+    "Health",
+    "Legal",
+    "Policy",
+    "Social",
+    "Technological",
+]
+
 
 # https://spacy.io/models
 SPACY_LANGUAGE_MODEL: str = "en_core_web_md"

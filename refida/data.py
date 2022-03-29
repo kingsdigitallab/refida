@@ -43,8 +43,8 @@ def get_data_path(
     return path
 
 
-def get_extracted_data(datadir: str) -> Optional[pd.DataFrame]:
-    return get_data(get_extracted_data_path(datadir))
+def get_etl_data(datadir: str) -> Optional[pd.DataFrame]:
+    return get_data(get_etl_data_path(datadir))
 
 
 def get_data(filename: Path, kwargs: dict = {}) -> Optional[pd.DataFrame]:
@@ -54,5 +54,9 @@ def get_data(filename: Path, kwargs: dict = {}) -> Optional[pd.DataFrame]:
         return None
 
 
-def get_extracted_data_path(datadir: str) -> Path:
-    return get_data_path(datadir, "1_interim", "extracted.csv")
+def get_etl_data_path(datadir: str) -> Path:
+    return get_data_path(datadir, "1_interim", "etl.csv")
+
+
+def get_topics_data_path(datadir: str) -> Path:
+    return get_data_path(datadir, "1_interim", "topics.csv")

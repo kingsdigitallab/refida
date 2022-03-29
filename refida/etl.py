@@ -1,4 +1,5 @@
 import re
+import zlib
 from pathlib import Path
 from typing import Iterator, Optional
 
@@ -34,10 +35,11 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
     if not paragraphs:
         return None
 
+    full_text = "\n".join([p for p in paragraphs if include_paragraph(p)])
+
     doc = REFDocument(
         id=file.name.replace(".pdf", ""), type=paragraphs[0], file=file.as_posix()
     )
-    doc.text = "\n".join([p for p in paragraphs if include_paragraph(p)])
 
     uoa = get_uoa(paragraphs)
     if uoa:
@@ -61,6 +63,8 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
             if len(period) > 1:
                 doc.set_field(f"{section[0]}_end", period[1])
 
+    text = ""
+
     for section in [
         ("summary", "1. summary of the impact", "2. underpinning research"),
         ("details", "4. details of the impact", "5. sources to corroborate the impact"),
@@ -68,7 +72,12 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
     ]:
         content = get_section(paragraphs, section[1], section[2])
         if content:
-            doc.set_field(section[0], "\n".join(content))
+            text = f"{text}\n{content}"
+            doc.set_field(section[0], content)
+
+    doc.text = text
+
+    doc.compressed = zlib.compress(full_text.encode("utf-8"))
 
     return pd.DataFrame([doc.dict()])
 
@@ -179,9 +188,7 @@ def get_period(paragraphs: list[str], section: str) -> Optional[list[str]]:
     return None
 
 
-def get_section(
-    paragraphs: list[str], start: str, end: Optional[str]
-) -> Optional[list[str]]:
+def get_section(paragraphs: list[str], start: str, end: Optional[str]) -> Optional[str]:
     """
     Get the section of text from a list of paragraphs.
 
@@ -197,6 +204,9 @@ def get_section(
     end_index = get_paragraph_index(paragraphs, end) if end else len(paragraphs)
     if start_index and end_index:
         start_index += 1
-        return [p for p in paragraphs[start_index:end_index] if include_paragraph(p)]
+
+        return "\n".join(
+            [p for p in paragraphs[start_index:end_index] if include_paragraph(p)]
+        )
 
     return None
