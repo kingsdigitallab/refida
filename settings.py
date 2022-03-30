@@ -44,9 +44,9 @@ UOA = {
 }
 
 # model used for topic modelling
-TOPIC_CLASSIFICATION_MODEL = "joeddav/bart-large-mnli-yahoo-answers"
+TOPIC_CLASSIFICATION_MODEL: str = "joeddav/bart-large-mnli-yahoo-answers"
 # labels used for topic modelling
-TOPIC_CLASSIFICATION_TOPICS = [
+TOPIC_CLASSIFICATION_TOPICS: list[str] = [
     "Cultural",
     "Economic",
     "Environmental",
@@ -58,6 +58,8 @@ TOPIC_CLASSIFICATION_TOPICS = [
     "Technological",
 ]
 
+# model used for summarisation
+SUMMARISATION_MODEL: str = "sshleifer/distilbart-cnn-12-6"
 
 # https://spacy.io/models
 SPACY_LANGUAGE_MODEL: str = "en_core_web_md"
