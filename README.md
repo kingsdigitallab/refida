@@ -17,6 +17,7 @@ flowchart LR
     class comment_etl comment
 
     data_etl -.- comment_data_etl[CSV with data extracted/transformed\nfrom the PDF files]
+    data_etl --> summaries(summaries)
     data_etl --> topics(topics)
     class comment_data_etl comment
 
@@ -28,8 +29,15 @@ flowchart LR
     topics -.- comment_topics[Topic classification using\nimpact categories as potential topics]
     class comment_topics comment
 
-    data_topics -.- comment_data_topics[List of tuples with topic and confidence value]
+    data_topics -.- comment_data_topics[CSV with lists of tuples with topic and confidence value]
     class comment_data_topics comment
+
+    summaries --> data_summaries[/Summarised data/]
+    summaries -.- comment_summaries[Text summarisation]
+    class comment_summaries comment
+
+    data_summaries -.- comment_data_summaries[CSV with summaries of each text]
+    class comment_data_summaries comment
 
     classDef comment fill:lightyellow,stroke-width:0px;
 ```
