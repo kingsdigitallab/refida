@@ -17,6 +17,7 @@ class REFDocument(BaseModel):
     details: Optional[str] = None
     sources: Optional[str] = None
     text: Optional[str] = None
+    text_summary: Optional[str] = None
     compressed: Optional[bytes] = None
     file: str
 

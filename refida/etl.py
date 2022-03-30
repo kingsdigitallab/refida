@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Iterator, Optional
 
 import pandas as pd
-from txtai.pipeline import Textractor
+from txtai.pipeline import Summary, Textractor
 
 from refida.models import REFDocument
 from settings import PARAGRAPH_EXCLUDE_PATTERN, UOA, UOA_PATTERN
@@ -76,6 +76,7 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
             doc.set_field(section[0], content)
 
     doc.text = text
+    doc.text_summary = summarise(text)
 
     doc.compressed = zlib.compress(full_text.encode("utf-8"))
 
@@ -210,3 +211,31 @@ def get_section(paragraphs: list[str], start: str, end: Optional[str]) -> Option
         )
 
     return None
+
+
+def summarise(text: str, name: Optional[str] = None) -> str:
+    """
+    Summarise the text.
+
+    :param text: The text to summarise.
+    :param name: The name of the summary model to use.
+    """
+
+    return get_summary_model(name)(text, workers=4)  # type: ignore
+
+
+summary_model = None
+
+
+def get_summary_model(name: Optional[str] = None) -> Summary:
+    """
+    Get the summarisation model.
+
+    :param name: The name of the model to get.
+    """
+    global summary_model
+
+    if not summary_model:
+        summary_model = Summary(name)
+
+    return summary_model
