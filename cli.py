@@ -38,8 +38,28 @@ def topics(datadir: str = settings.DATA_DIR.name):
         if data is None:
             error("No data found. Run the `etl` command first.")
 
-        topics = features.topics_classification(data)
+        topics = features.topic_classification(data)
         topics.to_csv(dm.get_topics_data_path(datadir), index=False)
+
+        progress.update(1)
+
+
+@app.command()
+def summaries(datadir: str = settings.DATA_DIR.name):
+    """
+    Summarise the text of in the data.
+
+    :param datadir: Path to the data directory.
+    """
+    with typer.progressbar(length=2, label="Summarising text...") as progress:
+        data = dm.get_etl_data(datadir)
+        progress.update(1)
+
+        if data is None:
+            error("No data found. Run the `etl` command first.")
+
+        summaries = features.summarise(data)
+        summaries.to_csv(dm.get_summaries_data_path(datadir), index=False)
 
         progress.update(1)
 

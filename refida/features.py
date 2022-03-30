@@ -1,10 +1,14 @@
 import pandas as pd
-from txtai.pipeline import Labels
+from txtai.pipeline import Labels, Summary
 
-from settings import TOPIC_CLASSIFICATION_MODEL, TOPIC_CLASSIFICATION_TOPICS
+from settings import (
+    SUMMARISATION_MODEL,
+    TOPIC_CLASSIFICATION_MODEL,
+    TOPIC_CLASSIFICATION_TOPICS,
+)
 
 
-def topics_classification(
+def topic_classification(
     data: pd.DataFrame,
     model: str = TOPIC_CLASSIFICATION_MODEL,
     topics: list[str] = TOPIC_CLASSIFICATION_TOPICS,
@@ -19,21 +23,23 @@ def topics_classification(
     classifier = Labels(model)
 
     topics_df = data[["id"]].copy()
-    topics_df["topics"] = data["text"].apply(classify, args=(classifier, topics))
+    topics_df["topics"] = classifier(data["text"].values.tolist(), topics)
+    topics_df["topics"] = topics_df["topics"].apply(
+        lambda predictions: [(topics[p[0]], p[1]) for p in predictions]
+    )
 
     return topics_df
 
 
-def classify(
-    text: str, classifier: Labels, topics: list[str], workers: int = 4
-) -> list[tuple[str, float]]:
+def summarise(data: pd.DataFrame, model: str = SUMMARISATION_MODEL) -> str:
     """
-    Get topics from text.
+    Summarise the text.
 
-    :param text: Text to classify.
-    :param classifier: Topic classifier to use.
-    :param topics: Topics to classify.
-    :param workers: Number of workers to use.
+    :param data: DataFrame with text to summarise.
+    :param name: The name of the summary model to use.
     """
-    predictions = classifier(text, topics, workers=workers)
-    return [(topics[p[0]], p[1]) for p in predictions]
+    summary = Summary(model)
+
+    summary_df = data[["id"]].copy()
+    summary_df["summary"] = summary(data["text"].values.tolist())
+    return summary_df

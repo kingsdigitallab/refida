@@ -60,3 +60,7 @@ def get_etl_data_path(datadir: str) -> Path:
 
 def get_topics_data_path(datadir: str) -> Path:
     return get_data_path(datadir, "1_interim", "topics.csv")
+
+
+def get_summaries_data_path(datadir: str) -> Path:
+    return get_data_path(datadir, "1_interim", "summaries.csv")
