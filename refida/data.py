@@ -1,14 +1,17 @@
+import ast
 from pathlib import Path
 from typing import Iterator, Optional
 
 import pandas as pd
 
+from settings import DATA_DIR
 
-def get_raw_data(datadir: str) -> Iterator[Path]:
+
+def get_raw_data(datadir: str = DATA_DIR) -> Iterator[Path]:
     return get_raw_data_path(datadir).glob("**/*.pdf")
 
 
-def get_raw_data_path(datadir: str) -> Path:
+def get_raw_data_path(datadir: str = DATA_DIR) -> Path:
     return get_data_path(datadir, "0_raw")
 
 
@@ -39,7 +42,7 @@ def get_data_path(
     return path
 
 
-def get_etl_data(datadir: str) -> Optional[pd.DataFrame]:
+def get_etl_data(datadir: str = DATA_DIR) -> Optional[pd.DataFrame]:
     return get_data(get_etl_data_path(datadir))
 
 
@@ -50,13 +53,23 @@ def get_data(filename: Path, kwargs: dict = {}) -> Optional[pd.DataFrame]:
         return None
 
 
-def get_etl_data_path(datadir: str) -> Path:
+def get_etl_data_path(datadir: str = DATA_DIR) -> Path:
     return get_data_path(datadir, "1_interim", "etl.csv")
 
 
-def get_topics_data_path(datadir: str) -> Path:
+def get_topics_data(datadir: str = DATA_DIR) -> Optional[pd.DataFrame]:
+    return get_data(
+        get_topics_data_path(datadir), dict(converters=dict(topics=ast.literal_eval))
+    )
+
+
+def get_topics_data_path(datadir: str = DATA_DIR) -> Path:
     return get_data_path(datadir, "1_interim", "topics.csv")
 
 
-def get_summaries_data_path(datadir: str) -> Path:
+def get_summaries_data(datadir: str = DATA_DIR) -> Optional[pd.DataFrame]:
+    return get_data(get_summaries_data_path(datadir))
+
+
+def get_summaries_data_path(datadir: str = DATA_DIR) -> Path:
     return get_data_path(datadir, "1_interim", "summaries.csv")
