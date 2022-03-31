@@ -43,7 +43,6 @@ def show_data_grid(data: pd.DataFrame) -> dict:
     grid = AgGrid(
         data,
         data_return_mode=DataReturnMode.FILTERED,
-        enable_enterprise_modules=True,
         gridOptions=options.build(),
         height=300,
         theme="streamlit",
