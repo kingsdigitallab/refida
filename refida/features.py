@@ -27,7 +27,11 @@ def topic_classification(
     topics_df["topics"] = topics_df["topics"].apply(
         lambda predictions: [[topics[p[0]], p[1]] for p in predictions]
     )
-    topics_df = topics_df.explode["topics"]
+    topics_df = topics_df.explode("topics")
+    topics_df[["topic", "score"]] = pd.DataFrame(
+        topics_df["topics"].tolist(), index=topics_df.index
+    )
+    topics_df = topics_df.drop(columns=["topics"])
 
     return topics_df
 
