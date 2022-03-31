@@ -58,9 +58,7 @@ def get_etl_data_path(datadir: str = DATA_DIR) -> Path:
 
 
 def get_topics_data(datadir: str = DATA_DIR) -> Optional[pd.DataFrame]:
-    return get_data(
-        get_topics_data_path(datadir), dict(converters=dict(topics=ast.literal_eval))
-    )
+    return get_data(get_topics_data_path(datadir))
 
 
 def get_topics_data_path(datadir: str = DATA_DIR) -> Path:
