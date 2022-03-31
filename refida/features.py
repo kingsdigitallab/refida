@@ -25,8 +25,9 @@ def topic_classification(
     topics_df = data[["id"]].copy()
     topics_df["topics"] = classifier(data["text"].values.tolist(), topics)
     topics_df["topics"] = topics_df["topics"].apply(
-        lambda predictions: [(topics[p[0]], p[1]) for p in predictions]
+        lambda predictions: [[topics[p[0]], p[1]] for p in predictions]
     )
+    topics_df = topics_df.explode["topics"]
 
     return topics_df
 
