@@ -1,23 +1,17 @@
+import base64
 from functools import lru_cache
 from typing import Optional
 
 import altair as alt
 import pandas as pd
-import spacy
 import spacy_streamlit
 import streamlit as st
-from spacy.tokens import Doc
 from spacy_streamlit import visualize_ner
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
 
 from refida import data as dm
-from settings import (
-    ENTITY_SECTIONS,
-    PROJECT_TITLE,
-    SPACY_ENTITY_TYPES,
-    SPACY_LANGUAGE_MODEL,
-)
+from settings import ENTITY_SECTIONS, PROJECT_TITLE, SPACY_ENTITY_TYPES
 
 
 def streamlit():
@@ -66,7 +60,7 @@ def show_data_grid(data: pd.DataFrame) -> dict:
 
 def show_data(data: pd.DataFrame, selection: pd.DataFrame):
     n_rows = selection.shape[0]
-    topic_score = "score"
+    topic_aggr = "score"
 
     if n_rows == 0:
         st.warning("No data found")
@@ -76,33 +70,41 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
 
     if n_rows > 1:
         st.info("Multiple documents available, showing aggregate information")
-        topic_score = "mean(score)"
+        topic_aggr = "mean(score)"
 
-        show_topics(selection, topic_score)
+        show_topics(selection, topic_aggr)
+        show_topics(selection, "count(topic)", threshold=0.15)
 
         for section in ENTITY_SECTIONS:
             show_entities(selection, section)
     else:
         doc_idx = data[data["id"] == selection["id"].iloc[0]].index[0]
-        show_doc(selection, doc_idx, topic_score)
+        show_doc(selection, doc_idx, topic_aggr)
 
 
-def show_doc(data: pd.DataFrame, idx: int, topic_score: str):
+def show_doc(data: pd.DataFrame, idx: int, topic_aggr: str):
     doc = data.iloc[0]
 
     st.subheader(doc["title"])
+
+    with st.expander("View document", expanded=False):
+        with open(doc["file"], "rb") as f:
+            base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="500" type="application/pdf"></iframe>'
+            st.markdown(pdf_display, unsafe_allow_html=True)
+
     summary = get_summary(tuple([doc["id"]]))
     if summary is not None:
         st.write(summary)
     else:
         st.write(doc["summary"])
 
-    show_topics(data, topic_score)
+    show_topics(data, topic_aggr)
 
     for section in ENTITY_SECTIONS:
         show_entities(data, section)
 
-    st.subheader("Entities in context")
+    st.subheader("View entities in context")
     st.write(
         "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>",
         unsafe_allow_html=True,
@@ -134,14 +136,19 @@ def get_rows_by_id(data: pd.DataFrame, ids: tuple[str]) -> Optional[pd.DataFrame
     return None
 
 
-def show_topics(data: pd.DataFrame, topic_score: str):
+def show_topics(data: pd.DataFrame, aggr: str, threshold: float = 0.0):
     topics = get_topics(tuple(data["id"].values.tolist()))
     if topics is not None:
-        st.subheader("Impact categories")
+        if threshold > 0.0:
+            topics = topics[topics["score"] >= threshold]
+
+        st.subheader(
+            f"Impact categories with threshold >= {threshold} aggregated by {aggr}"
+        )
         st.altair_chart(
             alt.Chart(topics)
             .mark_bar(tooltip=True)
-            .encode(x=topic_score, y="topic", color="topic"),
+            .encode(x=aggr, y="topic", color="topic"),
             use_container_width=True,
         )
 
