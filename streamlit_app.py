@@ -3,12 +3,21 @@ from typing import Optional
 
 import altair as alt
 import pandas as pd
+import spacy
+import spacy_streamlit
 import streamlit as st
+from spacy.tokens import Doc
+from spacy_streamlit import visualize_ner
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
 
 from refida import data as dm
-from settings import PROJECT_TITLE
+from settings import (
+    ENTITY_SECTIONS,
+    PROJECT_TITLE,
+    SPACY_ENTITY_TYPES,
+    SPACY_LANGUAGE_MODEL,
+)
 
 
 def streamlit():
@@ -28,9 +37,9 @@ def data_section():
         selection = grid["selected_rows"]
 
         if selection:
-            show_data(pd.DataFrame(selection))
+            show_data(data, pd.DataFrame(selection))
         else:
-            show_data(grid["data"])
+            show_data(data, grid["data"])
 
 
 def show_data_grid(data: pd.DataFrame) -> dict:
@@ -38,11 +47,13 @@ def show_data_grid(data: pd.DataFrame) -> dict:
     options = GridOptionsBuilder.from_dataframe(
         data, enableRowGroup=True, enableValue=True
     )
-    options.configure_selection("multiple", use_checkbox=True)
+    options.configure_selection("multiple")
 
     grid = AgGrid(
         data,
         data_return_mode=DataReturnMode.FILTERED,
+        enable_enterprise_modules=True,
+        fit_columns_on_grid_load=True,
         gridOptions=options.build(),
         height=300,
         theme="streamlit",
@@ -53,38 +64,53 @@ def show_data_grid(data: pd.DataFrame) -> dict:
     return grid
 
 
-def show_data(data: pd.DataFrame):
-    n_rows = data.shape[0]
+def show_data(data: pd.DataFrame, selection: pd.DataFrame):
+    n_rows = selection.shape[0]
     topic_score = "score"
 
     if n_rows == 0:
         st.warning("No data found")
         return
 
-    st.header("About the data")
+    st.header("Insights")
 
     if n_rows > 1:
         st.info("Multiple documents available, showing aggregate information")
         topic_score = "mean(score)"
-    else:
-        doc = data.iloc[0]
-        st.header(doc["title"])
-        st.subheader("About the case study")
-        summary = get_summary(tuple([doc["id"]]))
-        if summary is not None:
-            st.write(summary)
-        else:
-            st.write(doc["summary"])
 
-    topics = get_topics(tuple(data["id"].values.tolist()))
-    if topics is not None:
-        st.subheader("Impact categories")
-        st.altair_chart(
-            alt.Chart(topics)
-            .mark_bar(tooltip=True)
-            .encode(x=topic_score, y="topic", color="topic"),
-            use_container_width=True,
-        )
+        show_topics(selection, topic_score)
+
+        for section in ENTITY_SECTIONS:
+            show_entities(selection, section)
+    else:
+        doc_idx = data[data["id"] == selection["id"].iloc[0]].index[0]
+        show_doc(selection, doc_idx, topic_score)
+
+
+def show_doc(data: pd.DataFrame, idx: int, topic_score: str):
+    doc = data.iloc[0]
+
+    st.subheader(doc["title"])
+    summary = get_summary(tuple([doc["id"]]))
+    if summary is not None:
+        st.write(summary)
+    else:
+        st.write(doc["summary"])
+
+    show_topics(data, topic_score)
+
+    for section in ENTITY_SECTIONS:
+        show_entities(data, section)
+
+    st.subheader("Entities in context")
+    st.write(
+        "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>",
+        unsafe_allow_html=True,
+    )
+    section = st.radio("Choose context", [None] + ENTITY_SECTIONS)
+    if section:
+        st.subheader(section.capitalize())
+        show_entities_in_context(section, idx)
 
 
 @lru_cache(maxsize=256)
@@ -108,6 +134,18 @@ def get_rows_by_id(data: pd.DataFrame, ids: tuple[str]) -> Optional[pd.DataFrame
     return None
 
 
+def show_topics(data: pd.DataFrame, topic_score: str):
+    topics = get_topics(tuple(data["id"].values.tolist()))
+    if topics is not None:
+        st.subheader("Impact categories")
+        st.altair_chart(
+            alt.Chart(topics)
+            .mark_bar(tooltip=True)
+            .encode(x=topic_score, y="topic", color="topic"),
+            use_container_width=True,
+        )
+
+
 @lru_cache(maxsize=256)
 def get_topics(ids: tuple[str]) -> Optional[pd.DataFrame]:
     data = dm.get_topics_data()
@@ -118,6 +156,41 @@ def get_topics(ids: tuple[str]) -> Optional[pd.DataFrame]:
             return topics[["topic", "score"]]
 
     return None
+
+
+def show_entities(data: pd.DataFrame, section: str):
+    entities = get_entities(section, tuple(data["id"].values.tolist()))
+    if entities is not None:
+        st.subheader(f"Entities in the {section}")
+        st.altair_chart(
+            alt.Chart(entities)
+            .mark_bar(tooltip=True)
+            .encode(x="entity", y="count(entity)", color="label"),
+            use_container_width=True,
+        )
+
+
+@lru_cache(maxsize=256)
+def get_entities(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
+    data = dm.get_entities_data(section)
+
+    if data is not None:
+        entities = get_rows_by_id(data, ids)
+        if entities is not None:
+            return entities[["label", "entity"]]
+
+    return None
+
+
+def show_entities_in_context(section: str, idx: int):
+    doc = dm.get_spacy_doc(section, idx)
+    if doc:
+        visualize_ner(
+            doc,
+            labels=SPACY_ENTITY_TYPES,
+            show_table=False,
+            title="",
+        )
 
 
 if __name__ == "__main__":

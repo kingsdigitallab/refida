@@ -68,10 +68,11 @@ SPACY_EXTRA_STOP_WORDS: list[str] = ["Miss", "Mr", "Mrs", "Ms"]
 
 # https://spacy.io/models/en#en_core_web_sm-labels
 SPACY_ENTITY_TYPES: list[str] = [
-    "DATE",
-    "EVENT",
     "GPE",
     "LOC",
+    "ORG",
     "NORP",
     "PERSON",
 ]
+
+ENTITY_SECTIONS: list[str] = ["summary", "details", "sources"]
