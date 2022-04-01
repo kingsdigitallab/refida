@@ -75,18 +75,22 @@ def entity_extraction(
 
     entities_df = data[["id"]].copy()
     entities_df["doc"] = data[column].fillna("").apply(nlp)
-    entities_df["entity"] = entities_df["doc"].apply(
+
+    docs = entities_df["doc"].tolist()
+
+    entities_df["entities"] = entities_df["doc"].apply(
         lambda doc: [
-            f"{ent.label_}: {ent.text}"
+            [ent.label_, ent.text, f"{ent.label_}: {ent.text}"]
             for ent in doc.ents
             if ent.label_ in entity_types
         ]
     )
-    entities_df = entities_df.explode("entity")
-    entities_df = entities_df.dropna(subset=["entity"])
-
-    docs = entities_df["doc"].tolist()
-
     entities_df = entities_df.drop(columns=["doc"])
+    entities_df = entities_df.explode("entities")
+    entities_df = entities_df.dropna(subset=["entities"])
+    entities_df[["label", "text", "entity"]] = pd.DataFrame(
+        entities_df["entities"].tolist(), index=entities_df.index
+    )
+    entities_df = entities_df.drop(columns=["entities"])
 
     return docs, entities_df
