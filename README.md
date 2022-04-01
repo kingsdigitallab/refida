@@ -17,9 +17,28 @@ flowchart LR
     class comment_etl comment
 
     data_etl -.- comment_data_etl[CSV with data extracted/transformed\nfrom the PDF files]
+    data_etl --> entities(entities)
     data_etl --> summaries(summaries)
     data_etl --> topics(topics)
     class comment_data_etl comment
+
+    entities --> data_entities[/Entities data/]
+    entities --> data_doc_entities[/spaCy entities docs/]
+    entities -.- comment_entities[Entity extraction, can be applied to the\nsummary, details and sources sections]
+    class comment_entities comment
+
+    data_entities -.- comment_data_entities[CSVs with the entities extracted for each section]
+    class comment_data_entities comment
+
+    data_doc_entities -.- comment_data_doc_entities[Serialized spaCy docs for reuse]
+    class comment_data_doc_entities comment
+
+    summaries --> data_summaries[/Summarised data/]
+    summaries -.- comment_summaries[Text summarisation]
+    class comment_summaries comment
+
+    data_summaries -.- comment_data_summaries[CSV with summaries of each text]
+    class comment_data_summaries comment
 
     data_impact_categories[/Impact categories/] --> topics(topics)
     data_impact_categories -.- comment_data_impact_categories[List of categories provided by the impact team]
@@ -31,13 +50,6 @@ flowchart LR
 
     data_topics -.- comment_data_topics[CSV with lists of tuples with topic and confidence value]
     class comment_data_topics comment
-
-    summaries --> data_summaries[/Summarised data/]
-    summaries -.- comment_summaries[Text summarisation]
-    class comment_summaries comment
-
-    data_summaries -.- comment_data_summaries[CSV with summaries of each text]
-    class comment_data_summaries comment
 
     classDef comment fill:lightyellow,stroke-width:0px;
 ```
