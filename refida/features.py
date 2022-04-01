@@ -1,7 +1,10 @@
 import pandas as pd
+import spacy
 from txtai.pipeline import Labels, Summary
 
 from settings import (
+    SPACY_ENTITY_TYPES,
+    SPACY_LANGUAGE_MODEL,
     SUMMARISATION_MODEL,
     TOPIC_CLASSIFICATION_MODEL,
     TOPIC_CLASSIFICATION_TOPICS,
@@ -36,7 +39,7 @@ def topic_classification(
     return topics_df
 
 
-def summarise(data: pd.DataFrame, model: str = SUMMARISATION_MODEL) -> str:
+def summarise(data: pd.DataFrame, model: str = SUMMARISATION_MODEL) -> pd.DataFrame:
     """
     Summarise the text.
 
@@ -47,4 +50,43 @@ def summarise(data: pd.DataFrame, model: str = SUMMARISATION_MODEL) -> str:
 
     summary_df = data[["id"]].copy()
     summary_df["summary"] = summary(data["text"].values.tolist())
+
     return summary_df
+
+
+def entity_extraction(
+    data: pd.DataFrame,
+    column: str,
+    model: str = SPACY_LANGUAGE_MODEL,
+    entity_types: list[str] = SPACY_ENTITY_TYPES,
+) -> tuple[list, pd.DataFrame]:
+    """
+    Extract entities using spaCy.
+
+    :param data: DataFrame with text to extract entities from.
+    :param column: Column to extract entities from.
+    :param model: spaCy language model to use.
+    :param entity_types: Entity types to extract.
+    """
+    if column not in data.columns:
+        raise ValueError(f"Column {column} not in data.")
+
+    nlp = spacy.load(model)
+
+    entities_df = data[["id"]].copy()
+    entities_df["doc"] = data[column].fillna("").apply(nlp)
+    entities_df["entity"] = entities_df["doc"].apply(
+        lambda doc: [
+            f"{ent.label_}: {ent.text}"
+            for ent in doc.ents
+            if ent.label_ in entity_types
+        ]
+    )
+    entities_df = entities_df.explode("entity")
+    entities_df = entities_df.dropna(subset=["entity"])
+
+    docs = entities_df["doc"].tolist()
+
+    entities_df = entities_df.drop(columns=["doc"])
+
+    return docs, entities_df
