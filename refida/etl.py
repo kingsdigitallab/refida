@@ -66,9 +66,9 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
     text = ""
 
     for section in [
-        ("summary", "1. summary of the impact", "2. underpinning research"),
-        ("details", "4. details of the impact", "5. sources to corroborate the impact"),
-        ("sources", "5. sources to corroborate the impact", paragraphs[-1]),
+        ("summary", "1. Summary of the impact", "2. Underpinning research"),
+        ("details", "4. Details of the impact", "5. Sources to corroborate the impact"),
+        ("sources", "5. Sources to corroborate the impact", paragraphs[-1]),
     ]:
         content = get_section(paragraphs, section[1], section[2])
         if content:
@@ -203,10 +203,10 @@ def get_section(paragraphs: list[str], start: str, end: Optional[str]) -> Option
     start_index = get_paragraph_index(paragraphs, start)
     end_index = get_paragraph_index(paragraphs, end) if end else len(paragraphs)
     if start_index and end_index:
-        start_index += 1
-
-        return "\n".join(
+        text = "\n".join(
             [p for p in paragraphs[start_index:end_index] if include_paragraph(p)]
         )
+
+        return text.replace(start, "").strip()
 
     return None
