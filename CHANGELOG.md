@@ -14,3 +14,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Topic classification.
 - Dashboard with data, summary and topics chart.
 - Entity extraction.
+- Entity geolocation.
