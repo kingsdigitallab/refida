@@ -4,10 +4,19 @@ from typing import Optional
 import geopy
 import pandas as pd
 import spacy
-from geopy.location import Location
 from txtai.pipeline import Labels, Summary
 
 from settings import (
+    DATA_TEXT,
+    FEATURE_ENTITY_ENTITY,
+    FEATURE_ENTITY_LABEL,
+    FEATURE_ENTITY_TEXT,
+    FEATURE_LAT,
+    FEATURE_LON,
+    FEATURE_SUMMARY,
+    FEATURE_TOPIC_SCORE,
+    FEATURE_TOPIC_TOPIC,
+    FIELD_ID,
     SPACY_ENTITY_TYPES,
     SPACY_LANGUAGE_MODEL,
     SPACY_LOCATION_ENTITY_TYPES,
@@ -32,13 +41,13 @@ def topic_classification(
     """
     classifier = Labels(model)
 
-    topics_df = data[["id"]].copy()
-    topics_df["topics"] = classifier(data["text"].values.tolist(), topics)
+    topics_df = data[[FIELD_ID]].copy()
+    topics_df["topics"] = classifier(data[DATA_TEXT].values.tolist(), topics)
     topics_df["topics"] = topics_df["topics"].apply(
         lambda predictions: [[topics[p[0]], p[1]] for p in predictions]
     )
     topics_df = topics_df.explode("topics")
-    topics_df[["topic", "score"]] = pd.DataFrame(
+    topics_df[[FEATURE_TOPIC_TOPIC, FEATURE_TOPIC_SCORE]] = pd.DataFrame(
         topics_df["topics"].tolist(), index=topics_df.index
     )
     topics_df = topics_df.drop(columns=["topics"])
@@ -55,8 +64,8 @@ def summarise(data: pd.DataFrame, model: str = SUMMARISATION_MODEL) -> pd.DataFr
     """
     summary = Summary(model)
 
-    summary_df = data[["id"]].copy()
-    summary_df["summary"] = summary(data["text"].values.tolist())
+    summary_df = data[[FIELD_ID]].copy()
+    summary_df[FEATURE_SUMMARY] = summary(data[DATA_TEXT].values.tolist())
 
     return summary_df
 
@@ -80,7 +89,7 @@ def entity_extraction(
 
     nlp = spacy.load(model)
 
-    entities_df = data[["id"]].copy()
+    entities_df = data[[FIELD_ID]].copy()
     entities_df["doc"] = data[column].fillna("").apply(nlp)
 
     docs = entities_df["doc"].tolist()
@@ -95,9 +104,9 @@ def entity_extraction(
     entities_df = entities_df.drop(columns=["doc"])
     entities_df = entities_df.explode("entities")
     entities_df = entities_df.dropna(subset=["entities"])
-    entities_df[["label", "text", "entity"]] = pd.DataFrame(
-        entities_df["entities"].tolist(), index=entities_df.index
-    )
+    entities_df[
+        [FEATURE_ENTITY_LABEL, FEATURE_ENTITY_TEXT, FEATURE_ENTITY_ENTITY]
+    ] = pd.DataFrame(entities_df["entities"].tolist(), index=entities_df.index)
     entities_df = entities_df.drop(columns=["entities"])
 
     return docs, entities_df
@@ -113,11 +122,11 @@ def geolocate(
     :param data: DataFrame with text to geocode.
     :param entity_types: Entity types to geocode.
     """
-    geo_df = data[data["label"].isin(entity_types)].copy()
-    geo_df[["lat", "lon"]] = geo_df.apply(
-        lambda x: get_coordinates(x["text"]), axis=1, result_type="expand"
+    geo_df = data[data[FEATURE_ENTITY_LABEL].isin(entity_types)].copy()
+    geo_df[[FEATURE_LAT, FEATURE_LON]] = geo_df.apply(
+        lambda x: get_coordinates(x[FEATURE_ENTITY_TEXT]), axis=1, result_type="expand"
     )
-    geo_df = geo_df.dropna(subset=["lat", "lon"])
+    geo_df = geo_df.dropna(subset=[FEATURE_LAT, FEATURE_LON])
 
     return geo_df
 
@@ -135,5 +144,4 @@ def get_coordinates(name: str) -> Optional[list[float, float]]:
             return [location.latitude, location.longitude]
     except (geopy.exc.GeocoderTimedOut, geopy.exc.GeocoderServiceError):
         return None
-
     return None

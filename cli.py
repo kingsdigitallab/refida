@@ -2,16 +2,16 @@ import pickle
 
 import typer
 
-import settings
 from refida import data as dm
 from refida import etl as em
 from refida import features
+from settings import DATA_DIR
 
 app = typer.Typer()
 
 
 @app.command()
-def etl(datadir: str = settings.DATA_DIR.name):
+def etl(datadir: str = DATA_DIR.name):
     """
     Extract, transform and load data.
 
@@ -27,7 +27,7 @@ def etl(datadir: str = settings.DATA_DIR.name):
 
 
 @app.command()
-def topics(datadir: str = settings.DATA_DIR.name):
+def topics(datadir: str = DATA_DIR.name):
     """
     Apply topic classification to the data.
 
@@ -58,7 +58,7 @@ def error(msg: str):
 
 
 @app.command()
-def summaries(datadir: str = settings.DATA_DIR.name):
+def summaries(datadir: str = DATA_DIR.name):
     """
     Summarise the text of in the data.
 
@@ -78,7 +78,7 @@ def summaries(datadir: str = settings.DATA_DIR.name):
 
 
 @app.command()
-def entities(datadir: str = settings.DATA_DIR.name, column: str = "summary"):
+def entities(datadir: str = DATA_DIR.name, column: str = "summary"):
     """
     Extract entities from the data of the text of the given column.
 
@@ -107,7 +107,7 @@ def entities(datadir: str = settings.DATA_DIR.name, column: str = "summary"):
 
 
 @app.command()
-def geolocate(datadir: str = settings.DATA_DIR.name, column: str = "summary"):
+def geolocate(datadir: str = DATA_DIR.name, column: str = "summary"):
     """
     Geolocate the location entities in the data.
 

@@ -5,14 +5,27 @@ from typing import Optional
 import altair as alt
 import pandas as pd
 import pydeck as pdk
-import spacy_streamlit
 import streamlit as st
 from spacy_streamlit import visualize_ner
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
 
 from refida import data as dm
-from settings import ENTITY_SECTIONS, PROJECT_TITLE, SPACY_ENTITY_TYPES
+from settings import (
+    DATA_ENTITY_SECTIONS,
+    DATA_SUMMARY,
+    FEATURE_ENTITY_ENTITY,
+    FEATURE_ENTITY_LABEL,
+    FEATURE_ENTITY_TEXT,
+    FEATURE_LAT,
+    FEATURE_LON,
+    FEATURE_SUMMARY,
+    FEATURE_TOPIC_SCORE,
+    FEATURE_TOPIC_TOPIC,
+    FIELD_ID,
+    PROJECT_TITLE,
+    SPACY_ENTITY_TYPES,
+)
 
 
 def streamlit():
@@ -61,7 +74,7 @@ def show_data_grid(data: pd.DataFrame) -> dict:
 
 def show_data(data: pd.DataFrame, selection: pd.DataFrame):
     n_rows = selection.shape[0]
-    topic_aggr = "score"
+    topic_aggr = FEATURE_TOPIC_SCORE
 
     if n_rows == 0:
         st.warning("No data found")
@@ -76,12 +89,12 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
         show_topics(selection, topic_aggr)
         show_topics(selection, "count(topic)", threshold=0.15)
 
-        for section in ENTITY_SECTIONS:
+        for section in DATA_ENTITY_SECTIONS:
             show_entities(selection, section)
 
         show_geo(selection)
     else:
-        doc_idx = data[data["id"] == selection["id"].iloc[0]].index[0]
+        doc_idx = data[data[FIELD_ID] == selection[FIELD_ID].iloc[0]].index[0]
         show_doc(selection, doc_idx, topic_aggr)
 
 
@@ -92,13 +105,13 @@ def get_summary(ids: tuple[str]) -> Optional[str]:
     if data is not None:
         summary = get_rows_by_id(data, ids)
         if summary is not None:
-            return summary["summary"].iloc[0]
+            return summary[FEATURE_SUMMARY].iloc[0]
 
     return None
 
 
 def get_rows_by_id(data: pd.DataFrame, ids: tuple[str]) -> Optional[pd.DataFrame]:
-    rows = data[data["id"].isin(ids)]
+    rows = data[data[FIELD_ID].isin(ids)]
 
     if rows is not None:
         return rows
@@ -107,10 +120,10 @@ def get_rows_by_id(data: pd.DataFrame, ids: tuple[str]) -> Optional[pd.DataFrame
 
 
 def show_topics(data: pd.DataFrame, aggr: str, threshold: float = 0.0):
-    topics = get_topics(tuple(data["id"].values.tolist()))
+    topics = get_topics(tuple(data[FIELD_ID].values.tolist()))
     if topics is not None:
         if threshold > 0.0:
-            topics = topics[topics["score"] >= threshold]
+            topics = topics[topics[FEATURE_TOPIC_SCORE] >= threshold]
 
         st.subheader(
             f"Impact categories with threshold >= {threshold} aggregated by {aggr}"
@@ -118,7 +131,7 @@ def show_topics(data: pd.DataFrame, aggr: str, threshold: float = 0.0):
         st.altair_chart(
             alt.Chart(topics)
             .mark_bar(tooltip=True)
-            .encode(x=aggr, y="topic", color="topic"),
+            .encode(x=aggr, y=FEATURE_TOPIC_TOPIC, color=FEATURE_TOPIC_TOPIC),
             use_container_width=True,
         )
 
@@ -130,19 +143,23 @@ def get_topics(ids: tuple[str]) -> Optional[pd.DataFrame]:
     if data is not None:
         topics = get_rows_by_id(data, ids)
         if topics is not None:
-            return topics[["topic", "score"]]
+            return topics[[FEATURE_TOPIC_TOPIC, FEATURE_TOPIC_SCORE]]
 
     return None
 
 
 def show_entities(data: pd.DataFrame, section: str):
-    entities = get_entities(section, tuple(data["id"].values.tolist()))
+    entities = get_entities(section, tuple(data[FIELD_ID].values.tolist()))
     if entities is not None:
         st.subheader(f"Entities in the {section}")
         st.altair_chart(
             alt.Chart(entities)
             .mark_bar(tooltip=True)
-            .encode(x="entity", y="count(entity)", color="label"),
+            .encode(
+                x=FEATURE_ENTITY_ENTITY,
+                y=f"count({FEATURE_ENTITY_ENTITY})",
+                color=FEATURE_ENTITY_LABEL,
+            ),
             use_container_width=True,
         )
 
@@ -154,13 +171,13 @@ def get_entities(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
     if data is not None:
         entities = get_rows_by_id(data, ids)
         if entities is not None:
-            return entities[["label", "entity"]]
+            return entities[[FEATURE_ENTITY_LABEL, FEATURE_ENTITY_ENTITY]]
 
     return None
 
 
 def show_geo(data: pd.DataFrame):
-    geo_df = get_geo("summary", tuple(data["id"].values.tolist()))
+    geo_df = get_geo(DATA_SUMMARY, tuple(data[FIELD_ID].values.tolist()))
     if geo_df is not None:
         focus = geo_df.iloc[0]
 
@@ -200,10 +217,10 @@ def get_geo(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
     if data is not None:
         geo_df = get_rows_by_id(data, ids)
         if geo_df is not None:
-            geo_df = geo_df.drop(columns=["id", "text"])
+            geo_df = geo_df.drop(columns=[FIELD_ID, FEATURE_ENTITY_TEXT])
             geo_df["count"] = 0
             return (
-                geo_df.groupby(["entity", "lat", "lon"])
+                geo_df.groupby([FEATURE_ENTITY_ENTITY, FEATURE_LAT, FEATURE_LON])
                 .count()
                 .reset_index()
                 .sort_values(by="count", ascending=False)
@@ -223,15 +240,15 @@ def show_doc(data: pd.DataFrame, idx: int, topic_aggr: str):
             pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="500" type="application/pdf"></iframe>'
             st.markdown(pdf_display, unsafe_allow_html=True)
 
-    summary = get_summary(tuple([doc["id"]]))
+    summary = get_summary(tuple([doc[FIELD_ID]]))
     if summary is not None:
         st.write(summary)
     else:
-        st.write(doc["summary"])
+        st.write(doc[DATA_SUMMARY])
 
     show_topics(data, topic_aggr)
 
-    for section in ENTITY_SECTIONS:
+    for section in DATA_ENTITY_SECTIONS:
         show_entities(data, section)
 
     st.subheader("View entities in context")
@@ -239,7 +256,7 @@ def show_doc(data: pd.DataFrame, idx: int, topic_aggr: str):
         "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>",
         unsafe_allow_html=True,
     )
-    section = st.radio("Choose context", [None] + ENTITY_SECTIONS)
+    section = st.radio("Choose context", [None] + DATA_ENTITY_SECTIONS)
     if section:
         st.subheader(section.capitalize())
         show_entities_in_context(section, idx)

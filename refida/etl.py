@@ -7,7 +7,14 @@ import pandas as pd
 from txtai.pipeline import Textractor
 
 from refida.models import REFDocument
-from settings import PARAGRAPH_EXCLUDE_PATTERN, UOA, UOA_PATTERN
+from settings import (
+    DATA_DETAILS,
+    DATA_SOURCES,
+    DATA_SUMMARY,
+    PARAGRAPH_EXCLUDE_PATTERN,
+    UOA,
+    UOA_PATTERN,
+)
 
 
 def extract(
@@ -66,9 +73,13 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
     text = ""
 
     for section in [
-        ("summary", "1. Summary of the impact", "2. Underpinning research"),
-        ("details", "4. Details of the impact", "5. Sources to corroborate the impact"),
-        ("sources", "5. Sources to corroborate the impact", paragraphs[-1]),
+        (DATA_SUMMARY, "1. Summary of the impact", "2. Underpinning research"),
+        (
+            DATA_DETAILS,
+            "4. Details of the impact",
+            "5. Sources to corroborate the impact",
+        ),
+        (DATA_SOURCES, "5. Sources to corroborate the impact", paragraphs[-1]),
     ]:
         content = get_section(paragraphs, section[1], section[2])
         if content:

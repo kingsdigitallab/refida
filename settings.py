@@ -77,7 +77,29 @@ SPACY_ENTITY_TYPES: list[str] = SPACY_LOCATION_ENTITY_TYPES + [
     "PERSON",
 ]
 
-ENTITY_SECTIONS: list[str] = ["summary", "details", "sources"]
-
 geolocator = Nominatim(user_agent="kdl.kcl.ac.uk")
 geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
+
+# field names to access the data
+FIELD_ID = "id"
+DATA_SUMMARY = "summary"
+DATA_DETAILS = "details"
+DATA_SOURCES = "sources"
+DATA_TEXT = "text"
+DATA_ENTITY_SECTIONS: list[str] = [
+    DATA_SUMMARY,
+    DATA_DETAILS,
+    DATA_SOURCES,
+]
+
+FEATURE_TOPIC_TOPIC = "topic"
+FEATURE_TOPIC_SCORE = "score"
+
+FEATURE_SUMMARY = "summary"
+
+FEATURE_ENTITY_ENTITY = "entity"
+FEATURE_ENTITY_LABEL = "label"
+FEATURE_ENTITY_TEXT = "text"
+
+FEATURE_LAT = "lat"
+FEATURE_LON = "lon"

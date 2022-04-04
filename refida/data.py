@@ -80,7 +80,6 @@ def get_entities_data(
 ) -> Optional[pd.DataFrame]:
     return get_data(
         get_entities_data_path(label, datadir),
-        # dict(converters=dict(doc=ast.literal_eval)),
     )
 
 
@@ -90,7 +89,11 @@ def get_entities_data_path(label: str, datadir: str = DATA_DIR.name) -> Path:
 
 @lru_cache(maxsize=512)
 def get_spacy_doc(label: str, idx: int, datadir: str = DATA_DIR.name) -> Optional[Doc]:
-    return get_spacy_docs(label, datadir)[idx]
+    docs = get_spacy_docs(label, datadir)
+    if docs:
+        return docs[idx]
+
+    return None
 
 
 def get_spacy_docs(label: str, datadir: str = DATA_DIR.name) -> Optional[list]:
