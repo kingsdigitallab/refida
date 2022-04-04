@@ -1,10 +1,10 @@
 import ast
 import pickle
+from functools import lru_cache
 from pathlib import Path
 from typing import Iterator, Optional
 
 import pandas as pd
-from functools import lru_cache
 
 from settings import DATA_DIR
 
@@ -102,3 +102,11 @@ def get_spacy_docs(label: str, datadir: str = DATA_DIR.name) -> Optional[pd.Data
 
 def get_spacy_docs_path(label: str, datadir: str = DATA_DIR.name) -> Path:
     return get_data_path(datadir, "1_interim", f"spacy_docs_{label}.csv")
+
+
+def get_geo_data(label: str, datadir: str = DATA_DIR.name) -> Optional[pd.DataFrame]:
+    return get_data(get_geo_data_path(label, datadir))
+
+
+def get_geo_data_path(label: str, datadir: str = DATA_DIR.name) -> Path:
+    return get_data_path(datadir, "1_interim", f"geo_{label}.csv")

@@ -1,6 +1,9 @@
 import re
 from pathlib import Path
 
+from geopy.extra.rate_limiter import RateLimiter
+from geopy.geocoders import Nominatim
+
 ROOT_DIR = Path(".")
 
 DATA_DIR = ROOT_DIR.joinpath("data")
@@ -67,12 +70,14 @@ SPACY_LANGUAGE_MODEL: str = "en_core_web_md"
 SPACY_EXTRA_STOP_WORDS: list[str] = ["Miss", "Mr", "Mrs", "Ms"]
 
 # https://spacy.io/models/en#en_core_web_sm-labels
-SPACY_ENTITY_TYPES: list[str] = [
-    "GPE",
-    "LOC",
+SPACY_LOCATION_ENTITY_TYPES: list[str] = ["GPE", "LOC"]
+SPACY_ENTITY_TYPES: list[str] = SPACY_LOCATION_ENTITY_TYPES + [
     "ORG",
     "NORP",
     "PERSON",
 ]
 
 ENTITY_SECTIONS: list[str] = ["summary", "details", "sources"]
+
+geolocator = Nominatim(user_agent="kdl.kcl.ac.uk")
+geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)

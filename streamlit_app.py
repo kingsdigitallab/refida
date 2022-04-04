@@ -4,6 +4,7 @@ from typing import Optional
 
 import altair as alt
 import pandas as pd
+import pydeck as pdk
 import spacy_streamlit
 import streamlit as st
 from spacy_streamlit import visualize_ner
@@ -77,42 +78,11 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
 
         for section in ENTITY_SECTIONS:
             show_entities(selection, section)
+
+        show_geo(selection)
     else:
         doc_idx = data[data["id"] == selection["id"].iloc[0]].index[0]
         show_doc(selection, doc_idx, topic_aggr)
-
-
-def show_doc(data: pd.DataFrame, idx: int, topic_aggr: str):
-    doc = data.iloc[0]
-
-    st.subheader(doc["title"])
-
-    with st.expander("View document", expanded=False):
-        with open(doc["file"], "rb") as f:
-            base64_pdf = base64.b64encode(f.read()).decode("utf-8")
-            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="500" type="application/pdf"></iframe>'
-            st.markdown(pdf_display, unsafe_allow_html=True)
-
-    summary = get_summary(tuple([doc["id"]]))
-    if summary is not None:
-        st.write(summary)
-    else:
-        st.write(doc["summary"])
-
-    show_topics(data, topic_aggr)
-
-    for section in ENTITY_SECTIONS:
-        show_entities(data, section)
-
-    st.subheader("View entities in context")
-    st.write(
-        "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>",
-        unsafe_allow_html=True,
-    )
-    section = st.radio("Choose context", [None] + ENTITY_SECTIONS)
-    if section:
-        st.subheader(section.capitalize())
-        show_entities_in_context(section, idx)
 
 
 @lru_cache(maxsize=256)
@@ -187,6 +157,92 @@ def get_entities(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
             return entities[["label", "entity"]]
 
     return None
+
+
+def show_geo(data: pd.DataFrame):
+    geo_df = get_geo("summary", tuple(data["id"].values.tolist()))
+    if geo_df is not None:
+        focus = geo_df.iloc[0]
+
+        st.subheader("Geo located places")
+        st.pydeck_chart(
+            pdk.Deck(
+                map_style="mapbox://styles/mapbox/light-v9",
+                initial_view_state=pdk.ViewState(
+                    latitude=focus.lat, longitude=focus.lon, zoom=7, bearing=0, pitch=0
+                ),
+                layers=[
+                    pdk.Layer(
+                        "ScatterplotLayer",
+                        geo_df,
+                        stroked=True,
+                        filled=True,
+                        pickable=True,
+                        opacity=0.75,
+                        get_position="[lon, lat]",
+                        get_fill_color=[255, 140, 0],
+                        get_line_color=[0, 0, 0],
+                        get_radius="count * 100",
+                    ),
+                ],
+                tooltip={"text": "{entity}\n{count}"},
+            )
+        )
+
+        with st.expander("Geo data", expanded=False):
+            st.write(geo_df)
+
+
+@lru_cache(maxsize=256)
+def get_geo(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
+    data = dm.get_geo_data(section)
+
+    if data is not None:
+        geo_df = get_rows_by_id(data, ids)
+        if geo_df is not None:
+            geo_df = geo_df.drop(columns=["id", "text"])
+            geo_df["count"] = 0
+            return (
+                geo_df.groupby(["entity", "lat", "lon"])
+                .count()
+                .reset_index()
+                .sort_values(by="count", ascending=False)
+            )
+
+    return None
+
+
+def show_doc(data: pd.DataFrame, idx: int, topic_aggr: str):
+    doc = data.iloc[0]
+
+    st.subheader(doc["title"])
+
+    with st.expander("View document", expanded=False):
+        with open(doc["file"], "rb") as f:
+            base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="500" type="application/pdf"></iframe>'
+            st.markdown(pdf_display, unsafe_allow_html=True)
+
+    summary = get_summary(tuple([doc["id"]]))
+    if summary is not None:
+        st.write(summary)
+    else:
+        st.write(doc["summary"])
+
+    show_topics(data, topic_aggr)
+
+    for section in ENTITY_SECTIONS:
+        show_entities(data, section)
+
+    st.subheader("View entities in context")
+    st.write(
+        "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>",
+        unsafe_allow_html=True,
+    )
+    section = st.radio("Choose context", [None] + ENTITY_SECTIONS)
+    if section:
+        st.subheader(section.capitalize())
+        show_entities_in_context(section, idx)
 
 
 def show_entities_in_context(section: str, idx: int):

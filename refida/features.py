@@ -1,13 +1,20 @@
+from functools import lru_cache
+from typing import Optional
+
+import geopy
 import pandas as pd
 import spacy
+from geopy.location import Location
 from txtai.pipeline import Labels, Summary
 
 from settings import (
     SPACY_ENTITY_TYPES,
     SPACY_LANGUAGE_MODEL,
+    SPACY_LOCATION_ENTITY_TYPES,
     SUMMARISATION_MODEL,
     TOPIC_CLASSIFICATION_MODEL,
     TOPIC_CLASSIFICATION_TOPICS,
+    geocode,
 )
 
 
@@ -94,3 +101,39 @@ def entity_extraction(
     entities_df = entities_df.drop(columns=["entities"])
 
     return docs, entities_df
+
+
+def geolocate(
+    data: pd.DataFrame,
+    entity_types: list[str] = SPACY_LOCATION_ENTITY_TYPES,
+) -> pd.DataFrame:
+    """
+    Geolocate data using OpenStreetMap Nominatim service.
+
+    :param data: DataFrame with text to geocode.
+    :param entity_types: Entity types to geocode.
+    """
+    geo_df = data[data["label"].isin(entity_types)].copy()
+    geo_df[["lat", "lon"]] = geo_df.apply(
+        lambda x: get_coordinates(x["text"]), axis=1, result_type="expand"
+    )
+    geo_df = geo_df.dropna(subset=["lat", "lon"])
+
+    return geo_df
+
+
+@lru_cache(maxsize=1024)
+def get_coordinates(name: str) -> Optional[list[float, float]]:
+    """
+    Geolocate a place name using OpenStreetMap Nominatim service.
+
+    :param name: The name of the location to geolocate.
+    """
+    try:
+        location = geocode(name)
+        if location:
+            return [location.latitude, location.longitude]
+    except (geopy.exc.GeocoderTimedOut, geopy.exc.GeocoderServiceError):
+        return None
+
+    return None

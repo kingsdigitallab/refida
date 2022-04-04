@@ -46,6 +46,17 @@ def topics(datadir: str = settings.DATA_DIR.name):
         progress.update(1)
 
 
+def error(msg: str):
+    """
+    Print an error message and exit.
+
+    :param msg: Error message.
+    """
+    typer.echo()
+    typer.secho(f"Error: {msg}", fg=typer.colors.RED)
+    raise typer.Abort()
+
+
 @app.command()
 def summaries(datadir: str = settings.DATA_DIR.name):
     """
@@ -95,10 +106,27 @@ def entities(datadir: str = settings.DATA_DIR.name, column: str = "summary"):
         progress.update(1)
 
 
-def error(msg: str):
-    typer.echo()
-    typer.secho(f"Error: {msg}", fg=typer.colors.RED)
-    raise typer.Abort()
+@app.command()
+def geolocate(datadir: str = settings.DATA_DIR.name, column: str = "summary"):
+    """
+    Geolocate the location entities in the data.
+
+    :param datadir: Path to the data directory.
+    :param column: Name of the column to geolocate entities from.
+    """
+    with typer.progressbar(
+        length=2, label="Geolocating location entities..."
+    ) as progress:
+        data = dm.get_entities_data(column, datadir)
+        progress.update(1)
+
+        if data is None:
+            error("No data found. Run the `entities` command first.")
+
+        geolocations = features.geolocate(data)
+        geolocations.to_csv(dm.get_geo_data_path(column, datadir), index=False)
+
+        progress.update(1)
 
 
 if __name__ == "__main__":
