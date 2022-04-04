@@ -1,11 +1,12 @@
 import pickle
+from enum import Enum
 
 import typer
 
 from refida import data as dm
 from refida import etl as em
 from refida import features
-from settings import DATA_DIR
+from settings import DATA_DETAILS, DATA_DIR, DATA_SOURCES, DATA_SUMMARY
 
 app = typer.Typer()
 
@@ -77,8 +78,20 @@ def summaries(datadir: str = DATA_DIR.name):
         progress.update(1)
 
 
+class EntitySection(str, Enum):
+    """
+    Enum for the sections of the entity data.
+    """
+
+    summary = DATA_SUMMARY
+    details = DATA_DETAILS
+    sources = DATA_SOURCES
+
+
 @app.command()
-def entities(datadir: str = DATA_DIR.name, column: str = "summary"):
+def entities(
+    datadir: str = DATA_DIR.name, column: EntitySection = EntitySection.summary
+):
     """
     Extract entities from the data of the text of the given column.
 
@@ -107,7 +120,9 @@ def entities(datadir: str = DATA_DIR.name, column: str = "summary"):
 
 
 @app.command()
-def geolocate(datadir: str = DATA_DIR.name, column: str = "summary"):
+def geolocate(
+    datadir: str = DATA_DIR.name, column: EntitySection = EntitySection.summary
+):
     """
     Geolocate the location entities in the data.
 
