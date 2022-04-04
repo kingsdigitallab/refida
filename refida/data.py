@@ -1,10 +1,10 @@
-import ast
 import pickle
 from functools import lru_cache
 from pathlib import Path
 from typing import Iterator, Optional
 
 import pandas as pd
+from spacy.tokens import Doc
 
 from settings import DATA_DIR
 
@@ -89,19 +89,17 @@ def get_entities_data_path(label: str, datadir: str = DATA_DIR.name) -> Path:
 
 
 @lru_cache(maxsize=512)
-def get_spacy_doc(
-    label: str, idx: int, datadir: str = DATA_DIR.name
-) -> Optional[pd.DataFrame]:
+def get_spacy_doc(label: str, idx: int, datadir: str = DATA_DIR.name) -> Optional[Doc]:
     return get_spacy_docs(label, datadir)[idx]
 
 
-def get_spacy_docs(label: str, datadir: str = DATA_DIR.name) -> Optional[pd.DataFrame]:
+def get_spacy_docs(label: str, datadir: str = DATA_DIR.name) -> Optional[list]:
     with open(get_spacy_docs_path(label, datadir), "rb") as f:
         return pickle.load(f)
 
 
 def get_spacy_docs_path(label: str, datadir: str = DATA_DIR.name) -> Path:
-    return get_data_path(datadir, "1_interim", f"spacy_docs_{label}.csv")
+    return get_data_path(datadir, "1_interim", f"spacy_docs_{label}")
 
 
 def get_geo_data(label: str, datadir: str = DATA_DIR.name) -> Optional[pd.DataFrame]:
