@@ -22,6 +22,9 @@ def etl(datadir: str = DATA_DIR.name):
         files = dm.get_raw_data(datadir)
         progress.update(1)
 
+        if not files:
+            error("No PDF files found.")
+
         data = em.extract(files)
         data.to_csv(dm.get_etl_data_path(datadir), index=False)
         progress.update(1)
