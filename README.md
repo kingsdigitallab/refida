@@ -28,10 +28,18 @@ flowchart LR
     class comment_entities comment
 
     data_entities -.- comment_data_entities[CSVs with the entities extracted for each section]
+    data_entities --> geolocate(geolocate)
     class comment_data_entities comment
 
     data_doc_entities -.- comment_data_doc_entities[Serialized spaCy docs for reuse]
     class comment_data_doc_entities comment
+
+    geolocate -.- comment_geolocate[Geolocation, using OpenStreetMap's Nominatin service,\n can be applied to the location entities]
+    geolocate --> data_geolocate[/Location entities data/]
+    class comment_geolocate comment
+
+    data_geolocate -.- comment_data_geolocate[Location entities with lat and lon coordinates]
+    class comment_data_geolocate comment
 
     summaries --> data_summaries[/Summarised data/]
     summaries -.- comment_summaries[Text summarisation]
