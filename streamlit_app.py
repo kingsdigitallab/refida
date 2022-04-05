@@ -32,7 +32,31 @@ def streamlit():
     st.set_page_config(page_title=PROJECT_TITLE, layout="wide")
     st.title(PROJECT_TITLE)
 
+    with st.sidebar:
+        sidebar()
+
     data_section()
+
+
+def sidebar():
+    st.title("Insights")
+
+    st.session_state.view = st.radio(
+        "Choose view",
+        ("Topics", "Entities", "Geo"),
+    )
+
+
+def show_topics_view():
+    return st.session_state.view == "Topics"
+
+
+def show_entities_view():
+    return st.session_state.view == "Entities"
+
+
+def show_geo_view():
+    return st.session_state.view == "Geo"
 
 
 def data_section():
@@ -74,28 +98,63 @@ def show_data_grid(data: pd.DataFrame) -> dict:
 
 def show_data(data: pd.DataFrame, selection: pd.DataFrame):
     n_rows = selection.shape[0]
-    topic_aggr = FEATURE_TOPIC_SCORE
+    topic_aggr = f"mean({FEATURE_TOPIC_SCORE})"
 
     if n_rows == 0:
         st.warning("No data found")
         return
 
-    st.header("Insights")
+    doc = None
+    doc_idx = None
 
-    if n_rows > 1:
+    if n_rows == 1:
+        doc = selection.iloc[0]
+        doc_idx = data[data[FIELD_ID] == selection[FIELD_ID].iloc[0]].index[0]
+        topic_aggr = FEATURE_TOPIC_SCORE
+
+        show_doc(selection)
+    else:
         st.info("Multiple documents available, showing aggregate information")
-        topic_aggr = "mean(score)"
 
+    if show_topics_view():
         show_topics(selection, topic_aggr)
-        show_topics(selection, "count(topic)", threshold=0.15)
+        show_topics(selection, f"count({FEATURE_TOPIC_TOPIC})", threshold=0.15)
 
+    if show_entities_view():
         for section in DATA_ENTITY_SECTIONS:
             show_entities(selection, section)
 
+        if doc is not None:
+            st.subheader("View entities in context")
+            st.write(
+                "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>",
+                unsafe_allow_html=True,
+            )
+            section = st.radio("Choose context", [None] + DATA_ENTITY_SECTIONS)
+            if section:
+                st.subheader(section.capitalize())
+                show_entities_in_context(section, doc_idx)
+
+    if show_geo_view():
         show_geo(selection)
+
+
+def show_doc(data: pd.DataFrame):
+    doc = data.iloc[0]
+
+    st.subheader(doc["title"])
+
+    with st.expander("View document", expanded=False):
+        with open(doc["file"], "rb") as f:
+            base64_pdf = base64.b64encode(f.read()).decode("utf-8")
+            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="500" type="application/pdf"></iframe>'
+            st.markdown(pdf_display, unsafe_allow_html=True)
+
+    summary = get_summary(tuple([doc[FIELD_ID]]))
+    if summary is not None:
+        st.write(summary)
     else:
-        doc_idx = data[data[FIELD_ID] == selection[FIELD_ID].iloc[0]].index[0]
-        show_doc(selection, doc_idx, topic_aggr)
+        st.write(doc[DATA_SUMMARY])
 
 
 @lru_cache(maxsize=256)
@@ -176,6 +235,17 @@ def get_entities(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
     return None
 
 
+def show_entities_in_context(section: str, idx: int):
+    doc = dm.get_spacy_doc(section, idx)
+    if doc:
+        visualize_ner(
+            doc,
+            labels=SPACY_ENTITY_TYPES,
+            show_table=False,
+            title="",
+        )
+
+
 def show_geo(data: pd.DataFrame):
     geo_df = get_geo(DATA_SUMMARY, tuple(data[FIELD_ID].values.tolist()))
     if geo_df is not None:
@@ -227,50 +297,6 @@ def get_geo(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
             )
 
     return None
-
-
-def show_doc(data: pd.DataFrame, idx: int, topic_aggr: str):
-    doc = data.iloc[0]
-
-    st.subheader(doc["title"])
-
-    with st.expander("View document", expanded=False):
-        with open(doc["file"], "rb") as f:
-            base64_pdf = base64.b64encode(f.read()).decode("utf-8")
-            pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="500" type="application/pdf"></iframe>'
-            st.markdown(pdf_display, unsafe_allow_html=True)
-
-    summary = get_summary(tuple([doc[FIELD_ID]]))
-    if summary is not None:
-        st.write(summary)
-    else:
-        st.write(doc[DATA_SUMMARY])
-
-    show_topics(data, topic_aggr)
-
-    for section in DATA_ENTITY_SECTIONS:
-        show_entities(data, section)
-
-    st.subheader("View entities in context")
-    st.write(
-        "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>",
-        unsafe_allow_html=True,
-    )
-    section = st.radio("Choose context", [None] + DATA_ENTITY_SECTIONS)
-    if section:
-        st.subheader(section.capitalize())
-        show_entities_in_context(section, idx)
-
-
-def show_entities_in_context(section: str, idx: int):
-    doc = dm.get_spacy_doc(section, idx)
-    if doc:
-        visualize_ner(
-            doc,
-            labels=SPACY_ENTITY_TYPES,
-            show_table=False,
-            title="",
-        )
 
 
 if __name__ == "__main__":
