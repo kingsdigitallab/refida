@@ -43,7 +43,7 @@ def sidebar():
 
     st.session_state.view = st.radio(
         "Choose view",
-        ("Topics", "Entities", "Geo"),
+        ("Topics", "Entities", "Locations"),
     )
 
 
@@ -56,7 +56,7 @@ def show_entities_view():
 
 
 def show_geo_view():
-    return st.session_state.view == "Geo"
+    return st.session_state.view == "Locations"
 
 
 def data_section():
@@ -98,7 +98,7 @@ def show_data_grid(data: pd.DataFrame) -> dict:
 
 def show_data(data: pd.DataFrame, selection: pd.DataFrame):
     n_rows = selection.shape[0]
-    topic_aggr = f"mean({FEATURE_TOPIC_SCORE})"
+    topic_aggr = f"count({FEATURE_TOPIC_SCORE})"
 
     if n_rows == 0:
         st.warning("No data found")
@@ -117,10 +117,13 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
         st.info("Multiple documents available, showing aggregate information")
 
     if show_topics_view():
-        show_topics(selection, topic_aggr)
-        show_topics(selection, f"count({FEATURE_TOPIC_TOPIC})", threshold=0.15)
+        st.header("Topics/impact categories")
+        threshold = st.slider("Minimum score/confidence", 0.0, 1.0, 0.15, 0.05)
+        show_topics(selection, topic_aggr, threshold=threshold)
+        show_topics(selection, f"mean({FEATURE_TOPIC_SCORE})", threshold=threshold)
 
     if show_entities_view():
+        st.header("Entities")
         for section in DATA_ENTITY_SECTIONS:
             show_entities(selection, section)
 
@@ -136,6 +139,7 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
                 show_entities_in_context(section, doc_idx)
 
     if show_geo_view():
+        st.header("Locations")
         show_geo(selection)
 
 
@@ -282,7 +286,10 @@ def show_geo(data: pd.DataFrame):
 
 @lru_cache(maxsize=256)
 def get_geo(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
-    data = dm.get_geo_data(section)
+    data = pd.DataFrame()
+
+    for section in DATA_ENTITY_SECTIONS:
+        data = pd.concat([data, dm.get_geo_data(section)])
 
     if data is not None:
         geo_df = get_rows_by_id(data, ids)
