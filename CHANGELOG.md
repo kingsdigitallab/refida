@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- 
+- Chart to show correlation between topics and units of assessment.
 
 ## [0.1.0] - 2022-04-06
 
