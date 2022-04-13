@@ -14,6 +14,7 @@ from refida import data as dm
 from settings import (
     DATA_ENTITY_SECTIONS,
     DATA_SUMMARY,
+    DATA_UOA,
     FEATURE_ENTITY_ENTITY,
     FEATURE_ENTITY_LABEL,
     FEATURE_ENTITY_TEXT,
@@ -79,13 +80,13 @@ def show_data_grid(data: pd.DataFrame) -> dict:
     options = GridOptionsBuilder.from_dataframe(
         data, enableRowGroup=True, enableValue=True
     )
-    options.configure_selection("multiple")
+    options.configure_selection("multiple", use_checkbox=True)
 
     grid = AgGrid(
         data,
         data_return_mode=DataReturnMode.FILTERED,
         enable_enterprise_modules=True,
-        fit_columns_on_grid_load=True,
+        fit_columns_on_grid_load=False,
         gridOptions=options.build(),
         height=300,
         theme="streamlit",
@@ -184,19 +185,37 @@ def get_rows_by_id(data: pd.DataFrame, ids: tuple[str]) -> Optional[pd.DataFrame
 
 def show_topics(data: pd.DataFrame, aggr: str, threshold: float = 0.0):
     topics = get_topics(tuple(data[FIELD_ID].values.tolist()))
-    if topics is not None:
-        if threshold > 0.0:
-            topics = topics[topics[FEATURE_TOPIC_SCORE] >= threshold]
+    if topics is None or topics.empty:
+        st.warning("No topics found")
+        return
 
-        st.subheader(
-            f"Impact categories with threshold >= {threshold} aggregated by {aggr}"
-        )
-        st.altair_chart(
-            alt.Chart(topics)
-            .mark_bar(tooltip=True)
-            .encode(x=aggr, y=FEATURE_TOPIC_TOPIC, color=FEATURE_TOPIC_TOPIC),
-            use_container_width=True,
-        )
+    topics = topics.merge(data, on=FIELD_ID)
+
+    if threshold > 0.0:
+        topics = topics[topics[FEATURE_TOPIC_SCORE] >= threshold]
+
+    st.subheader(
+        f"Impact categories with confidence >= {threshold} aggregated by {aggr}"
+    )
+    with st.expander("View data", expanded=False):
+        st.write(topics)
+    st.altair_chart(
+        alt.Chart(topics)
+        .mark_bar(tooltip=True)
+        .encode(x=aggr, y=FEATURE_TOPIC_TOPIC, color=FEATURE_TOPIC_TOPIC),
+        use_container_width=True,
+    )
+    st.altair_chart(
+        alt.Chart(topics)
+        .mark_point(tooltip=True)
+        .encode(
+            y=FEATURE_TOPIC_TOPIC,
+            x=DATA_UOA,
+            color=FEATURE_TOPIC_TOPIC,
+            size=aggr,
+        ),
+        use_container_width=True,
+    )
 
 
 @lru_cache(maxsize=256)
@@ -204,9 +223,7 @@ def get_topics(ids: tuple[str]) -> Optional[pd.DataFrame]:
     data = dm.get_topics_data()
 
     if data is not None:
-        topics = get_rows_by_id(data, ids)
-        if topics is not None:
-            return topics[[FEATURE_TOPIC_TOPIC, FEATURE_TOPIC_SCORE]]
+        return get_rows_by_id(data, ids)
 
     return None
 
