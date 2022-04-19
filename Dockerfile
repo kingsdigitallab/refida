@@ -40,10 +40,7 @@ USER refida
 
 EXPOSE 8000
 
-ENTRYPOINT ["streamlit", "run", \
-    "--server.headless", "true", \
-    "--server.address", "0.0.0.0", \
-    "--server.port", "8000"]
+ENTRYPOINT ["streamlit", "run"]
 
 # dev image
 FROM base as dev
