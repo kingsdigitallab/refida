@@ -34,26 +34,25 @@ WORKDIR /app
 
 COPY --from=build --chown=refida:refida /venv /venv
 
-# dev image
-FROM base as dev
-
 ENV PATH="/venv/bin:$PATH"
 
 USER refida
 
 EXPOSE 8000
 
-CMD ["streamlit", "run", "streamlit_app.py",  "--server.headless",  "true", "--server.address", "0.0.0.0", "--server.port", "8000"]
+ENTRYPOINT ["streamlit", "run", \
+    "--server.headless", "true", \
+    "--server.address", "0.0.0.0", \
+    "--server.port", "8000"]
+
+# dev image
+FROM base as dev
+
+CMD ["streamlit_app.py"]
 
 # production image
 FROM base as prod
 
-ENV PATH="/venv/bin:$PATH"
-
 COPY --chown=refida:refida . /app/
 
-USER refida
-
-EXPOSE 8000
-
-CMD ["streamlit", "run", "streamlit_app.py", "--server.headless",  "true", "--server.address", "0.0.0.0", "--server.port", "8000"]
+CMD ["streamlit_app.py"]
