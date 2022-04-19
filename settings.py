@@ -84,6 +84,7 @@ geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
 FIELD_ID = "id"
 DATA_UOA = "uoa"
 DATA_SUMMARY = "summary"
+DATA_RESEARCH = "research"
 DATA_DETAILS = "details"
 DATA_SOURCES = "sources"
 DATA_TEXT = "text"

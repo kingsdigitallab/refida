@@ -9,6 +9,7 @@ from txtai.pipeline import Textractor
 from refida.models import REFDocument
 from settings import (
     DATA_DETAILS,
+    DATA_RESEARCH,
     DATA_SOURCES,
     DATA_SUMMARY,
     PARAGRAPH_EXCLUDE_PATTERN,
@@ -74,6 +75,7 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
 
     for section in [
         (DATA_SUMMARY, "1. Summary of the impact", "2. Underpinning research"),
+        (DATA_RESEARCH, "2. Underpinning research", "3. References to the research"),
         (
             DATA_DETAILS,
             "4. Details of the impact",

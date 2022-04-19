@@ -14,6 +14,7 @@ class REFDocument(BaseModel):
     impact_start: Optional[int] = None
     impact_end: Optional[int] = None
     summary: Optional[str] = None
+    research: Optional[str] = None
     details: Optional[str] = None
     sources: Optional[str] = None
     text: Optional[str] = None
