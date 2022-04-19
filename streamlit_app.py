@@ -199,7 +199,7 @@ def show_topics(data: pd.DataFrame):
     if n_rows == 1:
         aggr = FEATURE_TOPIC_SCORE
 
-    threshold = st.slider("Minimum score/confidence", 0.0, 1.0, 0.15, 0.05)
+    threshold = st.slider("Minimum score/confidence", 0.0, 1.0, 0.75, 0.05)
 
     topics = get_topics(source, tuple(data[FIELD_ID].values.tolist()))
     if topics is None or topics.empty:
