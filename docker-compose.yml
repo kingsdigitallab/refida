@@ -13,3 +13,4 @@ services:
       - data:/app/data
     ports:
       - "8201:8000"
+    restart: unless-stopped
