@@ -43,8 +43,12 @@ def topic_classification(
     """
     classifier = Labels(model)
 
-    topics_df = data[[FIELD_ID]].copy()
-    topics_df["topics"] = classifier(data[column].values.tolist(), topics)
+    topics_df = data[[FIELD_ID, column]].copy()
+    topics_df = topics_df.dropna(subset=[column])
+
+    topics_df["topics"] = classifier(
+        topics_df[column].values.tolist(), topics, multilabel=True
+    )
     topics_df["topics"] = topics_df["topics"].apply(
         lambda predictions: [[topics[p[0]], p[1]] for p in predictions]
     )
@@ -52,7 +56,7 @@ def topic_classification(
     topics_df[[FEATURE_TOPIC_TOPIC, FEATURE_TOPIC_SCORE]] = pd.DataFrame(
         topics_df["topics"].tolist(), index=topics_df.index
     )
-    topics_df = topics_df.drop(columns=["topics"])
+    topics_df = topics_df.drop(columns=[column, "topics"])
 
     return topics_df
 
