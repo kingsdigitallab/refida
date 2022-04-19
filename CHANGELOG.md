@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Chart to show correlation between topics and units of assessment.
 - Docker compose files.
 - Extract research section.
+- Streamlit configuration file.
 
 ### Changed
 
