@@ -49,7 +49,7 @@ class TopicsSection(str, Enum):
 
 
 @app.command()
-def topics(datadir: str = DATA_DIR.name, column: str = TopicsSection.text):
+def topics(datadir: str = DATA_DIR.name, column: TopicsSection = TopicsSection.text):
     """
     Apply topic classification to the data.
 
@@ -62,6 +62,9 @@ def topics(datadir: str = DATA_DIR.name, column: str = TopicsSection.text):
 
         if data is None:
             error("No data found. Run the `etl` command first.")
+
+        if column not in data.columns:
+            error(f"Column {column} not found in data.")
 
         labels = TOPIC_CLASSIFICATION_TOPICS
         if column == TopicsSection.research:
