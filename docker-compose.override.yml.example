@@ -5,3 +5,5 @@ services:
     volumes:
       - .:/app
       - ./data:/app/data
+    ports:
+      - "8000:8000"

@@ -134,3 +134,6 @@ dmypy.json
 
 # Dask
 dask-worker-space
+
+# Docker compose
+docker-compose.override.yml
