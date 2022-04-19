@@ -80,12 +80,11 @@ def show_data_grid(data: pd.DataFrame) -> dict:
     options = GridOptionsBuilder.from_dataframe(
         data, enableRowGroup=True, enableValue=True
     )
-    options.configure_selection("multiple", use_checkbox=True)
+    options.configure_selection("multiple")
 
     grid = AgGrid(
         data,
         data_return_mode=DataReturnMode.FILTERED,
-        enable_enterprise_modules=True,
         fit_columns_on_grid_load=False,
         gridOptions=options.build(),
         height=300,
