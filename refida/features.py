@@ -29,20 +29,22 @@ from settings import (
 
 def topic_classification(
     data: pd.DataFrame,
-    model: str = TOPIC_CLASSIFICATION_MODEL,
+    column: str,
     topics: list[str] = TOPIC_CLASSIFICATION_TOPICS,
+    model: str = TOPIC_CLASSIFICATION_MODEL,
 ) -> pd.DataFrame:
     """
     Topic classification using txtai.Labels.
 
     :param data: DataFrame with text to classify.
+    :param column: Column with text to classify.
     :param model: Model to use.
     :param topics: Topics to classify.
     """
     classifier = Labels(model)
 
     topics_df = data[[FIELD_ID]].copy()
-    topics_df["topics"] = classifier(data[DATA_TEXT].values.tolist(), topics)
+    topics_df["topics"] = classifier(data[column].values.tolist(), topics)
     topics_df["topics"] = topics_df["topics"].apply(
         lambda predictions: [[topics[p[0]], p[1]] for p in predictions]
     )

@@ -59,12 +59,12 @@ def get_etl_data_path(datadir: str = DATA_DIR.name) -> Path:
     return get_data_path(datadir, "1_interim", "etl.csv")
 
 
-def get_topics_data(datadir: str = DATA_DIR.name) -> Optional[pd.DataFrame]:
-    return get_data(get_topics_data_path(datadir))
+def get_topics_data(label: str, datadir: str = DATA_DIR.name) -> Optional[pd.DataFrame]:
+    return get_data(get_topics_data_path(label, datadir))
 
 
-def get_topics_data_path(datadir: str = DATA_DIR.name) -> Path:
-    return get_data_path(datadir, "1_interim", "topics.csv")
+def get_topics_data_path(label: str, datadir: str = DATA_DIR.name) -> Path:
+    return get_data_path(datadir, "1_interim", f"topics_{label}.csv")
 
 
 def get_summaries_data(datadir: str = DATA_DIR.name) -> Optional[pd.DataFrame]:

@@ -10,6 +10,7 @@ from spacy_streamlit import visualize_ner
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
 
+from cli import TopicsSection
 from refida import data as dm
 from settings import (
     DATA_ENTITY_SECTIONS,
@@ -98,7 +99,6 @@ def show_data_grid(data: pd.DataFrame) -> dict:
 
 def show_data(data: pd.DataFrame, selection: pd.DataFrame):
     n_rows = selection.shape[0]
-    topic_aggr = f"count({FEATURE_TOPIC_SCORE})"
 
     if n_rows == 0:
         st.warning("No data found")
@@ -110,17 +110,13 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
     if n_rows == 1:
         doc = selection.iloc[0]
         doc_idx = data[data[FIELD_ID] == selection[FIELD_ID].iloc[0]].index[0]
-        topic_aggr = FEATURE_TOPIC_SCORE
 
         show_doc(selection)
     else:
         st.info("Multiple documents available, showing aggregate information")
 
     if show_topics_view():
-        st.header("Topics/impact categories")
-        threshold = st.slider("Minimum score/confidence", 0.0, 1.0, 0.15, 0.05)
-        show_topics(selection, topic_aggr, threshold=threshold)
-        show_topics(selection, f"mean({FEATURE_TOPIC_SCORE})", threshold=threshold)
+        show_topics(selection)
 
     if show_entities_view():
         st.header("Entities")
@@ -182,8 +178,30 @@ def get_rows_by_id(data: pd.DataFrame, ids: tuple[str]) -> Optional[pd.DataFrame
     return None
 
 
-def show_topics(data: pd.DataFrame, aggr: str, threshold: float = 0.0):
-    topics = get_topics(tuple(data[FIELD_ID].values.tolist()))
+def show_topics(data: pd.DataFrame):
+    st.header("Topics")
+
+    n_rows = data.shape[0]
+
+    st.write(
+        "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>",
+        unsafe_allow_html=True,
+    )
+    source = st.radio(
+        "Choose topics source",
+        TopicsSection._member_names_,
+    )
+    aggr_function = st.radio(
+        "Choose topics aggregation function",
+        ("count", "mean"),
+    )
+    aggr = f"{aggr_function}({FEATURE_TOPIC_SCORE})"
+    if n_rows == 1:
+        aggr = FEATURE_TOPIC_SCORE
+
+    threshold = st.slider("Minimum score/confidence", 0.0, 1.0, 0.15, 0.05)
+
+    topics = get_topics(source, tuple(data[FIELD_ID].values.tolist()))
     if topics is None or topics.empty:
         st.warning("No topics found")
         return
@@ -194,7 +212,7 @@ def show_topics(data: pd.DataFrame, aggr: str, threshold: float = 0.0):
         topics = topics[topics[FEATURE_TOPIC_SCORE] >= threshold]
 
     st.subheader(
-        f"Impact categories with confidence >= {threshold} aggregated by {aggr}"
+        f"Topics in {source} with confidence >= {threshold} aggregated by {aggr}"
     )
     with st.expander("View data", expanded=False):
         st.write(topics)
@@ -218,8 +236,8 @@ def show_topics(data: pd.DataFrame, aggr: str, threshold: float = 0.0):
 
 
 @lru_cache(maxsize=256)
-def get_topics(ids: tuple[str]) -> Optional[pd.DataFrame]:
-    data = dm.get_topics_data()
+def get_topics(label: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
+    data = dm.get_topics_data(label)
 
     if data is not None:
         return get_rows_by_id(data, ids)

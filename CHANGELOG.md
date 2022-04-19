@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker compose files.
 - Extract research section.
 
+### Changed
+
+- Topic extraction to support extracting from different sections and using different labels.
+
 ## [0.1.0] - 2022-04-06
 
 ### Added

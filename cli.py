@@ -6,7 +6,16 @@ import typer
 from refida import data as dm
 from refida import etl as em
 from refida import features
-from settings import DATA_DETAILS, DATA_DIR, DATA_SOURCES, DATA_SUMMARY
+from settings import (
+    DATA_DETAILS,
+    DATA_DIR,
+    DATA_RESEARCH,
+    DATA_SOURCES,
+    DATA_SUMMARY,
+    DATA_TEXT,
+    TOPIC_CLASSIFICATION_TOPICS,
+    get_fields_of_research,
+)
 
 app = typer.Typer()
 
@@ -30,12 +39,22 @@ def etl(datadir: str = DATA_DIR.name):
         progress.update(1)
 
 
+class TopicsSection(str, Enum):
+    """
+    Enum for the sections of the topics data.
+    """
+
+    text = DATA_TEXT
+    research = DATA_RESEARCH
+
+
 @app.command()
-def topics(datadir: str = DATA_DIR.name):
+def topics(datadir: str = DATA_DIR.name, column: str = TopicsSection.text):
     """
     Apply topic classification to the data.
 
     :param datadir: Path to the data directory.
+    :param column: Column to use for topic classification.
     """
     with typer.progressbar(length=2, label="Topic classification...") as progress:
         data = dm.get_etl_data(datadir)
@@ -44,8 +63,12 @@ def topics(datadir: str = DATA_DIR.name):
         if data is None:
             error("No data found. Run the `etl` command first.")
 
-        topics = features.topic_classification(data)
-        topics.to_csv(dm.get_topics_data_path(datadir), index=False)
+        labels = TOPIC_CLASSIFICATION_TOPICS
+        if column == TopicsSection.research:
+            labels = get_fields_of_research()
+
+        topics = features.topic_classification(data, column, labels)
+        topics.to_csv(dm.get_topics_data_path(column, datadir), index=False)
 
         progress.update(1)
 
