@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Topic classification to support extracting from different sections and using different labels.
 - Enable multi-label topic classification.
+- spaCy language model to a transformer based model for better accuracy.
 
 ## [0.1.0] - 2022-04-06
 

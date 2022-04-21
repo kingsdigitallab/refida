@@ -333,7 +333,7 @@ def get_fields_of_research() -> list[str]:
 SUMMARISATION_MODEL: str = "sshleifer/distilbart-cnn-12-6"
 
 # https://spacy.io/models
-SPACY_LANGUAGE_MODEL: str = "en_core_web_md"
+SPACY_LANGUAGE_MODEL: str = "en_core_web_trf"
 
 SPACY_EXTRA_STOP_WORDS: list[str] = ["Miss", "Mr", "Mrs", "Ms"]
 
