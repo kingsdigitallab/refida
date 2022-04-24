@@ -19,6 +19,7 @@ spacy-streamlit = "^1.0.3"
 geopy = "^2.2.0"
 pydeck = "^0.7.1"
 en-core-web-trf = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.2.0/en_core_web_trf-3.2.0.tar.gz"}
+plotly = "^5.7.0"
 
 [tool.poetry.dev-dependencies]
 autoflake = "*"

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker compose files.
 - Extract research section.
 - Streamlit configuration file.
+- Alluvial diagram to show relationship between topics and units of assessment.
 
 ### Changed
 

@@ -4,6 +4,7 @@ from typing import Optional
 
 import altair as alt
 import pandas as pd
+import plotly.express as px
 import pydeck as pdk
 import streamlit as st
 from spacy_streamlit import visualize_ner
@@ -28,6 +29,8 @@ from settings import (
     PROJECT_TITLE,
     SPACY_ENTITY_TYPES,
 )
+
+STYLE_RADIO_INLINE = "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>"
 
 
 def streamlit():
@@ -125,10 +128,7 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
 
         if doc is not None:
             st.subheader("View entities in context")
-            st.write(
-                "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>",
-                unsafe_allow_html=True,
-            )
+            st.write(STYLE_RADIO_INLINE, unsafe_allow_html=True)
             section = st.radio("Choose context", [None] + DATA_ENTITY_SECTIONS)
             if section:
                 st.subheader(section.capitalize())
@@ -183,10 +183,7 @@ def show_topics(data: pd.DataFrame):
 
     n_rows = data.shape[0]
 
-    st.write(
-        "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>",
-        unsafe_allow_html=True,
-    )
+    st.write(STYLE_RADIO_INLINE, unsafe_allow_html=True)
     source = st.radio(
         "Choose topics source",
         TopicsSection._member_names_,
@@ -211,15 +208,31 @@ def show_topics(data: pd.DataFrame):
     if threshold > 0.0:
         topics = topics[topics[FEATURE_TOPIC_SCORE] >= threshold]
 
+    number_of_topics = topics[FEATURE_TOPIC_TOPIC].shape[0]
+
     st.subheader(
         f"Topics in {source} with confidence >= {threshold} aggregated by {aggr}"
     )
     with st.expander("View data", expanded=False):
         st.write(topics)
+        st.download_button(
+            label="Download data as CSV",
+            data=convert_df(topics),
+            file_name="topics.csv",
+            mime="text/csv",
+        )
     st.altair_chart(
         alt.Chart(topics)
         .mark_bar(tooltip=True)
         .encode(x=aggr, y=FEATURE_TOPIC_TOPIC, color=FEATURE_TOPIC_TOPIC),
+        use_container_width=True,
+    )
+    st.plotly_chart(
+        px.parallel_categories(
+            topics,
+            dimensions=[FEATURE_TOPIC_TOPIC, DATA_UOA],
+            height=topics.shape[0] * 2 if number_of_topics > 10 else 400,
+        ),
         use_container_width=True,
     )
     st.altair_chart(
@@ -243,6 +256,11 @@ def get_topics(label: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
         return get_rows_by_id(data, ids)
 
     return None
+
+
+@st.cache
+def convert_df(df):
+    return df.to_csv().encode("utf-8")
 
 
 def show_entities(data: pd.DataFrame, section: str):
