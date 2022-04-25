@@ -333,11 +333,11 @@ def show_geo(data: pd.DataFrame):
         countries = geo_df[[FEATURE_COUNTRY, FEATURE_COUNTRY_CATEGORY, "count"]]
         countries = (
             countries.groupby([FEATURE_COUNTRY, FEATURE_COUNTRY_CATEGORY])
-            .count()
+            .sum()
             .reset_index()
         )
-        mentions_uk = countries[countries[FEATURE_COUNTRY] == UK]["count"].sum()
-        mentions_global = countries[countries[FEATURE_COUNTRY] != UK]["count"].sum()
+        mentions_uk = countries[countries[FEATURE_COUNTRY] == UK]["count"].count()
+        mentions_global = countries[countries[FEATURE_COUNTRY] != UK]["count"].count()
 
         with st.expander("View data", expanded=False):
             st.write(countries)
