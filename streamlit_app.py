@@ -211,7 +211,11 @@ def show_topics(data: pd.DataFrame):
     if threshold > 0.0:
         topics = topics[topics[FEATURE_TOPIC_SCORE] >= threshold]
 
+    topics = topics.sort_values(by=FEATURE_TOPIC_TOPIC, ascending=True)
+    topics_aggr = topics.groupby(FEATURE_TOPIC_TOPIC).agg(aggr_function).reset_index()
+
     number_of_topics = topics[FEATURE_TOPIC_TOPIC].shape[0]
+    height = number_of_topics * 2 if number_of_topics > 10 else 400
 
     st.subheader(
         f"Topics in {source} with confidence >= {threshold} aggregated by {aggr}"
@@ -224,28 +228,43 @@ def show_topics(data: pd.DataFrame):
             file_name="topics.csv",
             mime="text/csv",
         )
-    st.altair_chart(
-        alt.Chart(topics)
-        .mark_bar(tooltip=True)
-        .encode(x=aggr, y=FEATURE_TOPIC_TOPIC, color=FEATURE_TOPIC_TOPIC),
+
+    st.plotly_chart(
+        px.histogram(
+            topics_aggr,
+            x=FEATURE_TOPIC_SCORE,
+            y=FEATURE_TOPIC_TOPIC,
+            color=FEATURE_TOPIC_TOPIC,
+            height=height,
+        ).update_layout(yaxis=dict(categoryorder="category ascending")),
         use_container_width=True,
     )
+
     st.plotly_chart(
         px.parallel_categories(
             topics,
             dimensions=[FEATURE_TOPIC_TOPIC, DATA_UOA],
-            height=topics.shape[0] * 2 if number_of_topics > 10 else 400,
+            height=height,
         ),
         use_container_width=True,
     )
-    st.altair_chart(
-        alt.Chart(topics)
-        .mark_point(tooltip=True)
-        .encode(
-            y=FEATURE_TOPIC_TOPIC,
+
+    topics_aggr = (
+        topics.groupby([FEATURE_TOPIC_TOPIC, DATA_UOA]).agg(aggr_function).reset_index()
+    )
+    st.plotly_chart(
+        px.scatter(
+            topics_aggr,
             x=DATA_UOA,
+            y=FEATURE_TOPIC_TOPIC,
             color=FEATURE_TOPIC_TOPIC,
-            size=aggr,
+            size=FEATURE_TOPIC_SCORE,
+            height=height,
+        ).update_layout(
+            xaxis=dict(categoryorder="category ascending"),
+            yaxis=dict(
+                categoryorder="category ascending", tickmode="linear", type="category"
+            ),
         ),
         use_container_width=True,
     )
