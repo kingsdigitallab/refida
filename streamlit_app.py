@@ -240,10 +240,20 @@ def show_topics(data: pd.DataFrame):
         use_container_width=True,
     )
 
+    colour_df = topics[FEATURE_TOPIC_TOPIC].copy()
+    palette = px.colors.qualitative.Plotly
+    colours = colour_df.map(
+        {
+            v: palette[i % len(px.colors.qualitative.Plotly)]
+            for i, v in enumerate(colour_df.unique())
+        }
+    )
+
     st.plotly_chart(
         px.parallel_categories(
             topics,
             dimensions=[FEATURE_TOPIC_TOPIC, DATA_UOA],
+            color=colours,
             height=height,
         ),
         use_container_width=True,
