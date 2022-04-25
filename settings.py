@@ -1,6 +1,7 @@
 import re
 from itertools import chain
 from pathlib import Path
+from typing import Optional
 
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
@@ -348,6 +349,22 @@ SPACY_ENTITY_TYPES: list[str] = SPACY_LOCATION_ENTITY_TYPES + [
 geolocator = Nominatim(user_agent="kdl.kcl.ac.uk")
 geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
 
+
+def get_country_category(country: str) -> Optional[str]:
+    """
+    Returns the country category for a given country.
+
+    :country: the country to get the category for.
+    """
+    if not country:
+        return None
+
+    if country == "United Kingdom":
+        return "National"
+    else:
+        return "Global"
+
+
 # field names to access the data
 FIELD_ID = "id"
 DATA_UOA = "uoa"
@@ -371,5 +388,7 @@ FEATURE_ENTITY_ENTITY = "entity"
 FEATURE_ENTITY_LABEL = "label"
 FEATURE_ENTITY_TEXT = "text"
 
+FEATURE_COUNTRY = "country"
+FEATURE_COUNTRY_CATEGORY = "category"
 FEATURE_LAT = "lat"
 FEATURE_LON = "lon"

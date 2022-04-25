@@ -17,6 +17,8 @@ from settings import (
     DATA_ENTITY_SECTIONS,
     DATA_SUMMARY,
     DATA_UOA,
+    FEATURE_COUNTRY,
+    FEATURE_COUNTRY_CATEGORY,
     FEATURE_ENTITY_ENTITY,
     FEATURE_ENTITY_LABEL,
     FEATURE_ENTITY_TEXT,
@@ -31,6 +33,7 @@ from settings import (
 )
 
 STYLE_RADIO_INLINE = "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>"
+UK = "United Kingdom"
 
 
 def streamlit():
@@ -303,11 +306,54 @@ def show_entities_in_context(section: str, idx: int):
 
 
 def show_geo(data: pd.DataFrame):
-    geo_df = get_geo(DATA_SUMMARY, tuple(data[FIELD_ID].values.tolist()))
+    geo_df = get_geo(tuple(data[FIELD_ID].values.tolist()))
     if geo_df is not None:
         focus = geo_df.iloc[0]
 
-        st.subheader("Geo located places")
+        st.subheader("National/global mentions")
+        st.warning("Please note the number of mentions includes duplicate mentions.")
+
+        countries = geo_df[[FEATURE_COUNTRY, FEATURE_COUNTRY_CATEGORY, "count"]]
+        countries = (
+            countries.groupby([FEATURE_COUNTRY, FEATURE_COUNTRY_CATEGORY])
+            .count()
+            .reset_index()
+        )
+        mentions_uk = countries[countries[FEATURE_COUNTRY] == UK]["count"].sum()
+        mentions_global = countries[countries[FEATURE_COUNTRY] != UK]["count"].sum()
+
+        with st.expander("View data", expanded=False):
+            st.write(countries)
+
+        st.plotly_chart(
+            px.histogram(
+                countries,
+                x=FEATURE_COUNTRY_CATEGORY,
+                y="count",
+                color=FEATURE_COUNTRY_CATEGORY,
+                labels={"count": "number of mentions"},
+            ),
+            use_container_width=True,
+        )
+        st.info(
+            "The United Kingdom, or locations within the UK, are mentioned "
+            f"{mentions_uk} times. Global locations are mentioned "
+            f"{mentions_global} times."
+        )
+        st.plotly_chart(
+            px.bar(
+                countries,
+                x=FEATURE_COUNTRY,
+                y="count",
+                color=FEATURE_COUNTRY_CATEGORY,
+                labels={"count": "number of mentions"},
+            ).update_layout(
+                dict(xaxis=dict(categoryorder="total descending", tickangle=-45))
+            ),
+            use_container_width=True,
+        )
+
+        st.subheader("Map")
         st.pydeck_chart(
             pdk.Deck(
                 map_style="mapbox://styles/mapbox/light-v9",
@@ -337,11 +383,14 @@ def show_geo(data: pd.DataFrame):
 
 
 @lru_cache(maxsize=256)
-def get_geo(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
+def get_geo(ids: tuple[str], section: Optional[str] = None) -> Optional[pd.DataFrame]:
     data = pd.DataFrame()
 
-    for section in DATA_ENTITY_SECTIONS:
-        data = pd.concat([data, dm.get_geo_data(section)])
+    if section:
+        data = dm.get_geo_data(section)
+    else:
+        for section in DATA_ENTITY_SECTIONS:
+            data = pd.concat([data, dm.get_geo_data(section)])
 
     if data is not None:
         geo_df = get_rows_by_id(data, ids)
@@ -349,7 +398,15 @@ def get_geo(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
             geo_df = geo_df.drop(columns=[FIELD_ID, FEATURE_ENTITY_TEXT])
             geo_df["count"] = 0
             return (
-                geo_df.groupby([FEATURE_ENTITY_ENTITY, FEATURE_LAT, FEATURE_LON])
+                geo_df.groupby(
+                    [
+                        FEATURE_ENTITY_ENTITY,
+                        FEATURE_COUNTRY,
+                        FEATURE_COUNTRY_CATEGORY,
+                        FEATURE_LAT,
+                        FEATURE_LON,
+                    ]
+                )
                 .count()
                 .reset_index()
                 .sort_values(by="count", ascending=False)

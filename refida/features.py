@@ -8,6 +8,8 @@ from txtai.pipeline import Labels, Summary
 
 from settings import (
     DATA_TEXT,
+    FEATURE_COUNTRY,
+    FEATURE_COUNTRY_CATEGORY,
     FEATURE_ENTITY_ENTITY,
     FEATURE_ENTITY_LABEL,
     FEATURE_ENTITY_TEXT,
@@ -24,6 +26,7 @@ from settings import (
     TOPIC_CLASSIFICATION_MODEL,
     TOPIC_CLASSIFICATION_TOPICS,
     geocode,
+    get_country_category,
 )
 
 
@@ -129,25 +132,41 @@ def geolocate(
     :param entity_types: Entity types to geocode.
     """
     geo_df = data[data[FEATURE_ENTITY_LABEL].isin(entity_types)].copy()
-    geo_df[[FEATURE_LAT, FEATURE_LON]] = geo_df.apply(
+    geo_df[[FEATURE_COUNTRY, FEATURE_LAT, FEATURE_LON]] = geo_df.apply(
         lambda x: get_coordinates(x[FEATURE_ENTITY_TEXT]), axis=1, result_type="expand"
     )
     geo_df = geo_df.dropna(subset=[FEATURE_LAT, FEATURE_LON])
+    geo_df[FEATURE_COUNTRY_CATEGORY] = geo_df[FEATURE_COUNTRY].apply(
+        get_country_category
+    )
 
     return geo_df
 
 
 @lru_cache(maxsize=1024)
-def get_coordinates(name: str) -> Optional[list[float, float]]:
+def get_coordinates(name: str) -> Optional[tuple[Optional[str], float, float]]:
     """
     Geolocate a place name using OpenStreetMap Nominatim service.
 
     :param name: The name of the location to geolocate.
     """
+    if not name:
+        return None
+
     try:
-        location = geocode(name)
+        location = geocode(name, language="en", addressdetails=1)
         if location:
-            return [location.latitude, location.longitude]
+            country = None
+            raw = location.raw
+            if "address" in raw:
+                if "country" in raw["address"]:
+                    country = raw["address"]["country"]
+
+            return (
+                country,
+                location.latitude,
+                location.longitude,
+            )
     except (geopy.exc.GeocoderTimedOut, geopy.exc.GeocoderServiceError):
         return None
     return None

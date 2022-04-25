@@ -11,9 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Chart to show correlation between topics and units of assessment.
 - Docker compose files.
-- Extract research section.
+- Extract research section to be used to extract fields of research.
 - Streamlit configuration file.
 - Alluvial diagram to show relationship between topics and units of assessment.
+- Country information to the place entities.
+- Country related charts.
 
 ### Changed
 
