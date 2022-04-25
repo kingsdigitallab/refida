@@ -289,12 +289,10 @@ def show_entities(data: pd.DataFrame, section: str):
     entities = get_entities(section, tuple(data[FIELD_ID].values.tolist()))
     if entities is not None:
         st.subheader(f"Entities in the {section}")
-        st.altair_chart(
-            alt.Chart(entities)
-            .mark_bar(tooltip=True)
-            .encode(
+        st.plotly_chart(
+            px.histogram(
+                entities,
                 x=FEATURE_ENTITY_ENTITY,
-                y=f"count({FEATURE_ENTITY_ENTITY})",
                 color=FEATURE_ENTITY_LABEL,
             ),
             use_container_width=True,
