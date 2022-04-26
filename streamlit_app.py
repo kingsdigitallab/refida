@@ -18,12 +18,12 @@ from settings import (
     DATA_SUMMARY,
     DATA_UOA,
     FEATURE_COUNTRY,
-    FEATURE_COUNTRY_CATEGORY,
     FEATURE_ENTITY_ENTITY,
     FEATURE_ENTITY_LABEL,
     FEATURE_ENTITY_TEXT,
     FEATURE_LAT,
     FEATURE_LON,
+    FEATURE_PLACE_CATEGORY,
     FEATURE_SUMMARY,
     FEATURE_TOPIC_SCORE,
     FEATURE_TOPIC_TOPIC,
@@ -340,9 +340,9 @@ def show_geo(data: pd.DataFrame):
         st.subheader("National/global mentions")
         st.warning("Please note the number of mentions includes duplicate mentions.")
 
-        countries = geo_df[[FEATURE_COUNTRY, FEATURE_COUNTRY_CATEGORY, "count"]]
+        countries = geo_df[[FEATURE_COUNTRY, FEATURE_PLACE_CATEGORY, "count"]]
         countries = (
-            countries.groupby([FEATURE_COUNTRY, FEATURE_COUNTRY_CATEGORY])
+            countries.groupby([FEATURE_COUNTRY, FEATURE_PLACE_CATEGORY])
             .sum()
             .reset_index()
         )
@@ -355,9 +355,9 @@ def show_geo(data: pd.DataFrame):
         st.plotly_chart(
             px.histogram(
                 countries,
-                x=FEATURE_COUNTRY_CATEGORY,
+                x=FEATURE_PLACE_CATEGORY,
                 y="count",
-                color=FEATURE_COUNTRY_CATEGORY,
+                color=FEATURE_PLACE_CATEGORY,
                 labels={"count": "number of mentions"},
             ),
             use_container_width=True,
@@ -372,7 +372,7 @@ def show_geo(data: pd.DataFrame):
                 countries,
                 x=FEATURE_COUNTRY,
                 y="count",
-                color=FEATURE_COUNTRY_CATEGORY,
+                color=FEATURE_PLACE_CATEGORY,
                 labels={"count": "number of mentions"},
             ).update_layout(
                 dict(xaxis=dict(categoryorder="total descending", tickangle=-45))
@@ -429,7 +429,7 @@ def get_geo(ids: tuple[str], section: Optional[str] = None) -> Optional[pd.DataF
                     [
                         FEATURE_ENTITY_ENTITY,
                         FEATURE_COUNTRY,
-                        FEATURE_COUNTRY_CATEGORY,
+                        FEATURE_PLACE_CATEGORY,
                         FEATURE_LAT,
                         FEATURE_LON,
                     ]

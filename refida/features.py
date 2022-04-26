@@ -9,12 +9,12 @@ from txtai.pipeline import Labels, Summary
 from settings import (
     DATA_TEXT,
     FEATURE_COUNTRY,
-    FEATURE_COUNTRY_CATEGORY,
     FEATURE_ENTITY_ENTITY,
     FEATURE_ENTITY_LABEL,
     FEATURE_ENTITY_TEXT,
     FEATURE_LAT,
     FEATURE_LON,
+    FEATURE_PLACE_CATEGORY,
     FEATURE_SUMMARY,
     FEATURE_TOPIC_SCORE,
     FEATURE_TOPIC_TOPIC,
@@ -26,7 +26,7 @@ from settings import (
     TOPIC_CLASSIFICATION_MODEL,
     TOPIC_CLASSIFICATION_TOPICS,
     geocode,
-    get_country_category,
+    get_place_category,
 )
 
 
@@ -132,41 +132,41 @@ def geolocate(
     :param entity_types: Entity types to geocode.
     """
     geo_df = data[data[FEATURE_ENTITY_LABEL].isin(entity_types)].copy()
-    geo_df[[FEATURE_COUNTRY, FEATURE_LAT, FEATURE_LON]] = geo_df.apply(
-        lambda x: get_coordinates(x[FEATURE_ENTITY_TEXT]), axis=1, result_type="expand"
+    geo_df[
+        [FEATURE_PLACE_CATEGORY, FEATURE_COUNTRY, FEATURE_LAT, FEATURE_LON]
+    ] = geo_df.apply(
+        lambda x: get_place_data(x[FEATURE_ENTITY_TEXT]), axis=1, result_type="expand"
     )
     geo_df = geo_df.dropna(subset=[FEATURE_LAT, FEATURE_LON])
-    geo_df[FEATURE_COUNTRY_CATEGORY] = geo_df[FEATURE_COUNTRY].apply(
-        get_country_category
-    )
 
     return geo_df
 
 
-@lru_cache(maxsize=1024)
-def get_coordinates(name: str) -> Optional[tuple[Optional[str], float, float]]:
+@lru_cache
+def get_place_data(
+    name: str,
+) -> Optional[tuple[Optional[str], Optional[str], float, float]]:
     """
-    Geolocate a place name using OpenStreetMap Nominatim service.
+    Get place data using OpenStreetMap Nominatim service.
 
-    :param name: The name of the location to geolocate.
+    :param name: Name of the place to get data for.
     """
     if not name:
         return None
 
-    try:
-        location = geocode(name, language="en", addressdetails=1)
-        if location:
-            country = None
-            raw = location.raw
-            if "address" in raw:
-                if "country" in raw["address"]:
-                    country = raw["address"]["country"]
+    location = geocode(name)
+    if location:
+        country = None
+        raw = location.raw
+        if "address" in raw:
+            if "country" in raw["address"]:
+                country = raw["address"]["country"]
 
-            return (
-                country,
-                location.latitude,
-                location.longitude,
-            )
-    except (geopy.exc.GeocoderTimedOut, geopy.exc.GeocoderServiceError):
-        return None
+        return (
+            get_place_category(name, country),
+            country,
+            location.latitude,
+            location.longitude,
+        )
+
     return None

@@ -1,16 +1,26 @@
 import re
+from functools import lru_cache
 from itertools import chain
 from pathlib import Path
 from typing import Optional
 
+import geopy
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
+from geopy.location import Location
+from joblib import Memory
 
 ROOT_DIR = Path(".")
 
 DATA_DIR = ROOT_DIR.joinpath("data")
 if not DATA_DIR.is_dir():
     DATA_DIR.mkdir(parents=True)
+
+CACHE_DIR = ROOT_DIR.joinpath(".cache")
+if not CACHE_DIR.is_dir():
+    CACHE_DIR.mkdir(parents=True)
+
+memory = Memory(CACHE_DIR, verbose=1)
 
 PROJECT_TITLE = "REF Impact Data Analysis"
 
@@ -346,23 +356,45 @@ SPACY_ENTITY_TYPES: list[str] = SPACY_LOCATION_ENTITY_TYPES + [
     "PERSON",
 ]
 
-geolocator = Nominatim(user_agent="kdl.kcl.ac.uk")
-geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
+
+nominatim = Nominatim(user_agent="kdl.kcl.ac.uk")
+geolocator = RateLimiter(nominatim.geocode, min_delay_seconds=1)
 
 
-def get_country_category(country: str) -> Optional[str]:
+@memory.cache
+def geocode(name: str) -> Optional[Location]:
     """
-    Returns the country category for a given country.
+    Geolocate a place name using OpenStreetMap Nominatim service.
 
+    :param name: The name of the location to geolocate.
+    """
+    try:
+        return geolocator(name, language="en", addressdetails=1, geometry="geojson")
+    except (geopy.exc.GeocoderTimedOut, geopy.exc.GeocoderServiceError):
+        return None
+
+
+@lru_cache
+def get_place_category(name: str, country: str) -> Optional[str]:
+    """
+    Returns the place category for a given place and country.
+
+    :name: the name of the place
     :country: the country to get the category for.
     """
+    if not name:
+        return None
+
+    if name == "London":
+        return "Local"
+
     if not country:
         return None
 
     if country == "United Kingdom":
         return "National"
-    else:
-        return "Global"
+
+    return "Global"
 
 
 # field names to access the data
@@ -389,6 +421,6 @@ FEATURE_ENTITY_LABEL = "label"
 FEATURE_ENTITY_TEXT = "text"
 
 FEATURE_COUNTRY = "country"
-FEATURE_COUNTRY_CATEGORY = "category"
+FEATURE_PLACE_CATEGORY = "category"
 FEATURE_LAT = "lat"
 FEATURE_LON = "lon"
