@@ -16,7 +16,7 @@ DATA_DIR = ROOT_DIR.joinpath("data")
 if not DATA_DIR.is_dir():
     DATA_DIR.mkdir(parents=True)
 
-CACHE_DIR = ROOT_DIR.joinpath(".cache")
+CACHE_DIR = DATA_DIR.joinpath(".cache")
 if not CACHE_DIR.is_dir():
     CACHE_DIR.mkdir(parents=True)
 
