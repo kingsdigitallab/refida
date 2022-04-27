@@ -154,7 +154,7 @@ hideTopBar = false
 
 # Configure Streamlit to use a custom Mapbox token for elements like st.pydeck_chart and st.map. To get a token for yourself, create an account at https://mapbox.com. It's free (for moderate usage levels)!
 # Default: ""
-token = ""
+token = "pk.eyJ1IjoibmVpbGpha2VtYW4xMDAwIiwiYSI6ImNsMmdsZzRiejA1Mm0zZG5ubDBqbjR1bG0ifQ.rbB-XRRVL64G4oAkJgK9wA"
 
 
 [deprecation]

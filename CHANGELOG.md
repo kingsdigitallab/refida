@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Country information to the place entities.
 - Country related charts.
 - Persistent cache for geocoding.
+- Mapbox token.
 
 ### Changed
 
