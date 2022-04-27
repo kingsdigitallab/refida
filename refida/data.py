@@ -111,3 +111,12 @@ def get_geo_data(label: str, datadir: str = DATA_DIR.name) -> Optional[pd.DataFr
 
 def get_geo_data_path(label: str, datadir: str = DATA_DIR.name) -> Path:
     return get_data_path(datadir, "1_interim", f"geo_{label}.csv")
+
+
+def get_geojson(label: str, datadir: str = DATA_DIR.name) -> Optional[list[str]]:
+    with open(get_geojson_path(label, datadir), "rb") as f:
+        return pickle.load(f)
+
+
+def get_geojson_path(label: str, datadir: str = DATA_DIR.name) -> Path:
+    return get_data_path(datadir, "1_interim", f"geojson_{label}")

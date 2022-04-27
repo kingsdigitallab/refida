@@ -167,8 +167,11 @@ def geolocate(
         if data is None:
             error("No data found. Run the `entities` command first.")
 
-        geolocations = features.geolocate(data)
-        geolocations.to_csv(dm.get_geo_data_path(column, datadir), index=False)
+        geo_df, geojson = features.geolocate(data)
+
+        geo_df.to_csv(dm.get_geo_data_path(column, datadir), index=False)
+        with open(dm.get_geojson_path(column, datadir), "wb") as f:
+            pickle.dump(geojson, f)
 
         progress.update(1)
 

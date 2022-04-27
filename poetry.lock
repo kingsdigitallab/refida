@@ -390,6 +390,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "geojson"
+version = "2.5.0"
+description = "Python bindings and utilities for GeoJSON"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "geopy"
 version = "2.2.0"
 description = "Python Geocoding Toolbox"
@@ -2269,7 +2277,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.9"
-content-hash = "494498f78bbe8d64314aa7412993191dd637e62afd9b898cface3a1824829eab"
+content-hash = "a0adc2f7cea92dbc5db33c3597a65fc2e0ec5ee383f32c883a1ac7a58c980ceb"
 
 [metadata.files]
 altair = [
@@ -2566,6 +2574,10 @@ flatbuffers = [
 geographiclib = [
     {file = "geographiclib-1.52-py3-none-any.whl", hash = "sha256:8f441c527b0b8a26cd96c965565ff0513d1e4d9952b704bf449409e5015c77b7"},
     {file = "geographiclib-1.52.tar.gz", hash = "sha256:ac400d672b8954b0306bca890b088bb8ba2a757dc8133cca0b878f34b33b2740"},
+]
+geojson = [
+    {file = "geojson-2.5.0-py2.py3-none-any.whl", hash = "sha256:ccbd13368dd728f4e4f13ffe6aaf725b6e802c692ba0dde628be475040c534ba"},
+    {file = "geojson-2.5.0.tar.gz", hash = "sha256:6e4bb7ace4226a45d9c8c8b1348b3fc43540658359f93c3f7e03efa9f15f658a"},
 ]
 geopy = [
     {file = "geopy-2.2.0-py3-none-any.whl", hash = "sha256:8f1f949082b964385de61fcc3a667a6a9a6e242beb1ae8972449f164b2ba0e89"},

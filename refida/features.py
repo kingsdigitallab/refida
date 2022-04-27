@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Optional
 
-import geopy
+import geojson
 import pandas as pd
 import spacy
 from txtai.pipeline import Labels, Summary
@@ -12,6 +12,7 @@ from settings import (
     FEATURE_ENTITY_ENTITY,
     FEATURE_ENTITY_LABEL,
     FEATURE_ENTITY_TEXT,
+    FEATURE_GEOJSON,
     FEATURE_LAT,
     FEATURE_LON,
     FEATURE_PLACE_CATEGORY,
@@ -124,28 +125,46 @@ def entity_extraction(
 def geolocate(
     data: pd.DataFrame,
     entity_types: list[str] = SPACY_LOCATION_ENTITY_TYPES,
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, list[dict]]:
     """
     Geolocate data using OpenStreetMap Nominatim service.
 
     :param data: DataFrame with text to geocode.
     :param entity_types: Entity types to geocode.
     """
+    place_data_columns = [
+        FEATURE_PLACE_CATEGORY,
+        FEATURE_COUNTRY,
+        FEATURE_LAT,
+        FEATURE_LON,
+        FEATURE_GEOJSON,
+    ]
+
     geo_df = data[data[FEATURE_ENTITY_LABEL].isin(entity_types)].copy()
-    geo_df[
-        [FEATURE_PLACE_CATEGORY, FEATURE_COUNTRY, FEATURE_LAT, FEATURE_LON]
-    ] = geo_df.apply(
+    geo_df[place_data_columns] = geo_df.apply(
         lambda x: get_place_data(x[FEATURE_ENTITY_TEXT]), axis=1, result_type="expand"
     )
     geo_df = geo_df.dropna(subset=[FEATURE_LAT, FEATURE_LON])
+    geo_df[FEATURE_GEOJSON] = geo_df.apply(
+        lambda x: geojson.Feature(
+            id=x[FEATURE_ENTITY_TEXT],
+            geometry=x[FEATURE_GEOJSON],
+            properties={"name": x[FEATURE_ENTITY_TEXT]},
+        ),
+        axis=1,
+    )
 
-    return geo_df
+    geojson_features = geo_df[FEATURE_GEOJSON].drop_duplicates().values.tolist()
+
+    geo_df = geo_df.drop(columns=[FEATURE_GEOJSON])
+
+    return geo_df, geojson_features
 
 
 @lru_cache
 def get_place_data(
     name: str,
-) -> Optional[tuple[Optional[str], Optional[str], float, float]]:
+) -> Optional[tuple[Optional[str], Optional[str], float, float, dict]]:
     """
     Get place data using OpenStreetMap Nominatim service.
 
@@ -167,6 +186,7 @@ def get_place_data(
             country,
             location.latitude,
             location.longitude,
+            location.raw["geojson"],
         )
 
     return None
