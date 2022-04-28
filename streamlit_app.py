@@ -8,34 +8,17 @@ from spacy_streamlit import visualize_ner
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
 
+import settings as _s
 from cli import TopicsSection
 from refida import data as dm
 from refida import visualize as vm
-from settings import (
-    DATA_ENTITY_SECTIONS,
-    DATA_SUMMARY,
-    DATA_UOA,
-    FEATURE_COUNTRY,
-    FEATURE_ENTITY_ENTITY,
-    FEATURE_ENTITY_LABEL,
-    FEATURE_ENTITY_TEXT,
-    FEATURE_LAT,
-    FEATURE_LON,
-    FEATURE_PLACE_CATEGORY,
-    FEATURE_SUMMARY,
-    FEATURE_TOPIC_SCORE,
-    FEATURE_TOPIC_TOPIC,
-    FIELD_ID,
-    PROJECT_TITLE,
-    SPACY_ENTITY_TYPES,
-)
 
 STYLE_RADIO_INLINE = "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>"
 
 
 def streamlit():
-    st.set_page_config(page_title=PROJECT_TITLE, layout="wide")
-    st.title(PROJECT_TITLE)
+    st.set_page_config(page_title=_s.PROJECT_TITLE, layout="wide")
+    st.title(_s.PROJECT_TITLE)
 
     with st.sidebar:
         sidebar()
@@ -112,7 +95,7 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
 
     if n_rows == 1:
         doc = selection.iloc[0]
-        doc_idx = data[data[FIELD_ID] == selection[FIELD_ID].iloc[0]].index[0]
+        doc_idx = data[data[_s.FIELD_ID] == selection[_s.FIELD_ID].iloc[0]].index[0]
 
         show_doc(selection)
     else:
@@ -123,13 +106,13 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
 
     if show_entities_view():
         st.header("Entities")
-        for section in DATA_ENTITY_SECTIONS:
+        for section in _s.DATA_ENTITY_SECTIONS:
             show_entities(selection, section)
 
         if doc is not None:
             st.subheader("View entities in context")
             st.write(STYLE_RADIO_INLINE, unsafe_allow_html=True)
-            section = st.radio("Choose context", [None] + DATA_ENTITY_SECTIONS)
+            section = st.radio("Choose context", [None] + _s.DATA_ENTITY_SECTIONS)
             if section:
                 st.subheader(section.capitalize())
                 show_entities_in_context(section, doc_idx)
@@ -150,11 +133,11 @@ def show_doc(data: pd.DataFrame):
             pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="500" type="application/pdf"></iframe>'
             st.markdown(pdf_display, unsafe_allow_html=True)
 
-    summary = get_summary(tuple([doc[FIELD_ID]]))
+    summary = get_summary(tuple([doc[_s.FIELD_ID]]))
     if summary is not None:
         st.write(summary)
     else:
-        st.write(doc[DATA_SUMMARY])
+        st.write(doc[_s.DATA_SUMMARY])
 
 
 @st.experimental_memo
@@ -164,13 +147,13 @@ def get_summary(ids: tuple[str]) -> Optional[str]:
     if data is not None:
         summary = get_rows_by_id(data, ids)
         if summary is not None:
-            return summary[FEATURE_SUMMARY].iloc[0]
+            return summary[_s.FEATURE_SUMMARY].iloc[0]
 
     return None
 
 
 def get_rows_by_id(data: pd.DataFrame, ids: tuple[str]) -> Optional[pd.DataFrame]:
-    rows = data[data[FIELD_ID].isin(ids)]
+    rows = data[data[_s.FIELD_ID].isin(ids)]
 
     if rows is not None:
         return rows
@@ -192,26 +175,28 @@ def show_topics(data: pd.DataFrame):
         "Choose topics aggregation function",
         ("count", "mean"),
     )
-    aggr = f"{aggr_function}({FEATURE_TOPIC_SCORE})"
+    aggr = f"{aggr_function}({_s.FEATURE_TOPIC_SCORE})"
     if n_rows == 1:
-        aggr = FEATURE_TOPIC_SCORE
+        aggr = _s.FEATURE_TOPIC_SCORE
 
     threshold = st.slider("Minimum score/confidence", 0.0, 1.0, 0.75, 0.05)
 
-    topics = get_topics(source, tuple(data[FIELD_ID].values.tolist()))
+    topics = get_topics(source, tuple(data[_s.FIELD_ID].values.tolist()))
     if topics is None or topics.empty:
         st.warning("No topics found")
         return
 
-    topics = topics.merge(data, on=FIELD_ID)
+    topics = topics.merge(data, on=_s.FIELD_ID)
 
     if threshold > 0.0:
-        topics = topics[topics[FEATURE_TOPIC_SCORE] >= threshold]
+        topics = topics[topics[_s.FEATURE_TOPIC_SCORE] >= threshold]
 
-    topics = topics.sort_values(by=FEATURE_TOPIC_TOPIC, ascending=True)
-    topics_aggr = topics.groupby(FEATURE_TOPIC_TOPIC).agg(aggr_function).reset_index()
+    topics = topics.sort_values(by=_s.FEATURE_TOPIC_TOPIC, ascending=True)
+    topics_aggr = (
+        topics.groupby(_s.FEATURE_TOPIC_TOPIC).agg(aggr_function).reset_index()
+    )
 
-    number_of_topics = topics[FEATURE_TOPIC_TOPIC].shape[0]
+    number_of_topics = topics[_s.FEATURE_TOPIC_TOPIC].shape[0]
     height = number_of_topics * 2 if number_of_topics > 10 else 400
 
     st.subheader(
@@ -229,15 +214,15 @@ def show_topics(data: pd.DataFrame):
     st.plotly_chart(
         px.histogram(
             topics_aggr,
-            x=FEATURE_TOPIC_SCORE,
-            y=FEATURE_TOPIC_TOPIC,
-            color=FEATURE_TOPIC_TOPIC,
+            x=_s.FEATURE_TOPIC_SCORE,
+            y=_s.FEATURE_TOPIC_TOPIC,
+            color=_s.FEATURE_TOPIC_TOPIC,
             height=height,
         ).update_layout(yaxis=dict(categoryorder="category ascending")),
         use_container_width=True,
     )
 
-    colour_df = topics[FEATURE_TOPIC_TOPIC].copy()
+    colour_df = topics[_s.FEATURE_TOPIC_TOPIC].copy()
     palette = px.colors.qualitative.Plotly
     colours = colour_df.map(
         {
@@ -249,7 +234,7 @@ def show_topics(data: pd.DataFrame):
     st.plotly_chart(
         px.parallel_categories(
             topics,
-            dimensions=[FEATURE_TOPIC_TOPIC, DATA_UOA],
+            dimensions=[_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA],
             color=colours,
             height=height,
         ),
@@ -257,15 +242,17 @@ def show_topics(data: pd.DataFrame):
     )
 
     topics_aggr = (
-        topics.groupby([FEATURE_TOPIC_TOPIC, DATA_UOA]).agg(aggr_function).reset_index()
+        topics.groupby([_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA])
+        .agg(aggr_function)
+        .reset_index()
     )
     st.plotly_chart(
         px.scatter(
             topics_aggr,
-            x=DATA_UOA,
-            y=FEATURE_TOPIC_TOPIC,
-            color=FEATURE_TOPIC_TOPIC,
-            size=FEATURE_TOPIC_SCORE,
+            x=_s.DATA_UOA,
+            y=_s.FEATURE_TOPIC_TOPIC,
+            color=_s.FEATURE_TOPIC_TOPIC,
+            size=_s.FEATURE_TOPIC_SCORE,
             height=height,
         ).update_layout(
             xaxis=dict(categoryorder="category ascending"),
@@ -293,14 +280,14 @@ def convert_df(df):
 
 
 def show_entities(data: pd.DataFrame, section: str):
-    entities = get_entities(section, tuple(data[FIELD_ID].values.tolist()))
+    entities = get_entities(section, tuple(data[_s.FIELD_ID].values.tolist()))
     if entities is not None:
         st.subheader(f"Entities in the {section}")
         st.plotly_chart(
             px.histogram(
                 entities,
-                x=FEATURE_ENTITY_ENTITY,
-                color=FEATURE_ENTITY_LABEL,
+                x=_s.FEATURE_ENTITY_ENTITY,
+                color=_s.FEATURE_ENTITY_LABEL,
             ),
             use_container_width=True,
         )
@@ -313,7 +300,7 @@ def get_entities(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
     if data is not None:
         entities = get_rows_by_id(data, ids)
         if entities is not None:
-            return entities[[FEATURE_ENTITY_LABEL, FEATURE_ENTITY_ENTITY]]
+            return entities[[_s.FEATURE_ENTITY_LABEL, _s.FEATURE_ENTITY_ENTITY]]
 
     return None
 
@@ -323,35 +310,32 @@ def show_entities_in_context(section: str, idx: int):
     if doc:
         visualize_ner(
             doc,
-            labels=SPACY_ENTITY_TYPES,
+            labels=_s.SPACY_ENTITY_TYPES,
             show_table=False,
             title="",
         )
 
 
 def show_geo(data: pd.DataFrame):
-    geo_df = get_geo_data(tuple(data[FIELD_ID].values.tolist()))
-    if geo_df is None:
-        st.warning("No geo data found")
+    places = get_places(tuple(data[_s.FIELD_ID].values.tolist()))
+    if places is None:
+        st.warning("No places data found")
         return
 
-    st.subheader("National/global mentions")
-    st.warning("Please note the number of mentions includes duplicate mentions.")
+    st.subheader("Local/national/global mentions")
 
-    countries = geo_df[[FEATURE_COUNTRY, FEATURE_PLACE_CATEGORY, "count"]]
-    countries = (
-        countries.groupby([FEATURE_COUNTRY, FEATURE_PLACE_CATEGORY]).sum().reset_index()
-    )
-
+    places = places.sort_values(by=_s.FEATURE_GEO_CATEGORY)
     with st.expander("View data", expanded=False):
-        st.write(countries)
+        st.write(places)
+
+    min_mentions = st.slider("Minimum number of mentions", 1, 20, 1, 1)
 
     st.plotly_chart(
         px.histogram(
-            countries,
-            x=FEATURE_PLACE_CATEGORY,
+            places[places["count"] >= min_mentions],
+            x=_s.FEATURE_GEO_CATEGORY,
             y="count",
-            color=FEATURE_PLACE_CATEGORY,
+            color=_s.FEATURE_GEO_CATEGORY,
             labels={"count": "number of mentions"},
         ),
         use_container_width=True,
@@ -359,10 +343,10 @@ def show_geo(data: pd.DataFrame):
 
     st.plotly_chart(
         px.bar(
-            countries,
-            x=FEATURE_COUNTRY,
+            places[places["count"] >= min_mentions],
+            x=_s.FEATURE_GEO_PLACE,
             y="count",
-            color=FEATURE_PLACE_CATEGORY,
+            color=_s.FEATURE_GEO_CATEGORY,
             labels={"count": "number of mentions"},
         ).update_layout(
             dict(xaxis=dict(categoryorder="total descending", tickangle=-45))
@@ -371,19 +355,33 @@ def show_geo(data: pd.DataFrame):
     )
 
     st.subheader("Map")
+    places = places.drop(columns=[_s.FEATURE_GEO_CATEGORY])
+    places = (
+        places.groupby(places.columns[:-1].values.tolist())
+        .sum()
+        .reset_index()
+        .sort_values(by="count", ascending=False)
+    )
+
+    focus = places.iloc[0]
     st.plotly_chart(
         vm.scatter_mapbox(
-            geo_df, FEATURE_ENTITY_TEXT, FEATURE_LAT, FEATURE_LON, "count"
+            places[places["count"] >= min_mentions],
+            _s.FEATURE_GEO_PLACE,
+            _s.FEATURE_GEO_PLACE_LAT,
+            _s.FEATURE_GEO_PLACE_LON,
+            "count",
+            (focus[_s.FEATURE_GEO_PLACE_LAT], focus[_s.FEATURE_GEO_PLACE_LON]),
         ),
         use_container_width=True,
     )
 
     with st.expander("Geo data", expanded=False):
-        st.write(geo_df)
+        st.write(places)
 
 
 @st.experimental_memo
-def get_geo_data(
+def get_places(
     ids: tuple[str], section: Optional[str] = None
 ) -> Optional[pd.DataFrame]:
     data = pd.DataFrame()
@@ -391,28 +389,29 @@ def get_geo_data(
     if section:
         data = dm.get_geo_data(section)
     else:
-        for section in DATA_ENTITY_SECTIONS:
-            data = pd.concat([data, dm.get_geo_data(section)])
+        for section in _s.DATA_ENTITY_SECTIONS:
+            section_data = dm.get_geo_data(section)
+            if section_data is not None:
+                data = pd.concat([data, section_data])
+
+        data = data.drop_duplicates()
 
     if data is not None:
-        geo_df = get_rows_by_id(data, ids)
-        if geo_df is not None:
-            geo_df = geo_df.drop(columns=[FIELD_ID])
-            geo_df["count"] = 0
+        places = get_rows_by_id(data, ids)
+        if places is not None:
+            columns = [
+                _s.FEATURE_GEO_CATEGORY,
+                _s.FEATURE_GEO_PLACE,
+                _s.FEATURE_GEO_PLACE_LAT,
+                _s.FEATURE_GEO_PLACE_LON,
+            ]
+
+            places = places[columns]
+            places["count"] = 0
             return (
-                geo_df.groupby(
-                    [
-                        FEATURE_ENTITY_ENTITY,
-                        FEATURE_ENTITY_TEXT,
-                        FEATURE_COUNTRY,
-                        FEATURE_PLACE_CATEGORY,
-                        FEATURE_LAT,
-                        FEATURE_LON,
-                    ]
-                )
+                places.groupby(places.columns[:-1].values.tolist())
                 .count()
                 .reset_index()
-                .sort_values(by="count", ascending=False)
             )
 
     return None

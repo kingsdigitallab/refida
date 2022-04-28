@@ -4,10 +4,8 @@ from itertools import chain
 from pathlib import Path
 from typing import Optional
 
-import geopy
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
-from geopy.location import Location
 from joblib import Memory
 
 ROOT_DIR = Path(".")
@@ -361,19 +359,6 @@ nominatim = Nominatim(user_agent="kdl.kcl.ac.uk")
 geolocator = RateLimiter(nominatim.geocode, min_delay_seconds=1)
 
 
-@memory.cache
-def geocode(name: str) -> Optional[Location]:
-    """
-    Geolocate a place name using OpenStreetMap Nominatim service.
-
-    :param name: The name of the location to geolocate.
-    """
-    try:
-        return geolocator(name, language="en", addressdetails=1, geometry="geojson")
-    except (geopy.exc.GeocoderTimedOut, geopy.exc.GeocoderServiceError):
-        return None
-
-
 @lru_cache
 def get_place_category(name: str, country: str) -> Optional[str]:
     """
@@ -387,9 +372,6 @@ def get_place_category(name: str, country: str) -> Optional[str]:
 
     if name == "London":
         return "Local"
-
-    if not country:
-        return None
 
     if country == "United Kingdom":
         return "National"
@@ -420,8 +402,11 @@ FEATURE_ENTITY_ENTITY = "entity"
 FEATURE_ENTITY_LABEL = "label"
 FEATURE_ENTITY_TEXT = "text"
 
-FEATURE_COUNTRY = "country"
-FEATURE_PLACE_CATEGORY = "category"
-FEATURE_LAT = "lat"
-FEATURE_LON = "lon"
-FEATURE_GEOJSON = "geojson"
+FEATURE_GEO_DISPLAY_NAME = "display_name"
+FEATURE_GEO_LAT = "lat"
+FEATURE_GEO_LON = "lon"
+FEATURE_GEO_CATEGORY = "category"
+FEATURE_GEO_PLACE = "place"
+FEATURE_GEO_PLACE_LAT = "place_lat"
+FEATURE_GEO_PLACE_LON = "place_lon"
+FEATURE_GEO_GEOJSON = "geojson"

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Changed
+
+- Geo data to count/display only unique mentions per case study.
+- Group places by country to display data in the map.
+
 ## [0.2.1] - 2022-04-28
 
 ### Added

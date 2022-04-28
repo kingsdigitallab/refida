@@ -2,40 +2,20 @@ from functools import lru_cache
 from typing import Optional
 
 import geojson
+import geopy
 import pandas as pd
 import spacy
+from geopy.location import Location
 from txtai.pipeline import Labels, Summary
 
-from settings import (
-    DATA_TEXT,
-    FEATURE_COUNTRY,
-    FEATURE_ENTITY_ENTITY,
-    FEATURE_ENTITY_LABEL,
-    FEATURE_ENTITY_TEXT,
-    FEATURE_GEOJSON,
-    FEATURE_LAT,
-    FEATURE_LON,
-    FEATURE_PLACE_CATEGORY,
-    FEATURE_SUMMARY,
-    FEATURE_TOPIC_SCORE,
-    FEATURE_TOPIC_TOPIC,
-    FIELD_ID,
-    SPACY_ENTITY_TYPES,
-    SPACY_LANGUAGE_MODEL,
-    SPACY_LOCATION_ENTITY_TYPES,
-    SUMMARISATION_MODEL,
-    TOPIC_CLASSIFICATION_MODEL,
-    TOPIC_CLASSIFICATION_TOPICS,
-    geocode,
-    get_place_category,
-)
+import settings as _s
 
 
 def topic_classification(
     data: pd.DataFrame,
     column: str,
-    topics: list[str] = TOPIC_CLASSIFICATION_TOPICS,
-    model: str = TOPIC_CLASSIFICATION_MODEL,
+    topics: list[str] = _s.TOPIC_CLASSIFICATION_TOPICS,
+    model: str = _s.TOPIC_CLASSIFICATION_MODEL,
 ) -> pd.DataFrame:
     """
     Topic classification using txtai.Labels.
@@ -47,7 +27,7 @@ def topic_classification(
     """
     classifier = Labels(model)
 
-    topics_df = data[[FIELD_ID, column]].copy()
+    topics_df = data[[_s.FIELD_ID, column]].copy()
     topics_df = topics_df.dropna(subset=[column])
 
     topics_df["topics"] = classifier(
@@ -57,7 +37,7 @@ def topic_classification(
         lambda predictions: [[topics[p[0]], p[1]] for p in predictions]
     )
     topics_df = topics_df.explode("topics")
-    topics_df[[FEATURE_TOPIC_TOPIC, FEATURE_TOPIC_SCORE]] = pd.DataFrame(
+    topics_df[[_s.FEATURE_TOPIC_TOPIC, _s.FEATURE_TOPIC_SCORE]] = pd.DataFrame(
         topics_df["topics"].tolist(), index=topics_df.index
     )
     topics_df = topics_df.drop(columns=[column, "topics"])
@@ -65,7 +45,7 @@ def topic_classification(
     return topics_df
 
 
-def summarise(data: pd.DataFrame, model: str = SUMMARISATION_MODEL) -> pd.DataFrame:
+def summarise(data: pd.DataFrame, model: str = _s.SUMMARISATION_MODEL) -> pd.DataFrame:
     """
     Summarise the text.
 
@@ -74,8 +54,8 @@ def summarise(data: pd.DataFrame, model: str = SUMMARISATION_MODEL) -> pd.DataFr
     """
     summary = Summary(model)
 
-    summary_df = data[[FIELD_ID]].copy()
-    summary_df[FEATURE_SUMMARY] = summary(data[DATA_TEXT].values.tolist())
+    summary_df = data[[_s.FIELD_ID]].copy()
+    summary_df[_s.FEATURE_SUMMARY] = summary(data[_s.DATA_TEXT].values.tolist())
 
     return summary_df
 
@@ -83,8 +63,8 @@ def summarise(data: pd.DataFrame, model: str = SUMMARISATION_MODEL) -> pd.DataFr
 def entity_extraction(
     data: pd.DataFrame,
     column: str,
-    model: str = SPACY_LANGUAGE_MODEL,
-    entity_types: list[str] = SPACY_ENTITY_TYPES,
+    model: str = _s.SPACY_LANGUAGE_MODEL,
+    entity_types: list[str] = _s.SPACY_ENTITY_TYPES,
 ) -> tuple[list, pd.DataFrame]:
     """
     Extract entities using spaCy.
@@ -99,7 +79,7 @@ def entity_extraction(
 
     nlp = spacy.load(model)
 
-    entities_df = data[[FIELD_ID]].copy()
+    entities_df = data[[_s.FIELD_ID]].copy()
     entities_df["doc"] = data[column].fillna("").apply(nlp)
 
     docs = entities_df["doc"].tolist()
@@ -115,7 +95,7 @@ def entity_extraction(
     entities_df = entities_df.explode("entities")
     entities_df = entities_df.dropna(subset=["entities"])
     entities_df[
-        [FEATURE_ENTITY_LABEL, FEATURE_ENTITY_TEXT, FEATURE_ENTITY_ENTITY]
+        [_s.FEATURE_ENTITY_LABEL, _s.FEATURE_ENTITY_TEXT, _s.FEATURE_ENTITY_ENTITY]
     ] = pd.DataFrame(entities_df["entities"].tolist(), index=entities_df.index)
     entities_df = entities_df.drop(columns=["entities"])
 
@@ -124,7 +104,7 @@ def entity_extraction(
 
 def geolocate(
     data: pd.DataFrame,
-    entity_types: list[str] = SPACY_LOCATION_ENTITY_TYPES,
+    entity_types: list[str] = _s.SPACY_LOCATION_ENTITY_TYPES,
 ) -> tuple[pd.DataFrame, list[dict]]:
     """
     Geolocate data using OpenStreetMap Nominatim service.
@@ -133,60 +113,107 @@ def geolocate(
     :param entity_types: Entity types to geocode.
     """
     place_data_columns = [
-        FEATURE_PLACE_CATEGORY,
-        FEATURE_COUNTRY,
-        FEATURE_LAT,
-        FEATURE_LON,
-        FEATURE_GEOJSON,
+        _s.FEATURE_GEO_DISPLAY_NAME,
+        _s.FEATURE_GEO_LAT,
+        _s.FEATURE_GEO_LON,
+        _s.FEATURE_GEO_CATEGORY,
+        _s.FEATURE_GEO_PLACE,
+        _s.FEATURE_GEO_PLACE_LAT,
+        _s.FEATURE_GEO_PLACE_LON,
+        _s.FEATURE_GEO_GEOJSON,
     ]
 
-    geo_df = data[data[FEATURE_ENTITY_LABEL].isin(entity_types)].copy()
+    geo_df = data[data[_s.FEATURE_ENTITY_LABEL].isin(entity_types)].copy()
     geo_df[place_data_columns] = geo_df.apply(
-        lambda x: get_place_data(x[FEATURE_ENTITY_TEXT]), axis=1, result_type="expand"
+        lambda x: get_place_data(x[_s.FEATURE_ENTITY_LABEL], x[_s.FEATURE_ENTITY_TEXT]),
+        axis=1,
+        result_type="expand",
     )
-    geo_df = geo_df.dropna(subset=[FEATURE_LAT, FEATURE_LON])
-    geo_df[FEATURE_GEOJSON] = geo_df.apply(
+    geo_df = geo_df.dropna(subset=[_s.FEATURE_GEO_LAT, _s.FEATURE_GEO_LON])
+    geo_df[_s.FEATURE_GEO_GEOJSON] = geo_df.apply(
         lambda x: geojson.Feature(
-            id=x[FEATURE_ENTITY_TEXT],
-            geometry=x[FEATURE_GEOJSON],
-            properties={"name": x[FEATURE_ENTITY_TEXT]},
+            id=x[_s.FEATURE_ENTITY_TEXT],
+            geometry=x[_s.FEATURE_GEO_GEOJSON],
+            properties={"name": x[_s.FEATURE_ENTITY_TEXT]},
         ),
         axis=1,
     )
 
-    geojson_features = geo_df[FEATURE_GEOJSON].drop_duplicates().values.tolist()
+    geojson_features = geo_df[_s.FEATURE_GEO_GEOJSON].drop_duplicates().values.tolist()
 
-    geo_df = geo_df.drop(columns=[FEATURE_GEOJSON])
+    geo_df = geo_df.drop(columns=[_s.FEATURE_GEO_GEOJSON])
+    geo_df = geo_df.drop_duplicates()
 
     return geo_df, geojson_features
 
 
 @lru_cache
 def get_place_data(
+    label: str,
     name: str,
-) -> Optional[tuple[Optional[str], Optional[str], float, float, dict]]:
+) -> Optional[
+    tuple[
+        str,
+        float,
+        float,
+        Optional[str],
+        Optional[str],
+        Optional[float],
+        Optional[float],
+        dict,
+    ]
+]:
     """
     Get place data using OpenStreetMap Nominatim service.
 
+    :param label: Entity label.
     :param name: Name of the place to get data for.
     """
     if not name:
         return None
 
     location = geocode(name)
-    if location:
-        country = None
-        raw = location.raw
-        if "address" in raw:
-            if "country" in raw["address"]:
-                country = raw["address"]["country"]
+    if not location:
+        return None
 
-        return (
-            get_place_category(name, country),
-            country,
-            location.latitude,
-            location.longitude,
-            location.raw["geojson"],
-        )
+    raw = location.raw
 
-    return None
+    city = name
+    place = display_name = raw["display_name"]
+    place_location = None
+
+    # continents
+    if label == "LOC":
+        place_location = location
+
+    if "address" in raw:
+        if "city" in raw["address"]:
+            city = raw["address"]["city"]
+        if "country" in raw["address"]:
+            place = raw["address"]["country"]
+
+            place_location = geocode(place)
+
+    return (
+        display_name,
+        location.latitude,
+        location.longitude,
+        _s.get_place_category(city, place),
+        place,
+        place_location.latitude if place_location else None,
+        place_location.longitude if place_location else None,
+        location.raw["geojson"],
+    )
+
+
+@_s.memory.cache
+def geocode(name: str) -> Optional[Location]:
+    """
+    Geolocate a place name using OpenStreetMap Nominatim service.
+
+    :param name: The name of the location to geolocate.
+    """
+    try:
+        return _s.geolocator(name, language="en", addressdetails=1, geometry="geojson")
+    except (geopy.exc.GeocoderTimedOut, geopy.exc.GeocoderServiceError):
+        return None

@@ -13,6 +13,7 @@ def scatter_mapbox(
     lat: str,
     lon: str,
     facet: str,
+        focus: tuple[ float, float ]
 ) -> go.Figure:
     """
     Create a mapbox scatter plot.
@@ -23,8 +24,6 @@ def scatter_mapbox(
     :param lon: Longitude field.
     :param facet: Field used for colour and size of the bubbles.
     """
-    focus = data.iloc[0]
-
     return px.scatter_mapbox(
         data,
         hover_name=field,
@@ -33,9 +32,8 @@ def scatter_mapbox(
         color=facet,
         color_continuous_scale="Viridis",
         size=facet,
-        size_max=15,
         mapbox_style="carto-positron",
-        zoom=3,
-        center=dict(lat=focus.lat, lon=focus.lon),
+        zoom=1,
+        center=dict(lat=focus[0], lon=focus[1]),
         opacity=0.75,
     ).update_layout(margin=dict(r=0, t=0, l=0, b=0))
