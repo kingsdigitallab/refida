@@ -1,11 +1,8 @@
 import base64
-from functools import lru_cache
 from typing import Optional
 
-import altair as alt
 import pandas as pd
 import plotly.express as px
-import pydeck as pdk
 import streamlit as st
 from spacy_streamlit import visualize_ner
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder
@@ -13,6 +10,7 @@ from st_aggrid.shared import GridUpdateMode
 
 from cli import TopicsSection
 from refida import data as dm
+from refida import visualize as vm
 from settings import (
     DATA_ENTITY_SECTIONS,
     DATA_SUMMARY,
@@ -33,7 +31,6 @@ from settings import (
 )
 
 STYLE_RADIO_INLINE = "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>"
-UK = "United Kingdom"
 
 
 def streamlit():
@@ -160,7 +157,7 @@ def show_doc(data: pd.DataFrame):
         st.write(doc[DATA_SUMMARY])
 
 
-@lru_cache(maxsize=256)
+@st.experimental_memo
 def get_summary(ids: tuple[str]) -> Optional[str]:
     data = dm.get_summaries_data()
 
@@ -280,7 +277,7 @@ def show_topics(data: pd.DataFrame):
     )
 
 
-@lru_cache(maxsize=256)
+@st.experimental_memo
 def get_topics(label: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
     data = dm.get_topics_data(label)
 
@@ -290,7 +287,7 @@ def get_topics(label: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
     return None
 
 
-@st.cache
+@st.experimental_memo
 def convert_df(df):
     return df.to_csv().encode("utf-8")
 
@@ -309,7 +306,7 @@ def show_entities(data: pd.DataFrame, section: str):
         )
 
 
-@lru_cache(maxsize=256)
+@st.experimental_memo
 def get_entities(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
     data = dm.get_entities_data(section)
 
@@ -333,84 +330,62 @@ def show_entities_in_context(section: str, idx: int):
 
 
 def show_geo(data: pd.DataFrame):
-    geo_df = get_geo(tuple(data[FIELD_ID].values.tolist()))
-    if geo_df is not None:
-        focus = geo_df.iloc[0]
+    geo_df = get_geo_data(tuple(data[FIELD_ID].values.tolist()))
+    if geo_df is None:
+        st.warning("No geo data found")
+        return
 
-        st.subheader("National/global mentions")
-        st.warning("Please note the number of mentions includes duplicate mentions.")
+    st.subheader("National/global mentions")
+    st.warning("Please note the number of mentions includes duplicate mentions.")
 
-        countries = geo_df[[FEATURE_COUNTRY, FEATURE_PLACE_CATEGORY, "count"]]
-        countries = (
-            countries.groupby([FEATURE_COUNTRY, FEATURE_PLACE_CATEGORY])
-            .sum()
-            .reset_index()
-        )
-        mentions_uk = countries[countries[FEATURE_COUNTRY] == UK]["count"].count()
-        mentions_global = countries[countries[FEATURE_COUNTRY] != UK]["count"].count()
+    countries = geo_df[[FEATURE_COUNTRY, FEATURE_PLACE_CATEGORY, "count"]]
+    countries = (
+        countries.groupby([FEATURE_COUNTRY, FEATURE_PLACE_CATEGORY]).sum().reset_index()
+    )
 
-        with st.expander("View data", expanded=False):
-            st.write(countries)
+    with st.expander("View data", expanded=False):
+        st.write(countries)
 
-        st.plotly_chart(
-            px.histogram(
-                countries,
-                x=FEATURE_PLACE_CATEGORY,
-                y="count",
-                color=FEATURE_PLACE_CATEGORY,
-                labels={"count": "number of mentions"},
-            ),
-            use_container_width=True,
-        )
-        st.info(
-            "The United Kingdom, or locations within the UK, are mentioned "
-            f"{mentions_uk} times. Global locations are mentioned "
-            f"{mentions_global} times."
-        )
-        st.plotly_chart(
-            px.bar(
-                countries,
-                x=FEATURE_COUNTRY,
-                y="count",
-                color=FEATURE_PLACE_CATEGORY,
-                labels={"count": "number of mentions"},
-            ).update_layout(
-                dict(xaxis=dict(categoryorder="total descending", tickangle=-45))
-            ),
-            use_container_width=True,
-        )
+    st.plotly_chart(
+        px.histogram(
+            countries,
+            x=FEATURE_PLACE_CATEGORY,
+            y="count",
+            color=FEATURE_PLACE_CATEGORY,
+            labels={"count": "number of mentions"},
+        ),
+        use_container_width=True,
+    )
 
-        st.subheader("Map")
-        st.pydeck_chart(
-            pdk.Deck(
-                map_style="mapbox://styles/mapbox/light-v9",
-                initial_view_state=pdk.ViewState(
-                    latitude=focus.lat, longitude=focus.lon, zoom=7, bearing=0, pitch=0
-                ),
-                layers=[
-                    pdk.Layer(
-                        "ScatterplotLayer",
-                        geo_df,
-                        stroked=True,
-                        filled=True,
-                        pickable=True,
-                        opacity=0.75,
-                        get_position="[lon, lat]",
-                        get_fill_color=[255, 140, 0],
-                        get_line_color=[0, 0, 0],
-                        get_radius="count * 100",
-                    ),
-                ],
-                tooltip={"text": "{entity}\n{count}"},
-            )
-        )
+    st.plotly_chart(
+        px.bar(
+            countries,
+            x=FEATURE_COUNTRY,
+            y="count",
+            color=FEATURE_PLACE_CATEGORY,
+            labels={"count": "number of mentions"},
+        ).update_layout(
+            dict(xaxis=dict(categoryorder="total descending", tickangle=-45))
+        ),
+        use_container_width=True,
+    )
 
-        with st.expander("Geo data", expanded=False):
-            st.write(geo_df)
+    st.subheader("Map")
+    st.plotly_chart(
+        vm.scatter_mapbox(
+            geo_df, FEATURE_ENTITY_TEXT, FEATURE_LAT, FEATURE_LON, "count"
+        ),
+        use_container_width=True,
+    )
+
+    with st.expander("Geo data", expanded=False):
+        st.write(geo_df)
 
 
-@lru_cache(maxsize=256)
-def get_geo(ids: tuple[str], section: Optional[str] = None) -> Optional[pd.DataFrame]:
+@st.experimental_memo
+def get_geo_data(
+    ids: tuple[str], section: Optional[str] = None
+) -> Optional[pd.DataFrame]:
     data = pd.DataFrame()
 
     if section:
@@ -422,12 +397,13 @@ def get_geo(ids: tuple[str], section: Optional[str] = None) -> Optional[pd.DataF
     if data is not None:
         geo_df = get_rows_by_id(data, ids)
         if geo_df is not None:
-            geo_df = geo_df.drop(columns=[FIELD_ID, FEATURE_ENTITY_TEXT])
+            geo_df = geo_df.drop(columns=[FIELD_ID])
             geo_df["count"] = 0
             return (
                 geo_df.groupby(
                     [
                         FEATURE_ENTITY_ENTITY,
+                        FEATURE_ENTITY_TEXT,
                         FEATURE_COUNTRY,
                         FEATURE_PLACE_CATEGORY,
                         FEATURE_LAT,
