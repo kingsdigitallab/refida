@@ -11,12 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Geo data to count/display only unique mentions per case study.
 - Group places by country to display data in the map.
+- Move all the chart creation to the visualize module.
 
 ## [0.2.1] - 2022-04-28
 
 ### Added
 
 - Bubble map to the dashboard.
+- Module to create visualisations.
 
 ### Changed
 

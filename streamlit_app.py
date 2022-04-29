@@ -212,31 +212,25 @@ def show_topics(data: pd.DataFrame):
         )
 
     st.plotly_chart(
-        px.histogram(
+        vm.histogram(
             topics_aggr,
-            x=_s.FEATURE_TOPIC_SCORE,
-            y=_s.FEATURE_TOPIC_TOPIC,
-            color=_s.FEATURE_TOPIC_TOPIC,
-            height=height,
+            _s.FEATURE_TOPIC_SCORE,
+            _s.FEATURE_TOPIC_TOPIC,
+            _s.FEATURE_TOPIC_TOPIC,
         ).update_layout(yaxis=dict(categoryorder="category ascending")),
         use_container_width=True,
     )
 
     colour_df = topics[_s.FEATURE_TOPIC_TOPIC].copy()
     palette = px.colors.qualitative.Plotly
+    palette_len = len(palette)
     colours = colour_df.map(
-        {
-            v: palette[i % len(px.colors.qualitative.Plotly)]
-            for i, v in enumerate(colour_df.unique())
-        }
+        {v: palette[i % palette_len] for i, v in enumerate(colour_df.unique())}
     )
 
     st.plotly_chart(
-        px.parallel_categories(
-            topics,
-            dimensions=[_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA],
-            color=colours,
-            height=height,
+        vm.parallel_categories(
+            topics, [_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA], colours, height
         ),
         use_container_width=True,
     )
@@ -247,13 +241,13 @@ def show_topics(data: pd.DataFrame):
         .reset_index()
     )
     st.plotly_chart(
-        px.scatter(
+        vm.scatter(
             topics_aggr,
-            x=_s.DATA_UOA,
-            y=_s.FEATURE_TOPIC_TOPIC,
-            color=_s.FEATURE_TOPIC_TOPIC,
-            size=_s.FEATURE_TOPIC_SCORE,
-            height=height,
+            _s.DATA_UOA,
+            _s.FEATURE_TOPIC_TOPIC,
+            _s.FEATURE_TOPIC_TOPIC,
+            _s.FEATURE_TOPIC_SCORE,
+            height,
         ).update_layout(
             xaxis=dict(categoryorder="category ascending"),
             yaxis=dict(
@@ -284,10 +278,8 @@ def show_entities(data: pd.DataFrame, section: str):
     if entities is not None:
         st.subheader(f"Entities in the {section}")
         st.plotly_chart(
-            px.histogram(
-                entities,
-                x=_s.FEATURE_ENTITY_ENTITY,
-                color=_s.FEATURE_ENTITY_LABEL,
+            vm.histogram(
+                entities, _s.FEATURE_ENTITY_ENTITY, None, _s.FEATURE_ENTITY_LABEL
             ),
             use_container_width=True,
         )
@@ -329,25 +321,26 @@ def show_geo(data: pd.DataFrame):
         st.write(places)
 
     min_mentions = st.slider("Minimum number of mentions", 1, 20, 1, 1)
+    places = places[places["count"] >= min_mentions]
 
     st.plotly_chart(
-        px.histogram(
-            places[places["count"] >= min_mentions],
-            x=_s.FEATURE_GEO_CATEGORY,
-            y="count",
-            color=_s.FEATURE_GEO_CATEGORY,
-            labels={"count": "number of mentions"},
+        vm.histogram(
+            places,
+            _s.FEATURE_GEO_CATEGORY,
+            "count",
+            _s.FEATURE_GEO_CATEGORY,
+            {"count": "number of mentions"},
         ),
         use_container_width=True,
     )
 
     st.plotly_chart(
-        px.bar(
-            places[places["count"] >= min_mentions],
-            x=_s.FEATURE_GEO_PLACE,
-            y="count",
-            color=_s.FEATURE_GEO_CATEGORY,
-            labels={"count": "number of mentions"},
+        vm.bar(
+            places,
+            _s.FEATURE_GEO_PLACE,
+            "count",
+            _s.FEATURE_GEO_CATEGORY,
+            {"count": "number of mentions"},
         ).update_layout(
             dict(xaxis=dict(categoryorder="total descending", tickangle=-45))
         ),
@@ -366,7 +359,7 @@ def show_geo(data: pd.DataFrame):
     focus = places.iloc[0]
     st.plotly_chart(
         vm.scatter_mapbox(
-            places[places["count"] >= min_mentions],
+            places,
             _s.FEATURE_GEO_PLACE,
             _s.FEATURE_GEO_PLACE_LAT,
             _s.FEATURE_GEO_PLACE_LON,

@@ -18,7 +18,7 @@ CACHE_DIR = DATA_DIR.joinpath(".cache")
 if not CACHE_DIR.is_dir():
     CACHE_DIR.mkdir(parents=True)
 
-memory = Memory(CACHE_DIR, verbose=1)
+memory = Memory(CACHE_DIR, verbose=0)
 
 PROJECT_TITLE = "REF Impact Data Analysis"
 
