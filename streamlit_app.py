@@ -280,7 +280,7 @@ def show_entities(data: pd.DataFrame, section: str):
         st.plotly_chart(
             vm.histogram(
                 entities, _s.FEATURE_ENTITY_ENTITY, None, _s.FEATURE_ENTITY_LABEL
-            ),
+            ).update_layout(dict(xaxis=dict(tickangle=-45))),
             use_container_width=True,
         )
 

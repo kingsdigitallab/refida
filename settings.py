@@ -351,7 +351,7 @@ SPACY_LOCATION_ENTITY_TYPES: list[str] = ["GPE", "LOC"]
 SPACY_ENTITY_TYPES: list[str] = SPACY_LOCATION_ENTITY_TYPES + [
     "ORG",
     "NORP",
-    "PERSON",
+    "PRODUCT",
 ]
 
 
