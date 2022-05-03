@@ -13,6 +13,7 @@ from settings import (
     DATA_SOURCES,
     DATA_SUMMARY,
     DATA_TEXT,
+    TOPIC_CLASSIFICATION_IMPACTS,
     TOPIC_CLASSIFICATION_TOPICS,
     get_fields_of_research,
 )
@@ -44,6 +45,8 @@ class TopicsSection(str, Enum):
     Enum for the sections of the topics data.
     """
 
+    details = DATA_DETAILS
+    summary = DATA_SUMMARY
     text = DATA_TEXT
     research = DATA_RESEARCH
 
@@ -67,7 +70,9 @@ def topics(datadir: str = DATA_DIR.name, column: TopicsSection = TopicsSection.t
             error(f"Column {column} not found in data.")
 
         labels = TOPIC_CLASSIFICATION_TOPICS
-        if column == TopicsSection.research:
+        if column in [TopicsSection.details, TopicsSection.summary]:
+            labels = TOPIC_CLASSIFICATION_IMPACTS
+        elif column == TopicsSection.research:
             labels = get_fields_of_research()
 
         topics = features.topic_classification(data, column, labels)
