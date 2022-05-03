@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Product to the list of entity types to extract.
+- MPL-2.0 license file.
 
 ### Changed
 
