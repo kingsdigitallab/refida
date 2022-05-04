@@ -353,6 +353,7 @@ def show_geo(data: pd.DataFrame):
     st.subheader("Map")
     places = places[places[_s.FEATURE_GEO_CATEGORY] != "Local"]
     places = places.drop(columns=[_s.FEATURE_GEO_CATEGORY])
+    places = places.sort_values(by="count", ascending=False)
 
     focus = places.iloc[0]
     st.plotly_chart(

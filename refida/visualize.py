@@ -107,4 +107,5 @@ def scatter_mapbox(
         zoom=1,
         center=dict(lat=focus[0], lon=focus[1]),
         opacity=0.75,
+        height=700,
     ).update_layout(margin=dict(r=0, t=0, l=0, b=0))
