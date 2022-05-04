@@ -13,6 +13,7 @@ def histogram(
     x: Optional[str],
     y: Optional[str],
     colour: str,
+    height: int = None,
     labels: dict[str, str] = {},
 ) -> go.Figure:
     """
@@ -22,9 +23,10 @@ def histogram(
     :param x: The column to plot on the x-axis.
     :param y: The column to plot on the y-axis.
     :param colour: The column to colour the bars by.
+    :param height: The height of the plot.
     :param labels: A dictionary of labels to use for the x-axis and y-axis.
     """
-    return px.histogram(data, x=x, y=y, color=colour, labels=labels)
+    return px.histogram(data, x=x, y=y, color=colour, height=height, labels=labels)
 
 
 @memory.cache
@@ -100,8 +102,6 @@ def scatter_mapbox(
         hover_name=field,
         lat=lat,
         lon=lon,
-        color=facet,
-        color_continuous_scale="Cividis_r",
         size=facet,
         mapbox_style="carto-positron",
         zoom=1,

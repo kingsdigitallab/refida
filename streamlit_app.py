@@ -99,7 +99,7 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
 
         show_doc(selection)
     else:
-        st.info("Multiple documents available, showing aggregate information")
+        st.info(f"{n_rows} documents available, showing aggregate information")
 
     if show_topics_view():
         show_topics(selection)
@@ -203,7 +203,9 @@ def show_topics(data: pd.DataFrame):
         f"Topics in {source} with confidence >= {threshold} aggregated by {aggr}"
     )
     with st.expander("View data", expanded=False):
-        st.write(topics)
+        # https://stackoverflow.com/questions/69578431/how-to-fix-streamlitapiexception-expected-bytes-got-a-int-object-conver
+        # https://issues.apache.org/jira/browse/ARROW-14087
+        st.write(topics.astype(str))
         st.download_button(
             label="Download data as CSV",
             data=convert_df(topics),
@@ -217,6 +219,7 @@ def show_topics(data: pd.DataFrame):
             _s.FEATURE_TOPIC_SCORE,
             _s.FEATURE_TOPIC_TOPIC,
             _s.FEATURE_TOPIC_TOPIC,
+            height,
         ).update_layout(yaxis=dict(categoryorder="category ascending")),
         use_container_width=True,
     )
@@ -329,7 +332,7 @@ def show_geo(data: pd.DataFrame):
             _s.FEATURE_GEO_CATEGORY,
             "count",
             _s.FEATURE_GEO_CATEGORY,
-            {"count": "number of mentions"},
+            labels={"count": "number of mentions"},
         ),
         use_container_width=True,
     )
@@ -340,7 +343,7 @@ def show_geo(data: pd.DataFrame):
             _s.FEATURE_GEO_PLACE,
             "count",
             _s.FEATURE_GEO_CATEGORY,
-            {"count": "number of mentions"},
+            labels={"count": "number of mentions"},
         ).update_layout(
             dict(xaxis=dict(categoryorder="total descending", tickangle=-45))
         ),
@@ -348,13 +351,8 @@ def show_geo(data: pd.DataFrame):
     )
 
     st.subheader("Map")
+    places = places[places[_s.FEATURE_GEO_CATEGORY] != "Local"]
     places = places.drop(columns=[_s.FEATURE_GEO_CATEGORY])
-    places = (
-        places.groupby(places.columns[:-1].values.tolist())
-        .sum()
-        .reset_index()
-        .sort_values(by="count", ascending=False)
-    )
 
     focus = places.iloc[0]
     st.plotly_chart(
@@ -393,6 +391,7 @@ def get_places(
         places = get_rows_by_id(data, ids)
         if places is not None:
             columns = [
+                _s.FIELD_ID,
                 _s.FEATURE_GEO_CATEGORY,
                 _s.FEATURE_GEO_PLACE,
                 _s.FEATURE_GEO_PLACE_LAT,
@@ -400,6 +399,8 @@ def get_places(
             ]
 
             places = places[columns]
+            places = places.drop_duplicates()
+            places = places.drop(columns=[_s.FIELD_ID])
             places["count"] = 0
             return (
                 places.groupby(places.columns[:-1].values.tolist())
