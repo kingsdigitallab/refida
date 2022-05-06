@@ -30,9 +30,9 @@ jobs:
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --select=E9,F63,F7,F82
+        poetry run flake8 . --select=E9,F63,F7,F82
         # exit-zero treats all errors as warnings
-        flake8 . --exit-zero
+        poetry run flake8 . --exit-zero
     - name: Test with pytest
       run: |
-        pytest
+        poetry run pytest
