@@ -8,6 +8,8 @@ from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
 from joblib import Memory
 
+PROJECT_TITLE = "REF Impact Data Analysis"
+
 ROOT_DIR = Path(".")
 
 DATA_DIR = ROOT_DIR.joinpath("data")
@@ -20,12 +22,88 @@ if not CACHE_DIR.is_dir():
 
 memory = Memory(CACHE_DIR, verbose=0)
 
-PROJECT_TITLE = "REF Impact Data Analysis"
+# =====================================================================================
+# field names to access the data
+FIELD_ID = "id"
+DATA_UOA = "uoa"
+DATA_SUMMARY = "summary"
+DATA_RESEARCH = "research"
+DATA_DETAILS = "details"
+DATA_SOURCES = "sources"
+DATA_TEXT = "text"
+DATA_ENTITY_SECTIONS: list[str] = [
+    DATA_SUMMARY,
+    DATA_DETAILS,
+    DATA_SOURCES,
+]
+
+FEATURE_TOPIC_TOPIC = "topic"
+FEATURE_TOPIC_SCORE = "score"
+
+FEATURE_SUMMARY = "summary"
+
+FEATURE_ENTITY_ENTITY = "entity"
+FEATURE_ENTITY_LABEL = "label"
+FEATURE_ENTITY_TEXT = "text"
+
+FEATURE_GEO_DISPLAY_NAME = "display_name"
+FEATURE_GEO_LAT = "lat"
+FEATURE_GEO_LON = "lon"
+FEATURE_GEO_CATEGORY = "category"
+FEATURE_GEO_PLACE = "place"
+FEATURE_GEO_PLACE_LAT = "place_lat"
+FEATURE_GEO_PLACE_LON = "place_lon"
+FEATURE_GEO_GEOJSON = "geojson"
 
 
-PARAGRAPH_EXCLUDE_PATTERN: re.Pattern = re.compile(
-    r"^(Page \d+)|(Impact case study \(REF3\))$"
+# =====================================================================================
+# etl module settings
+PARAGRAPH_TYPE_EXCLUDE_PATTERN: re.Pattern = re.compile(
+    r"^(Microsoft Word)|(UoA)", re.IGNORECASE
 )
+PARAGRAPH_CONTENT_EXCLUDE_PATTERN: re.Pattern = re.compile(
+    (
+        r"^(Microsoft Word.*?docx)|"
+        r"(Page \d+)|"
+        r"(Impact case study \(REF3\))|"
+        r"(Unit-level environment template \(REF5b\))|"
+        r"(\(indicative maximum.*?\))$"
+    ),
+    re.IGNORECASE,
+)
+PARAGRAPH_CONTENT_REMOVE: re.Pattern = re.compile(
+    r"\(indicative maximum.*?words\)",
+    re.IGNORECASE,
+)
+
+
+def get_sections_impact_case_study(end: str) -> list[tuple[str, str, str]]:
+    return [
+        (DATA_SUMMARY, "1. Summary of the impact", "2. Underpinning research"),
+        (DATA_RESEARCH, "2. Underpinning research", "3. References to the research"),
+        (
+            DATA_DETAILS,
+            "4. Details of the impact",
+            "5. Sources to corroborate the impact",
+        ),
+        (DATA_SOURCES, "5. Sources to corroborate the impact", end),
+    ]
+
+
+def get_sections_environment(end: str) -> list[tuple[str, str, str]]:
+    return [
+        (
+            DATA_DETAILS,
+            "1. Unit context and structure, research and impact strategy",
+            "2. People",
+        ),
+        (
+            DATA_SOURCES,
+            "4. Collaboration and contribution to the research base, economy and society",
+            end,
+        ),
+    ]
+
 
 UOA_PATTERN: re.Pattern = re.compile(r"(\d+)")
 UOA = {
@@ -56,6 +134,8 @@ UOA = {
     "34": "Communication, Cultural and Media Studies",
 }
 
+# =====================================================================================
+# features module settings
 # model used for topic modelling
 TOPIC_CLASSIFICATION_MODEL: str = "joeddav/bart-large-mnli-yahoo-answers"
 # labels used for topic modelling
@@ -239,26 +319,7 @@ TOPIC_CLASSIFICATION_FIELDS_OF_RESEARCH: dict[str, list[str]] = {
         "Other human society",
     ],
     "INDIGENOUS STUDIES": [
-        "Aboriginal and Torres Strait Islander culture, language and history",
-        "Aboriginal and Torres Strait Islander education",
-        "Aboriginal and Torres Strait Islander environmental knowledges and management",
-        "Aboriginal and Torres Strait Islander health and wellbeing",
-        "Aboriginal and Torres Strait Islander peoples, society and community",
-        "Aboriginal and Torres Strait Islander sciences",
-        "Māori culture, language and history",
-        "Māori education",
-        "Māori environmental knowledges",
-        "Māori health and wellbeing",
-        "Māori peoples, society and community",
-        "Māori sciences",
-        "Pacific Peoples culture, language and history",
-        "Pacific Peoples education",
-        "Pacific Peoples environmental knowledges",
-        "Pacific Peoples health and wellbeing",
-        "Pacific Peoples sciences",
-        "Pacific Peoples society and community",
-        "Other Indigenous data, methodologies and global Indigenous studies",
-        "Other Indigenous studies",
+        "Indigenous studies",
     ],
     "INFORMATION AND COMPUTING SCIENCES": [
         "Applied computing",
@@ -444,36 +505,3 @@ def get_place_category(name: str, country: str) -> Optional[str]:
         return "National"
 
     return "Global"
-
-
-# field names to access the data
-FIELD_ID = "id"
-DATA_UOA = "uoa"
-DATA_SUMMARY = "summary"
-DATA_RESEARCH = "research"
-DATA_DETAILS = "details"
-DATA_SOURCES = "sources"
-DATA_TEXT = "text"
-DATA_ENTITY_SECTIONS: list[str] = [
-    DATA_SUMMARY,
-    DATA_DETAILS,
-    DATA_SOURCES,
-]
-
-FEATURE_TOPIC_TOPIC = "topic"
-FEATURE_TOPIC_SCORE = "score"
-
-FEATURE_SUMMARY = "summary"
-
-FEATURE_ENTITY_ENTITY = "entity"
-FEATURE_ENTITY_LABEL = "label"
-FEATURE_ENTITY_TEXT = "text"
-
-FEATURE_GEO_DISPLAY_NAME = "display_name"
-FEATURE_GEO_LAT = "lat"
-FEATURE_GEO_LON = "lon"
-FEATURE_GEO_CATEGORY = "category"
-FEATURE_GEO_PLACE = "place"
-FEATURE_GEO_PLACE_LAT = "place_lat"
-FEATURE_GEO_PLACE_LON = "place_lon"
-FEATURE_GEO_GEOJSON = "geojson"

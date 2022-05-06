@@ -45,7 +45,11 @@ def get_data_path(
 
 
 def get_etl_data(datadir: str = DATA_DIR.name) -> Optional[pd.DataFrame]:
-    return get_data(get_etl_data_path(datadir))
+    data = get_data(get_etl_data_path(datadir))
+    if data is not None:
+        return data.sort_values(by=["uoa_n", "id"])
+
+    return None
 
 
 def get_data(filename: Path, kwargs: dict = {}) -> Optional[pd.DataFrame]:

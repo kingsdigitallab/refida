@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel
 
@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class REFDocument(BaseModel):
     id: str
     type: str
+    uoa_n: Optional[int] = None
     uoa: Optional[str] = None
     title: Optional[str] = None
     names: Optional[list[str]] = None
@@ -21,7 +22,7 @@ class REFDocument(BaseModel):
     compressed: Optional[bytes] = None
     file: str
 
-    def set_field(self, field: str, value: str):
+    def set_field(self, field: str, value: Union[int, str]):
         """
         Set a field of the document.
 

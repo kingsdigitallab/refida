@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Product to the list of entity types to extract.
 - MPL-2.0 license file.
+- Tests for etl module.
 
 ### Changed
 
@@ -18,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group places by country to display data in the map.
 - Move all the chart creation to the visualize module.
 - Enable checkbox selection in the data grid.
+- `etl` module to extract data from environment statements.
 
 ### Removed
 
