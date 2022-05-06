@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Product to the list of entity types to extract.
 - MPL-2.0 license file.
-- Tests for etl module.
+- Tests for `etl` module.
+- [pre-commit](https://pre-commit.com/) configuration.
 
 ### Changed
 
