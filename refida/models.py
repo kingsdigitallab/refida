@@ -19,7 +19,6 @@ class REFDocument(BaseModel):
     details: Optional[str] = None
     sources: Optional[str] = None
     text: Optional[str] = None
-    compressed: Optional[bytes] = None
     file: str
 
     def set_field(self, field: str, value: Union[int, str]):

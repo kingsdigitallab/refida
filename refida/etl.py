@@ -1,5 +1,4 @@
 import re
-import zlib
 from pathlib import Path
 from typing import Iterator, Optional
 
@@ -28,7 +27,7 @@ def extract(
         if data is not None:
             extracted = pd.concat([data, extracted], ignore_index=True)
 
-    return extracted
+    return extracted.sort_values(by=["uoa_n", "id"])  # type: ignore
 
 
 def extract_file(file: Path) -> Optional[pd.DataFrame]:
@@ -46,8 +45,35 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
     if not include_paragraph(paragraphs[0], PARAGRAPH_TYPE_EXCLUDE_PATTERN):
         paragraphs = paragraphs[1:]
 
-    full_text = "\n".join([p for p in paragraphs if include_paragraph(p)])
+    doc_type = paragraphs[0]
+    impact_case_study = is_impact_case_study(doc_type)
 
+    sections = get_sections_environment(paragraphs[-1])
+
+    if impact_case_study:
+        sections = get_sections_impact_case_study(paragraphs[-1])
+
+    doc = get_document(file, paragraphs, doc_type, impact_case_study, sections)
+
+    return pd.DataFrame([doc.dict()])
+
+
+def get_document(
+    file: Path,
+    paragraphs: list[str],
+    doc_type: str,
+    impact_case_study: bool,
+    sections: list[tuple[str, str, str]],
+) -> REFDocument:
+    """
+    Get a REFDocument from a list of paragraphs.
+
+    :param file: The file to get the document from.
+    :param paragraphs: The list of paragraphs to search through.
+    :param doc_type: The document type.
+    :param impact_case_study: Whether the document is an impact case study.
+    :param sections: The list of sections to extract from the paragraphs.
+    """
     doc_type = paragraphs[0]
 
     doc = REFDocument(
@@ -64,12 +90,11 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
         title = file.name.replace(".pdf", "")
     doc.title = title
 
-    if is_impact_case_study(doc_type):
+    if impact_case_study:
         names = get_names(paragraphs)
         if names:
             doc.names = names
 
-    if is_impact_case_study(doc_type):
         for section in [
             ("research", "period when the underpinning research was undertaken"),
             ("impact", "period when the claimed impact occurred"),
@@ -82,11 +107,6 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
 
     text = ""
 
-    sections = get_sections_impact_case_study(paragraphs[-1])
-
-    if not is_impact_case_study(doc_type):
-        sections = get_sections_environment(paragraphs[-1])
-
     for section in sections:
         content = get_section(paragraphs, section[1], section[2])
         if content:
@@ -95,9 +115,7 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
 
     doc.text = text
 
-    doc.compressed = zlib.compress(full_text.encode("utf-8"))
-
-    return pd.DataFrame([doc.dict()])
+    return doc
 
 
 def is_impact_case_study(doc_type: str) -> bool:

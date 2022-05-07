@@ -47,7 +47,7 @@ def get_data_path(
 def get_etl_data(datadir: str = DATA_DIR.name) -> Optional[pd.DataFrame]:
     data = get_data(get_etl_data_path(datadir))
     if data is not None:
-        return data.sort_values(by=["uoa_n", "id"])
+        return data
 
     return None
 

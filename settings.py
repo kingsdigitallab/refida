@@ -99,7 +99,10 @@ def get_sections_environment(end: str) -> list[tuple[str, str, str]]:
         ),
         (
             DATA_SOURCES,
-            "4. Collaboration and contribution to the research base, economy and society",
+            (
+                "4. Collaboration and contribution to the research base, "
+                "economy and society"
+            ),
             end,
         ),
     ]
