@@ -40,49 +40,64 @@ def sidebar():
         ),
     )
 
-    view = st.session_state.view
-
     if (
         show_impact_categories_view()
         or show_types_of_impact_view()
         or show_fields_of_research_view()
     ):
-        st.subheader(f"{st.session_state.view} options")
-        st.session_state.topics_aggr_function = st.radio(
-            f"Aggregate {view.lower()} by",
-            ("count", "mean"),
-        )
-        st.session_state.topics_score_threshold = st.slider(
-            "Minimum score/confidence", 0.0, 1.0, 0.75, 0.05
-        )
+        topics_sidebar()
+        return
 
 
 def show_impact_categories_view():
-    return st.session_state.view == "Impact categories"
+    return get_session_view() == "Impact categories"
+
+
+def get_session_view() -> str:
+    return st.session_state.view
 
 
 def show_types_of_impact_view():
-    return st.session_state.view == "Types of impact"
+    return get_session_view() == "Types of impact"
 
 
 def show_fields_of_research_view():
-    return st.session_state.view == "Fields of research"
+    return get_session_view() == "Fields of research"
+
+
+def topics_sidebar():
+    view = get_session_view()
+
+    st.subheader(f"{view} options")
+    st.session_state.topics_aggr_function = st.radio(
+        f"Aggregate {view.lower()} by",
+        ("count", "mean"),
+        help=_s.DASHBOARD_HELP_TOPICS_AGGR_FUNCTION,
+    )
+    st.session_state.topics_score_threshold = st.slider(
+        "Minimum score/confidence",
+        0.0,
+        1.0,
+        0.75,
+        0.05,
+        help=_s.DASHBOARD_HELP_TOPICS_SCORE_THRESHOLD,
+    )
 
 
 def show_partners_view():
-    return st.session_state.view == "Partners"
+    return get_session_view() == "Partners"
 
 
 def show_beneficiaries_view():
-    return st.session_state.view == "Beneficiaries"
+    return get_session_view() == "Beneficiaries"
 
 
 def show_geo_view():
-    return st.session_state.view == "Locations"
+    return get_session_view() == "Locations"
 
 
 def data_section():
-    st.header("Case studies")
+    st.header("Documents")
 
     data = dm.get_etl_data()
     if data is not None:
@@ -209,16 +224,18 @@ def show_topics(
     title: str, data: pd.DataFrame, sources: list[str] = [_s.DATA_TEXT]
 ) -> None:
     st.header(title)
+    with st.expander("About", expanded=False):
+        st.markdown(_s.DASHBOARD_HELP_TOPICS)
 
     n_rows = data.shape[0]
 
     st.write(STYLE_RADIO_INLINE, unsafe_allow_html=True)
-    aggr_function = get_topics_aggr_function()
+    aggr_function = get_session_topics_aggr_function()
     aggr = f"{aggr_function}({_s.FEATURE_TOPIC_SCORE})"
     if n_rows == 1:
         aggr = _s.FEATURE_TOPIC_SCORE
 
-    threshold = get_topics_score_threshold()
+    threshold = get_session_topics_score_threshold()
 
     topics = get_topics(sources, tuple(data[_s.FIELD_ID].values.tolist()))
     if topics is None or topics.empty:
@@ -299,11 +316,11 @@ def show_topics(
     )
 
 
-def get_topics_aggr_function() -> str:
+def get_session_topics_aggr_function() -> str:
     return st.session_state.topics_aggr_function
 
 
-def get_topics_score_threshold() -> float:
+def get_session_topics_score_threshold() -> float:
     return st.session_state.topics_score_threshold
 
 

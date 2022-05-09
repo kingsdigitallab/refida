@@ -64,25 +64,6 @@ FEATURE_GEO_GEOJSON = "geojson"
 
 
 # =====================================================================================
-# dashboard settings
-DASHBOARD_COLUMNS_FOR_DATA_GRID: list[str] = [
-    FIELD_ID,
-    DATA_TYPE,
-    DATA_UOA_N,
-    DATA_UOA,
-    DATA_TITLE,
-    DATA_RESEARCH_START,
-    DATA_RESEARCH_END,
-    DATA_IMPACT_START,
-    DATA_IMPACT_END,
-    "file",
-]
-
-DASHBOARD_PLOT_MIN_HEIGHT: int = 500
-DASHBOARD_PLOT_RATIO: float = 5
-
-
-# =====================================================================================
 # etl module settings
 ETL_SORT_BY: list[str] = [DATA_UOA_N, FIELD_ID]
 
@@ -536,3 +517,39 @@ def get_place_category(name: str, country: str) -> Optional[str]:
         return "National"
 
     return "Global"
+
+
+# =====================================================================================
+# dashboard settings
+DASHBOARD_COLUMNS_FOR_DATA_GRID: list[str] = [
+    FIELD_ID,
+    DATA_TYPE,
+    DATA_UOA_N,
+    DATA_UOA,
+    DATA_TITLE,
+    DATA_RESEARCH_START,
+    DATA_RESEARCH_END,
+    DATA_IMPACT_START,
+    DATA_IMPACT_END,
+    "file",
+]
+
+DASHBOARD_PLOT_MIN_HEIGHT: int = 500
+DASHBOARD_PLOT_RATIO: float = 5
+
+DASHBOARD_HELP_TOPICS: str = """
+Topic classification has been applied to the documents using different authority lists
+to classify the data according to different perspectives:
+- impact categories, extracted from the whole text of the document;
+- fields of research, extracted from the section 2. Underpinning research;
+- types of impact, extracted from the sections 1. Summary, 4. Details of the impact.
+"""
+DASHBOARD_HELP_TOPICS_AGGR_FUNCTION: str = """
+The data in this section can either be aggregated by count (to find out
+how many documents belong to a topic) or by average score (to find out how
+confident the algorithm was in selecting a topic for the documents).
+"""
+DASHBOARD_HELP_TOPICS_SCORE_THRESHOLD: str = """
+The topics are assigned to the case studies by the classification algorithm using a
+confidence score (0-100%), the higher the score the more relevant the topics are.
+"""
