@@ -143,7 +143,6 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
         return
 
     if show_geo_view():
-        st.header("Locations")
         show_geo(selection)
         return
 
@@ -369,6 +368,8 @@ def show_entities_in_context(section: str, idx: int):
 
 
 def show_geo(data: pd.DataFrame):
+    st.header("Locations")
+
     places = get_places(tuple(data[_s.FIELD_ID].values.tolist()))
     if places is None:
         st.warning("No places data found")
