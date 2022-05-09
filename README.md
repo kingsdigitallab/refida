@@ -1,5 +1,7 @@
 # REF Impact Data Analysis
 
+[![Python application](https://github.com/kingsdigitallab/refida/actions/workflows/test.yml/badge.svg)](https://github.com/kingsdigitallab/refida/actions/workflows/test.yml)
+
 For the list of changes to the project see the [Changelog](CHANGELOG.md).
 
 ## Workflow
