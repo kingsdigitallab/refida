@@ -65,12 +65,19 @@ def parallel_categories(
     :param dimensions: The dimensions to plot.
     :param colour: A dictionary of colours to use for each value.
     """
-    return px.parallel_categories(
-        data,
-        dimensions=dimensions,
-        color=colour,
-        height=get_height(data, ratio=1.25),
-    ).update_traces(line=dict(shape="hspline"))
+    margin_left = data[dimensions[0]].map(len).max() + 150
+    margin_right = data[dimensions[-1]].map(len).max() + 150
+
+    return (
+        px.parallel_categories(
+            data,
+            dimensions=dimensions,
+            color=colour,
+            height=get_height(data, ratio=1.25),
+        )
+        .update_layout(margin=dict(l=margin_left, r=margin_right))
+        .update_traces(line=dict(shape="hspline"))
+    )
 
 
 @memory.cache
