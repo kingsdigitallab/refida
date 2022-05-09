@@ -25,6 +25,7 @@ memory = Memory(CACHE_DIR, verbose=0)
 # =====================================================================================
 # field names to access the data
 FIELD_ID = "id"
+DATA_UOA_N = "uoa_n"
 DATA_UOA = "uoa"
 DATA_SUMMARY = "summary"
 DATA_RESEARCH = "research"
@@ -58,6 +59,8 @@ FEATURE_GEO_GEOJSON = "geojson"
 
 # =====================================================================================
 # etl module settings
+ETL_SORT_BY: list[str] = [DATA_UOA_N, FIELD_ID]
+
 PARAGRAPH_TYPE_EXCLUDE_PATTERN: re.Pattern = re.compile(
     r"^(Microsoft Word)|(UoA)", re.IGNORECASE
 )

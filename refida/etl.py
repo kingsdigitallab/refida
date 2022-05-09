@@ -7,6 +7,7 @@ from txtai.pipeline import Textractor
 
 from refida.models import REFDocument
 from settings import (
+    ETL_SORT_BY,
     PARAGRAPH_CONTENT_EXCLUDE_PATTERN,
     PARAGRAPH_CONTENT_REMOVE,
     PARAGRAPH_TYPE_EXCLUDE_PATTERN,
@@ -17,27 +18,31 @@ from settings import (
 )
 
 
-def extract(
-    files: Iterator[Path],
-) -> pd.DataFrame:
-    extracted = pd.DataFrame()
-
-    for file in files:
-        data = extract_file(file)
-        if data is not None:
-            extracted = pd.concat([data, extracted], ignore_index=True)
-
-    return extracted.sort_values(by=["uoa_n", "id"])  # type: ignore
-
-
-def extract_file(file: Path) -> Optional[pd.DataFrame]:
+def extract(files: Iterator[Path], sort_by: list[str] = ETL_SORT_BY) -> pd.DataFrame:
     """
-    Extract data from a file using txtai.Textractor.
+    Extract data from a list of files using txtai.Textractor.
 
-    :param file: Path to the file to extract data from.
+    :param files: The list of files to extract data from.
     """
     textractor = Textractor(paragraphs=True)
 
+    extracted = pd.DataFrame()
+
+    for file in files:
+        data = extract_file(textractor, file)
+        if data is not None:
+            extracted = pd.concat([data, extracted], ignore_index=True)
+
+    return extracted.sort_values(by=ETL_SORT_BY)  # type: ignore
+
+
+def extract_file(textractor: Textractor, file: Path) -> Optional[pd.DataFrame]:
+    """
+    Extract data from a file using txtai.Textractor.
+
+    :param textractor: The txtai.Textractor to use.
+    :param file: Path to the file to extract data from.
+    """
     paragraphs = textractor(file.as_posix())
     if not paragraphs:
         return None
@@ -46,6 +51,9 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
         paragraphs = paragraphs[1:]
 
     doc_type = paragraphs[0]
+    if not doc_type:
+        return None
+
     impact_case_study = is_impact_case_study(doc_type)
 
     sections = get_sections_environment(paragraphs[-1])
@@ -56,6 +64,27 @@ def extract_file(file: Path) -> Optional[pd.DataFrame]:
     doc = get_document(file, paragraphs, doc_type, impact_case_study, sections)
 
     return pd.DataFrame([doc.dict()])
+
+
+def get_document_type(paragraphs: list[str]) -> Optional[str]:
+    """
+    Get the document type.
+
+    :param paragraphs: The list of paragraphs to get the document type from.
+    """
+    if not paragraphs:
+        return None
+
+    return paragraphs[0]
+
+
+def is_impact_case_study(doc_type: str) -> bool:
+    """
+    Check if the document type is an impact case study.
+
+    :param doc_type: The document type to check.
+    """
+    return doc_type.lower().startswith("impact case study")
 
 
 def get_document(
@@ -74,11 +103,9 @@ def get_document(
     :param impact_case_study: Whether the document is an impact case study.
     :param sections: The list of sections to extract from the paragraphs.
     """
-    doc_type = paragraphs[0]
+    doc_id = file.name.replace(".pdf", "")
 
-    doc = REFDocument(
-        id=file.name.replace(".pdf", ""), type=doc_type, file=file.as_posix()
-    )
+    doc = REFDocument(id=doc_id, type=doc_type, file=file.as_posix())
 
     uoa = get_uoa(paragraphs)
     if uoa:
@@ -87,7 +114,7 @@ def get_document(
 
     title = get_title(paragraphs)
     if not title:
-        title = file.name.replace(".pdf", "")
+        title = doc_id
     doc.title = title
 
     if impact_case_study:
@@ -116,15 +143,6 @@ def get_document(
     doc.text = text
 
     return doc
-
-
-def is_impact_case_study(doc_type: str) -> bool:
-    """
-    Check if the document type is an impact case study.
-
-    :param doc_type: The document type to check.
-    """
-    return doc_type.lower().startswith("impact case study")
 
 
 def include_paragraph(
