@@ -40,6 +40,22 @@ def sidebar():
         ),
     )
 
+    view = st.session_state.view
+
+    if (
+        show_impact_categories_view()
+        or show_types_of_impact_view()
+        or show_fields_of_research_view()
+    ):
+        st.subheader(f"{st.session_state.view} options")
+        st.session_state.topics_aggr_function = st.radio(
+            f"Aggregate {view.lower()} by",
+            ("count", "mean"),
+        )
+        st.session_state.topics_score_threshold = st.slider(
+            "Minimum score/confidence", 0.0, 1.0, 0.75, 0.05
+        )
+
 
 def show_impact_categories_view():
     return st.session_state.view == "Impact categories"
@@ -197,15 +213,12 @@ def show_topics(
     n_rows = data.shape[0]
 
     st.write(STYLE_RADIO_INLINE, unsafe_allow_html=True)
-    aggr_function = st.radio(
-        f"Aggregate {title.lower()} by",
-        ("count", "mean"),
-    )
+    aggr_function = get_topics_aggr_function()
     aggr = f"{aggr_function}({_s.FEATURE_TOPIC_SCORE})"
     if n_rows == 1:
         aggr = _s.FEATURE_TOPIC_SCORE
 
-    threshold = st.slider("Minimum score/confidence", 0.0, 1.0, 0.75, 0.05)
+    threshold = get_topics_score_threshold()
 
     topics = get_topics(sources, tuple(data[_s.FIELD_ID].values.tolist()))
     if topics is None or topics.empty:
@@ -284,6 +297,14 @@ def show_topics(
         ),
         use_container_width=True,
     )
+
+
+def get_topics_aggr_function() -> str:
+    return st.session_state.topics_aggr_function
+
+
+def get_topics_score_threshold() -> float:
+    return st.session_state.topics_score_threshold
 
 
 @st.experimental_memo
