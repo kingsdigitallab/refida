@@ -395,6 +395,7 @@ def show_geo(data: pd.DataFrame):
         use_container_width=True,
     )
 
+    st.subheader("Countries distribution")
     st.plotly_chart(
         vm.bar(
             places,
