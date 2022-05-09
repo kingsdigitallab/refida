@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MPL-2.0 license file.
 - Tests for `etl` module.
 - [pre-commit](https://pre-commit.com/) configuration.
+- Processing for environment studies.
 
 ### Changed
 
@@ -21,11 +22,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Move all the chart creation to the visualize module.
 - Enable checkbox selection in the data grid.
 - `etl` module to extract data from environment statements.
+- Reduce the number of columns in the data grid.
 - Refactor sidebar options.
+- Dynamically calculate the plot heights.
+- Move text data to the `y` axis for easier readability.
 
 ### Removed
 
 - Person from the list of entity types to extract.
+
+### Fixed
+
+- Labels being cut-off in parallel plots.
 
 ## [0.2.1] - 2022-04-28
 
