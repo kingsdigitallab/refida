@@ -72,6 +72,7 @@ COLUMNS_FOR_DATA_GRID: list[str] = [
     DATA_RESEARCH_END,
     DATA_IMPACT_START,
     DATA_IMPACT_END,
+    "file"
 ]
 
 
