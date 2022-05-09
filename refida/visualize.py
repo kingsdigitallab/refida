@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-from settings import memory
+from settings import DASHBOARD_PLOT_MIN_HEIGHT, DASHBOARD_PLOT_RATIO, memory
 
 
 @memory.cache
@@ -13,8 +13,8 @@ def histogram(
     x: Optional[str],
     y: Optional[str],
     colour: str,
-    height: int = None,
     labels: dict[str, str] = {},
+    height: Optional[int] = None,
 ) -> go.Figure:
     """
     Generate a histogram of the data.
@@ -23,15 +23,40 @@ def histogram(
     :param x: The column to plot on the x-axis.
     :param y: The column to plot on the y-axis.
     :param colour: The column to colour the bars by.
-    :param height: The height of the plot.
     :param labels: A dictionary of labels to use for the x-axis and y-axis.
     """
-    return px.histogram(data, x=x, y=y, color=colour, height=height, labels=labels)
+    if not height:
+        height = get_height(data)
+
+    return px.histogram(data, x=x, y=y, color=colour, labels=labels, height=height)
+
+
+def get_height(
+    data: pd.DataFrame,
+    min_height: int = DASHBOARD_PLOT_MIN_HEIGHT,
+    ratio: float = DASHBOARD_PLOT_RATIO,
+) -> Optional[int]:
+    """
+    Get the height for plot.
+
+    :param data: The data to plot.
+    :param min_height: The minimum height to return.
+    :param ratio: The ratio to use for the height and the length of the data.
+    """
+    if data is None:
+        return None
+
+    number_of_rows = len(data.index)
+    height = max(
+        number_of_rows * ratio if number_of_rows > 10 else min_height, min_height
+    )
+
+    return int(height)
 
 
 @memory.cache
 def parallel_categories(
-    data: pd.DataFrame, dimensions: list[str], colour: dict[str, str], height: int
+    data: pd.DataFrame, dimensions: list[str], colour: dict[str, str]
 ) -> go.Figure:
     """
     Generate a parallel category plot of the data.
@@ -39,17 +64,14 @@ def parallel_categories(
     :param data: The data to plot.
     :param dimensions: The dimensions to plot.
     :param colour: A dictionary of colours to use for each value.
-    :param height: The height of the plot.
     """
     return px.parallel_categories(
-        data, dimensions=dimensions, color=colour, height=height
+        data, dimensions=dimensions, color=colour, height=get_height(data, ratio=1.25)
     )
 
 
 @memory.cache
-def scatter(
-    data: pd.DataFrame, x: str, y: str, colour: str, size: str, height: int
-) -> go.Figure:
+def scatter(data: pd.DataFrame, x: str, y: str, colour: str, size: str) -> go.Figure:
     """
     Generate a scatter plot of the data.
 
@@ -58,9 +80,8 @@ def scatter(
     :param y: The column to plot on the y-axis.
     :param colour: The column to colour the points by.
     :param size: The column to size the points by.
-    :param height: The height of the plot.
     """
-    return px.scatter(data, x=x, y=y, color=colour, size=size, height=height)
+    return px.scatter(data, x=x, y=y, color=colour, size=size, height=get_height(data))
 
 
 @memory.cache
@@ -76,7 +97,7 @@ def bar(
     :param colour: The column to colour the bars by.
     :param labels: A dictionary of labels to use for the x-axis and y-axis.
     """
-    return px.bar(data, x=x, y=y, color=colour, labels=labels)
+    return px.bar(data, x=x, y=y, color=colour, labels=labels, height=get_height(data))
 
 
 @memory.cache

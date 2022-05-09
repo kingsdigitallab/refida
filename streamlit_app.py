@@ -81,7 +81,7 @@ def data_section():
 
 
 def show_data_grid(data: pd.DataFrame) -> dict:
-    data = data[_s.COLUMNS_FOR_DATA_GRID]
+    data = data[_s.DASHBOARD_COLUMNS_FOR_DATA_GRID]
     options = GridOptionsBuilder.from_dataframe(
         data, enableRowGroup=True, enableValue=True
     )
@@ -222,9 +222,6 @@ def show_topics(
         topics.groupby(_s.FEATURE_TOPIC_TOPIC).agg(aggr_function).reset_index()
     )
 
-    number_of_topics = topics[_s.FEATURE_TOPIC_TOPIC].shape[0]
-    height = number_of_topics * 1.25 if number_of_topics > 10 else 400
-
     st.subheader(f"{title} with confidence >= {threshold} aggregated by {aggr}")
     with st.expander("View data", expanded=False):
         # https://stackoverflow.com/questions/69578431/how-to-fix-streamlitapiexception-expected-bytes-got-a-int-object-conver
@@ -244,7 +241,6 @@ def show_topics(
             _s.FEATURE_TOPIC_SCORE,
             _s.FEATURE_TOPIC_TOPIC,
             _s.FEATURE_TOPIC_TOPIC,
-            height,
         ).update_layout(yaxis=dict(categoryorder="category ascending")),
         use_container_width=True,
     )
@@ -256,13 +252,14 @@ def show_topics(
         {v: palette[i % palette_len] for i, v in enumerate(colour_df.unique())}
     )
 
-    st.subheader(f"Connections between {title.lower()} and unit of assessment")
-    st.plotly_chart(
-        vm.parallel_categories(
-            topics, [_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA], colours, height
-        ),
-        use_container_width=True,
-    )
+    with st.container():
+        st.subheader(f"Connections between {title.lower()} and unit of assessment")
+        st.plotly_chart(
+            vm.parallel_categories(
+                topics, [_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA], colours
+            ),
+            use_container_width=True,
+        )
 
     st.subheader(f"Correlation between {title.lower()} and unit of assessment")
     topics_aggr = (
@@ -277,7 +274,6 @@ def show_topics(
             _s.FEATURE_TOPIC_TOPIC,
             _s.FEATURE_TOPIC_TOPIC,
             _s.FEATURE_TOPIC_SCORE,
-            height,
         ).update_layout(
             xaxis=dict(categoryorder="category ascending", tickangle=-45),
             yaxis=dict(
@@ -326,8 +322,12 @@ def show_entities(
         st.subheader(f"{title} distribution")
         st.plotly_chart(
             vm.histogram(
-                entities, None, _s.FEATURE_ENTITY_ENTITY, _s.FEATURE_ENTITY_LABEL
-            ).update_layout(dict(xaxis=dict(tickangle=-45))),
+                entities,
+                None,
+                _s.FEATURE_ENTITY_ENTITY,
+                _s.FEATURE_ENTITY_LABEL,
+                height=_s.DASHBOARD_PLOT_MIN_HEIGHT,
+            ),
             use_container_width=True,
         )
 
@@ -353,7 +353,9 @@ def get_entities(sections: list[str], ids: tuple[str]) -> Optional[pd.DataFrame]
     if data is not None:
         entities = get_rows_by_id(data, ids)
         if entities is not None:
-            return entities[[_s.FEATURE_ENTITY_LABEL, _s.FEATURE_ENTITY_ENTITY]]
+            return entities[
+                [_s.FEATURE_ENTITY_LABEL, _s.FEATURE_ENTITY_ENTITY]
+            ].sort_values(by=_s.FEATURE_ENTITY_ENTITY)
 
     return None
 

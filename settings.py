@@ -62,7 +62,10 @@ FEATURE_GEO_PLACE_LAT = "place_lat"
 FEATURE_GEO_PLACE_LON = "place_lon"
 FEATURE_GEO_GEOJSON = "geojson"
 
-COLUMNS_FOR_DATA_GRID: list[str] = [
+
+# =====================================================================================
+# dashboard settings
+DASHBOARD_COLUMNS_FOR_DATA_GRID: list[str] = [
     FIELD_ID,
     DATA_TYPE,
     DATA_UOA_N,
@@ -72,8 +75,11 @@ COLUMNS_FOR_DATA_GRID: list[str] = [
     DATA_RESEARCH_END,
     DATA_IMPACT_START,
     DATA_IMPACT_END,
-    "file"
+    "file",
 ]
+
+DASHBOARD_PLOT_MIN_HEIGHT: int = 500
+DASHBOARD_PLOT_RATIO: float = 5
 
 
 # =====================================================================================
