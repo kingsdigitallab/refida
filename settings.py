@@ -25,8 +25,14 @@ memory = Memory(CACHE_DIR, verbose=0)
 # =====================================================================================
 # field names to access the data
 FIELD_ID = "id"
+DATA_TYPE = "type"
 DATA_UOA_N = "uoa_n"
 DATA_UOA = "uoa"
+DATA_TITLE = "title"
+DATA_RESEARCH_START = "research_start"
+DATA_RESEARCH_END = "research_end"
+DATA_IMPACT_START = "impact_start"
+DATA_IMPACT_END = "impact_end"
 DATA_SUMMARY = "summary"
 DATA_RESEARCH = "research"
 DATA_DETAILS = "details"
@@ -55,6 +61,18 @@ FEATURE_GEO_PLACE = "place"
 FEATURE_GEO_PLACE_LAT = "place_lat"
 FEATURE_GEO_PLACE_LON = "place_lon"
 FEATURE_GEO_GEOJSON = "geojson"
+
+COLUMNS_FOR_DATA_GRID: list[str] = [
+    FIELD_ID,
+    DATA_TYPE,
+    DATA_UOA_N,
+    DATA_UOA,
+    DATA_TITLE,
+    DATA_RESEARCH_START,
+    DATA_RESEARCH_END,
+    DATA_IMPACT_START,
+    DATA_IMPACT_END,
+]
 
 
 # =====================================================================================
