@@ -63,7 +63,7 @@ def data_section():
 
 
 def show_data_grid(data: pd.DataFrame) -> dict:
-    data = data.drop(columns=["names", "compressed"])
+    data = data.drop(columns=["names"])
     options = GridOptionsBuilder.from_dataframe(
         data, enableRowGroup=True, enableValue=True
     )
