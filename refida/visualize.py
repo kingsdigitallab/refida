@@ -66,8 +66,11 @@ def parallel_categories(
     :param colour: A dictionary of colours to use for each value.
     """
     return px.parallel_categories(
-        data, dimensions=dimensions, color=colour, height=get_height(data, ratio=1.25)
-    )
+        data,
+        dimensions=dimensions,
+        color=colour,
+        height=get_height(data, ratio=1.25),
+    ).update_traces(line=dict(shape="hspline"))
 
 
 @memory.cache
