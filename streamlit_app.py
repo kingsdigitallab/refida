@@ -9,11 +9,10 @@ from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
 
 import settings as _s
-from cli import TopicsSection
 from refida import data as dm
 from refida import visualize as vm
 
-STYLE_RADIO_INLINE = "<style>div.row-widget.stRadio > div{flex-direction:row;}</style>"
+STYLE_RADIO_INLINE = ""
 
 
 def streamlit():
@@ -31,16 +30,35 @@ def sidebar():
 
     st.session_state.view = st.radio(
         "Choose view",
-        ("Topics", "Entities", "Locations"),
+        (
+            "Impact categories",
+            "Types of impact",
+            "Fields of research",
+            "Partners",
+            "Beneficiaries",
+            "Locations",
+        ),
     )
 
 
-def show_topics_view():
-    return st.session_state.view == "Topics"
+def show_impact_categories_view():
+    return st.session_state.view == "Impact categories"
 
 
-def show_entities_view():
-    return st.session_state.view == "Entities"
+def show_types_of_impact_view():
+    return st.session_state.view == "Types of impact"
+
+
+def show_fields_of_research_view():
+    return st.session_state.view == "Fields of research"
+
+
+def show_partners_view():
+    return st.session_state.view == "Partners"
+
+
+def show_beneficiaries_view():
+    return st.session_state.view == "Beneficiaries"
 
 
 def show_geo_view():
@@ -101,25 +119,33 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
     else:
         st.info(f"{n_rows} documents available, showing aggregate information")
 
-    if show_topics_view():
-        show_topics(selection)
+    if show_impact_categories_view():
+        show_topics("Impact categories", selection)
+        return
 
-    if show_entities_view():
-        st.header("Entities")
-        for section in _s.DATA_ENTITY_SECTIONS:
-            show_entities(selection, section)
+    if show_types_of_impact_view():
+        # TODO: types of impact are also available in the summary
+        show_topics("Types of impact", selection, [_s.DATA_SUMMARY, _s.DATA_DETAILS])
+        return
 
-        if doc is not None:
-            st.subheader("View entities in context")
-            st.write(STYLE_RADIO_INLINE, unsafe_allow_html=True)
-            section = st.radio("Choose context", [None] + _s.DATA_ENTITY_SECTIONS)
-            if section:
-                st.subheader(section.capitalize())
-                show_entities_in_context(section, doc_idx)
+    if show_fields_of_research_view():
+        show_topics("Fields of research", selection, [_s.DATA_RESEARCH])
+        return
+
+    if show_partners_view():
+        show_entities(
+            "Partners", selection, [_s.DATA_SUMMARY, _s.DATA_SOURCES], doc, doc_idx
+        )
+        return
+
+    if show_beneficiaries_view():
+        show_entities("Beneficiaries", selection, [_s.DATA_DETAILS], doc, doc_idx)
+        return
 
     if show_geo_view():
         st.header("Locations")
         show_geo(selection)
+        return
 
 
 def show_doc(data: pd.DataFrame):
@@ -164,18 +190,16 @@ def get_rows_by_id(data: pd.DataFrame, ids: tuple[str]) -> Optional[pd.DataFrame
     return None
 
 
-def show_topics(data: pd.DataFrame):
-    st.header("Topics")
+def show_topics(
+    title: str, data: pd.DataFrame, sources: list[str] = [_s.DATA_TEXT]
+) -> None:
+    st.header(title)
 
     n_rows = data.shape[0]
 
     st.write(STYLE_RADIO_INLINE, unsafe_allow_html=True)
-    source = st.radio(
-        "Choose topics source",
-        TopicsSection._member_names_,
-    )
     aggr_function = st.radio(
-        "Choose topics aggregation function",
+        f"Aggregate {title.lower()} by",
         ("count", "mean"),
     )
     aggr = f"{aggr_function}({_s.FEATURE_TOPIC_SCORE})"
@@ -184,7 +208,7 @@ def show_topics(data: pd.DataFrame):
 
     threshold = st.slider("Minimum score/confidence", 0.0, 1.0, 0.75, 0.05)
 
-    topics = get_topics(source, tuple(data[_s.FIELD_ID].values.tolist()))
+    topics = get_topics(sources, tuple(data[_s.FIELD_ID].values.tolist()))
     if topics is None or topics.empty:
         st.warning("No topics found")
         return
@@ -202,9 +226,7 @@ def show_topics(data: pd.DataFrame):
     number_of_topics = topics[_s.FEATURE_TOPIC_TOPIC].shape[0]
     height = number_of_topics * 2 if number_of_topics > 10 else 400
 
-    st.subheader(
-        f"Topics in {source} with confidence >= {threshold} aggregated by {aggr}"
-    )
+    st.subheader(f"{title} with confidence >= {threshold} aggregated by {aggr}")
     with st.expander("View data", expanded=False):
         # https://stackoverflow.com/questions/69578431/how-to-fix-streamlitapiexception-expected-bytes-got-a-int-object-conver
         # https://issues.apache.org/jira/browse/ARROW-14087
@@ -216,6 +238,7 @@ def show_topics(data: pd.DataFrame):
             mime="text/csv",
         )
 
+    st.subheader(f"{title} distribution")
     st.plotly_chart(
         vm.histogram(
             topics_aggr,
@@ -234,6 +257,7 @@ def show_topics(data: pd.DataFrame):
         {v: palette[i % palette_len] for i, v in enumerate(colour_df.unique())}
     )
 
+    st.subheader(f"Connections between {title.lower()} and unit of assessment")
     st.plotly_chart(
         vm.parallel_categories(
             topics, [_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA], colours, height
@@ -241,6 +265,7 @@ def show_topics(data: pd.DataFrame):
         use_container_width=True,
     )
 
+    st.subheader(f"Correlation between {title.lower()} and unit of assessment")
     topics_aggr = (
         topics.groupby([_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA])
         .agg(aggr_function)
@@ -265,11 +290,18 @@ def show_topics(data: pd.DataFrame):
 
 
 @st.experimental_memo
-def get_topics(label: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
-    data = dm.get_topics_data(label)
+def get_topics(sections: list[str], ids: tuple[str]) -> Optional[pd.DataFrame]:
+    data = pd.DataFrame()
+
+    for section in sections:
+        section_df = dm.get_topics_data(section)
+        if section_df is not None:
+            data = pd.concat([data, section_df], ignore_index=True)
 
     if data is not None:
-        return get_rows_by_id(data, ids)
+        data = data.drop_duplicates()
+        if data is not None:
+            return get_rows_by_id(data, ids)
 
     return None
 
@@ -279,21 +311,43 @@ def convert_df(df):
     return df.to_csv().encode("utf-8")
 
 
-def show_entities(data: pd.DataFrame, section: str):
-    entities = get_entities(section, tuple(data[_s.FIELD_ID].values.tolist()))
+def show_entities(
+    title: str,
+    data: pd.DataFrame,
+    sections: list[str],
+    doc: Optional[pd.Series],
+    doc_idx: Optional[int],
+):
+    st.header(title)
+
+    entities = get_entities(sections, tuple(data[_s.FIELD_ID].values.tolist()))
     if entities is not None:
-        st.subheader(f"Entities in the {section}")
+        st.subheader(f"{title} distribution")
         st.plotly_chart(
             vm.histogram(
-                entities, _s.FEATURE_ENTITY_ENTITY, None, _s.FEATURE_ENTITY_LABEL
+                entities, None, _s.FEATURE_ENTITY_ENTITY, _s.FEATURE_ENTITY_LABEL
             ).update_layout(dict(xaxis=dict(tickangle=-45))),
             use_container_width=True,
         )
 
+    if doc is not None and doc_idx:
+        st.subheader(f"View {title.lower()} in context")
+        st.write(STYLE_RADIO_INLINE, unsafe_allow_html=True)
+        section = sections[0]
+        if len(sections) > 1:
+            section = st.radio("Choose context", sections)
+        st.subheader(section.capitalize())
+        show_entities_in_context(section, doc_idx)
+
 
 @st.experimental_memo
-def get_entities(section: str, ids: tuple[str]) -> Optional[pd.DataFrame]:
-    data = dm.get_entities_data(section)
+def get_entities(sections: list[str], ids: tuple[str]) -> Optional[pd.DataFrame]:
+    data = pd.DataFrame()
+
+    for section in sections:
+        section_df = dm.get_entities_data(section)
+        if section_df is not None:
+            data = pd.concat([data, section_df], ignore_index=True)
 
     if data is not None:
         entities = get_rows_by_id(data, ids)
