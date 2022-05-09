@@ -223,7 +223,7 @@ def show_topics(
     )
 
     number_of_topics = topics[_s.FEATURE_TOPIC_TOPIC].shape[0]
-    height = number_of_topics * 2 if number_of_topics > 10 else 400
+    height = number_of_topics * 1.25 if number_of_topics > 10 else 400
 
     st.subheader(f"{title} with confidence >= {threshold} aggregated by {aggr}")
     with st.expander("View data", expanded=False):
@@ -279,9 +279,11 @@ def show_topics(
             _s.FEATURE_TOPIC_SCORE,
             height,
         ).update_layout(
-            xaxis=dict(categoryorder="category ascending"),
+            xaxis=dict(categoryorder="category ascending", tickangle=-45),
             yaxis=dict(
-                categoryorder="category ascending", tickmode="linear", type="category"
+                categoryorder="category ascending",
+                tickmode="linear",
+                type="category",
             ),
         ),
         use_container_width=True,
@@ -387,8 +389,8 @@ def show_geo(data: pd.DataFrame):
     st.plotly_chart(
         vm.histogram(
             places,
-            _s.FEATURE_GEO_CATEGORY,
             "count",
+            _s.FEATURE_GEO_CATEGORY,
             _s.FEATURE_GEO_CATEGORY,
             labels={"count": "number of mentions"},
         ),
@@ -399,12 +401,10 @@ def show_geo(data: pd.DataFrame):
     st.plotly_chart(
         vm.bar(
             places,
-            _s.FEATURE_GEO_PLACE,
             "count",
+            _s.FEATURE_GEO_PLACE,
             _s.FEATURE_GEO_CATEGORY,
             labels={"count": "number of mentions"},
-        ).update_layout(
-            dict(xaxis=dict(categoryorder="total descending", tickangle=-45))
         ),
         use_container_width=True,
     )
