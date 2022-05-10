@@ -570,9 +570,9 @@ intereactive and allows you to filter the data by selecting rows and columns:
 DASHBOARD_HELP_TOPICS: str = """
 Topic classification has been applied to the documents using different authority lists
 to classify the data according to different perspectives:
-- **Impact categories**, extracted from the whole text of the document;
-- **Fields of research**, extracted from the section *Underpinning research*;
-- **Types of impact**, extracted from the sections *Summary*, *Details of the impact*.
+- **Impact categories**, extracted from the whole text of the document based on the 9 REF-defined areas of impact;
+- **Fields of research**, extracted from the section *Underpinning research* based on the [Australian and New Zealand Standard Research Classification](https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/latest-release#data-downloads) FoR classification;
+- **Types of impact**, extracted from the sections *Summary*, *Details of the impact* based on the list of outcomes/outputs used by the impact data collection tool adopted by UKRI [Researchfish](https://researchfish.com/).
 """
 DASHBOARD_HELP_TOPICS_AGGR_FUNCTION: str = """
 The data in this section can either be aggregated by count (to find out
@@ -584,7 +584,7 @@ The topics are assigned to the case studies by the classification algorithm usin
 confidence score (0-100%), the higher the score the more relevant the topics are.
 """
 DASHBOARD_HELP_ENTITIES: str = f"""
-Entity extraction has been applied to different sections of the case studies to extract
+Entity extraction has been applied using the free open-source Python library [SpaCy](https://spacy.io/) to different sections of the case studies to extract
 mentions of Organisations, Places and Products ({", ".join(SPACY_ENTITY_TYPES)}).
 Entities extracted from the sections *Summary*, *Details of the impact* are grouped
 together in the **Partners** view. Entities extracted from the section *Details of the
