@@ -8,7 +8,7 @@ services:
     build:
       context: .
       target: prod
-    image: refida:0.2.1
+    image: refida:0.3.0
     volumes:
       - data:/app/data
     ports:
