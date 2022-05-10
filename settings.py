@@ -542,29 +542,28 @@ DASHBOARD_DEVELOPMENT: str = """
 This dashboard is under development, please expect *breaking* changes between versions.
 """
 DASHBOARD_DISCLAIMER: str = """
-Potential caveats for the outputs of this dashboard:
+Potential caveats for the material presented in this dashboard:
 - All of the insights provided here are not final answers and should be reviewed
     before being accepted; the output requires further interpretation and analysis
-    outside the system KDL will provide;
+    outside the system KDL has provided;
 - Due to the timeframe and amount of data there was no provision to train/fine tune
-    the algorithms KDL used, this means that some results may be better than expected
+    the algorithms KDL used, this means that some results may be more accurate than expected
     while others will be worse than expected and could even be useless;
-- The language used to describe the pathways to impact is very varied and it may not
-    be possible to set up something accurate enough in the desired time frame.
+- The language used to describe the pathways to impact is very varied with the result that when accuracy is suboptimal could not be refined in the desired time frame.
 """
 DASHBOARD_HELP_DATA_GRID: str = """
 The data grid displays the base data extracted from all the documents. The grid is
 intereactive and allows you to filter the data by selecting rows and columns:
-- click on rows to select/deselect them, multiple rows can be selected by holding down
+- click on rows to select/deselect items, multiple rows can be selected by holding down
     the shift key;
 - click on column labels to sort the data by that column;
 - when hovering on a column header, click on the hamburger icon to show filtering
-    options for that column.
-- when a single document is selected, the original PDF document and an automatically
+    options for that column;
+- when a single document is selected, the source PDF document and an automatically
     generated summary of the document are displayed below the grid;
 - when a single document is selected, in the **Partners** and **Beneficiares** views, a
     new visualisation becomes available where the entity mentions are shown in the
-    context of the document.
+    context of the document;
 - when the selection on the grid changes, all the visualisations in the current view
     are updated.
 """
@@ -589,7 +588,7 @@ Entity extraction has been applied to different sections of the case studies to 
 mentions of Organisations, Places and Products ({", ".join(SPACY_ENTITY_TYPES)}).
 Entities extracted from the sections *Summary*, *Details of the impact* are grouped
 together in the **Partners** view. Entities extracted from the section *Details of the
-impact* are in the **Beneficiaries** view.
+impact* appear in the **Beneficiaries** view.
 """
 DASHBOARD_HELP_LOCATIONS: str = f"""
 Entity extraction has been applied to the documents to extract Places mentions
