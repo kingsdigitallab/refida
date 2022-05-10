@@ -76,7 +76,10 @@ def parallel_categories(
             height=get_height(data, ratio=1.25),
         )
         .update_layout(margin=dict(l=margin_left, r=margin_right))
-        .update_traces(line=dict(shape="hspline"))
+        .update_traces(
+            dimensions=[{"categoryorder": "category descending"} for _ in dimensions],
+            line=dict(shape="hspline"),
+        )
     )
 
 
