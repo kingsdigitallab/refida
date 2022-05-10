@@ -544,14 +544,21 @@ intereactive and allows you to filter the data by selecting rows and columns:
     the shift key;
 - click on column labels to sort the data by that column;
 - when hovering on a column header, click on the hamburger icon to show filtering
-    options for that column;
+    options for that column.
+- when a single document is selected, the original PDF document and an automatically
+    generated summary of the document are displayed below the grid;
+- when a single document is selected, in the **Partners** and **Beneficiares** views, a
+    new visualisation becomes available where the entity mentions are shown in the
+    context of the document.
+- when the selection on the grid changes, all the visualisations in the current view
+are updated.
 """
 DASHBOARD_HELP_TOPICS: str = """
 Topic classification has been applied to the documents using different authority lists
 to classify the data according to different perspectives:
-- impact categories, extracted from the whole text of the document;
-- fields of research, extracted from the section 2. Underpinning research;
-- types of impact, extracted from the sections 1. Summary, 4. Details of the impact.
+- **Impact categories**, extracted from the whole text of the document;
+- **Fields of research**, extracted from the section *Underpinning research*;
+- **Types of impact**, extracted from the sections *Summary*, *Details of the impact*.
 """
 DASHBOARD_HELP_TOPICS_AGGR_FUNCTION: str = """
 The data in this section can either be aggregated by count (to find out
@@ -561,4 +568,17 @@ confident the algorithm was in selecting a topic for the documents).
 DASHBOARD_HELP_TOPICS_SCORE_THRESHOLD: str = """
 The topics are assigned to the case studies by the classification algorithm using a
 confidence score (0-100%), the higher the score the more relevant the topics are.
+"""
+DASHBOARD_HELP_ENTITIES: str = f"""
+Entity extraction has been applied to different sections of the case studies to extract
+mentions of Organisations, Places and Products ({", ".join(SPACY_ENTITY_TYPES)}).
+Entities extracted from the sections *Summary*, *Details of the impact* are grouped
+together in the **Partners** view. Entities extracted from the section *Details of the
+impact* are in the **Beneficiaries** view.
+"""
+DASHBOARD_HELP_LOCATIONS: str = f"""
+Entity extraction has been applied to the documents to extract Places mentions
+({", ".join(SPACY_LOCATION_ENTITY_TYPES)}). The extracted entities were geocoded and
+classified according to the categories *local* (to London), *national* (UK) and
+*global* (rest of the world).
 """

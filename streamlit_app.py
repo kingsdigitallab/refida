@@ -11,6 +11,7 @@ from st_aggrid.shared import GridUpdateMode
 import settings as _s
 from refida import data as dm
 from refida import visualize as vm
+from refida.__init__ import __version__
 
 STYLE_RADIO_INLINE = ""
 
@@ -18,6 +19,10 @@ STYLE_RADIO_INLINE = ""
 def streamlit():
     st.set_page_config(page_title=_s.PROJECT_TITLE, layout="wide")
     st.title(_s.PROJECT_TITLE)
+    st.write(f"v{__version__}")
+    st.error(
+        "This dashboard is under development, please expect changes between versions."
+    )
 
     with st.sidebar:
         sidebar()
@@ -46,6 +51,10 @@ def sidebar():
         or show_fields_of_research_view()
     ):
         topics_sidebar()
+        return
+
+    if show_geo_view():
+        geo_sidebar()
         return
 
 
@@ -94,6 +103,14 @@ def show_beneficiaries_view():
 
 def show_geo_view():
     return get_session_view() == "Locations"
+
+
+def geo_sidebar():
+    st.subheader("Locations options")
+
+    st.session_state.geo_min_mentions = st.slider(
+        "Minimum number of mentions", 1, 20, 1, 1
+    )
 
 
 def data_section():
@@ -229,7 +246,7 @@ def show_topics(
     title: str, data: pd.DataFrame, sources: list[str] = [_s.DATA_TEXT]
 ) -> None:
     st.header(title)
-    with st.expander("About", expanded=False):
+    with st.expander("About topic classification", expanded=False):
         st.markdown(_s.DASHBOARD_HELP_TOPICS)
 
     n_rows = data.shape[0]
@@ -356,6 +373,8 @@ def show_entities(
     doc_idx: Optional[int],
 ):
     st.header(title)
+    with st.expander("About entity extraction", expanded=False):
+        st.markdown(_s.DASHBOARD_HELP_ENTITIES)
 
     entities = get_entities(sections, tuple(data[_s.FIELD_ID].values.tolist()))
     if entities is not None:
@@ -413,6 +432,8 @@ def show_entities_in_context(section: str, idx: int):
 
 def show_geo(data: pd.DataFrame):
     st.header("Locations")
+    with st.expander("About locations", expanded=False):
+        st.markdown(_s.DASHBOARD_HELP_LOCATIONS)
 
     places = get_places(tuple(data[_s.FIELD_ID].values.tolist()))
     if places is None:
@@ -425,7 +446,7 @@ def show_geo(data: pd.DataFrame):
     with st.expander("View data", expanded=False):
         st.write(places)
 
-    min_mentions = st.slider("Minimum number of mentions", 1, 20, 1, 1)
+    min_mentions = get_session_geo_min_mentions()
     places = places[places["count"] >= min_mentions]
 
     st.plotly_chart(
@@ -452,6 +473,8 @@ def show_geo(data: pd.DataFrame):
     )
 
     st.subheader("Map")
+    with st.expander("Map data", expanded=False):
+        st.write(places)
     places = places[places[_s.FEATURE_GEO_CATEGORY] != "Local"]
     places = places.drop(columns=[_s.FEATURE_GEO_CATEGORY])
     places = places.sort_values(by="count", ascending=False)
@@ -468,9 +491,6 @@ def show_geo(data: pd.DataFrame):
         ),
         use_container_width=True,
     )
-
-    with st.expander("Geo data", expanded=False):
-        st.write(places)
 
 
 @st.experimental_memo
@@ -511,6 +531,10 @@ def get_places(
             )
 
     return None
+
+
+def get_session_geo_min_mentions() -> int:
+    return st.session_state.geo_min_mentions
 
 
 if __name__ == "__main__":
