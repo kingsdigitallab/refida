@@ -537,6 +537,15 @@ DASHBOARD_COLUMNS_FOR_DATA_GRID: list[str] = [
 DASHBOARD_PLOT_MIN_HEIGHT: int = 500
 DASHBOARD_PLOT_RATIO: float = 5
 
+DASHBOARD_HELP_DATA_GRID: str = """
+The data grid displays the base data extracted from all the documents. The grid is
+intereactive and allows you to filter the data by selecting rows and columns:
+- click on rows to select/deselect them, multiple rows can be selected by holding down
+    the shift key;
+- click on column labels to sort the data by that column;
+- when hovering on a column header, click on the hamburger icon to show filtering
+    options for that column;
+"""
 DASHBOARD_HELP_TOPICS: str = """
 Topic classification has been applied to the documents using different authority lists
 to classify the data according to different perspectives:

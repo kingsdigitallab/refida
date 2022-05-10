@@ -101,22 +101,28 @@ def data_section():
 
     data = dm.get_etl_data()
     if data is not None:
-        grid = show_data_grid(data)
+        with st.expander("Using the data grid"):
+            st.markdown(_s.DASHBOARD_HELP_DATA_GRID)
+        grid = get_data_grid(data)
 
         selection = grid["selected_rows"]
 
         if selection:
-            show_data(data, pd.DataFrame(selection))
+            selection = pd.DataFrame(selection)
         else:
-            show_data(data, grid["data"])
+            selection = grid["data"]
+
+        show_data(data, selection)
 
 
-def show_data_grid(data: pd.DataFrame) -> dict:
+def get_data_grid(data: pd.DataFrame) -> dict:
     data = data[_s.DASHBOARD_COLUMNS_FOR_DATA_GRID]
     options = GridOptionsBuilder.from_dataframe(
         data, enableRowGroup=True, enableValue=True
     )
-    options.configure_selection("multiple", use_checkbox=True)
+    options.configure_selection(
+        "multiple", use_checkbox=False, rowMultiSelectWithClick=True
+    )
 
     grid = AgGrid(
         data,
@@ -125,7 +131,7 @@ def show_data_grid(data: pd.DataFrame) -> dict:
         gridOptions=options.build(),
         height=300,
         theme="streamlit",
-        update_mode=GridUpdateMode.MODEL_CHANGED,
+        update_mode=GridUpdateMode.SELECTION_CHANGED,
         allow_unsafe_jscode=False,
     )
 
@@ -155,7 +161,6 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
         return
 
     if show_types_of_impact_view():
-        # TODO: types of impact are also available in the summary
         show_topics("Types of impact", selection, [_s.DATA_SUMMARY, _s.DATA_DETAILS])
         return
 
@@ -282,14 +287,11 @@ def show_topics(
         {v: palette[i % palette_len] for i, v in enumerate(colour_df.unique())}
     )
 
-    with st.container():
-        st.subheader(f"Connections between {title.lower()} and unit of assessment")
-        st.plotly_chart(
-            vm.parallel_categories(
-                topics, [_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA], colours
-            ),
-            use_container_width=True,
-        )
+    st.subheader(f"Connections between {title.lower()} and unit of assessment")
+    st.plotly_chart(
+        vm.parallel_categories(topics, [_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA], colours),
+        use_container_width=True,
+    )
 
     st.subheader(f"Correlation between {title.lower()} and unit of assessment")
     topics_aggr = (
