@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tests for `etl` module.
 - [pre-commit](https://pre-commit.com/) configuration.
 - Processing for environment studies.
-- Help information to the topics section.
+- Help information to the dashboard.
 
 ### Changed
 
