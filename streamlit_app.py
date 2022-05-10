@@ -18,11 +18,10 @@ STYLE_RADIO_INLINE = ""
 
 def streamlit():
     st.set_page_config(page_title=_s.PROJECT_TITLE, layout="wide")
+    st.error(_s.DASHBOARD_DEVELOPMENT)
     st.title(_s.PROJECT_TITLE)
     st.write(f"v{__version__}")
-    st.error(
-        "This dashboard is under development, please expect changes between versions."
-    )
+    st.warning(_s.DASHBOARD_DISCLAIMER)
 
     with st.sidebar:
         sidebar()

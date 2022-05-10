@@ -537,6 +537,21 @@ DASHBOARD_COLUMNS_FOR_DATA_GRID: list[str] = [
 DASHBOARD_PLOT_MIN_HEIGHT: int = 500
 DASHBOARD_PLOT_RATIO: float = 5
 
+
+DASHBOARD_DEVELOPMENT: str = """
+This dashboard is under development, please expect *breaking* changes between versions.
+"""
+DASHBOARD_DISCLAIMER: str = """
+Potential caveats for the outputs of this dashboard:
+- All of the insights provided here are not final answers and should be reviewed
+    before being accepted; the output requires further interpretation and analysis
+    outside the system KDL will provide;
+- Due to the timeframe and amount of data there was no provision to train/fine tune
+    the algorithms KDL used, this means that some results may be better than expected
+    while others will be worse than expected and could even be useless;
+- The language used to describe the pathways to impact is very varied and it may not
+    be possible to set up something accurate enough in the desired time frame.
+"""
 DASHBOARD_HELP_DATA_GRID: str = """
 The data grid displays the base data extracted from all the documents. The grid is
 intereactive and allows you to filter the data by selecting rows and columns:
@@ -551,7 +566,7 @@ intereactive and allows you to filter the data by selecting rows and columns:
     new visualisation becomes available where the entity mentions are shown in the
     context of the document.
 - when the selection on the grid changes, all the visualisations in the current view
-are updated.
+    are updated.
 """
 DASHBOARD_HELP_TOPICS: str = """
 Topic classification has been applied to the documents using different authority lists
