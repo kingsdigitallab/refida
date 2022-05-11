@@ -52,6 +52,10 @@ def sidebar():
         topics_sidebar()
         return
 
+    if show_partners_view() or show_beneficiaries_view():
+        entities_sidebar()
+        return
+
     if show_geo_view():
         geo_sidebar()
         return
@@ -100,18 +104,30 @@ def show_beneficiaries_view():
     return get_session_view() == "Beneficiaries"
 
 
+def entities_sidebar():
+    view = get_session_view()
+    st.subheader(f"{view} options")
+
+    st.session_state.entity_types = st.multiselect(
+        f"Choose {view.lower()} entity types",
+        _s.SPACY_ENTITY_TYPES,
+        default=_s.SPACY_ENTITY_TYPES,
+    )
+
+
 def show_geo_view():
     return get_session_view() == "Locations"
 
 
 def geo_sidebar():
-    st.subheader("Locations options")
+    view = get_session_view()
+    st.subheader(f"{view} options")
 
     st.session_state.geo_min_mentions = st.slider(
         "Minimum number of mentions", 1, 20, 1, 1
     )
-    st.session_state.geo_entity_types = st.multiselect(
-        "Choose location entity types",
+    st.session_state.entity_types_geo = st.multiselect(
+        f"Choose {view.lower()} entity types",
         _s.SPACY_LOCATION_ENTITY_TYPES,
         default=_s.SPACY_LOCATION_ENTITY_TYPES,
     )
@@ -380,7 +396,9 @@ def show_entities(
     with st.expander("About entity extraction", expanded=False):
         st.markdown(_s.DASHBOARD_HELP_ENTITIES)
 
-    entities = get_entities(sections, tuple(data[_s.FIELD_ID].values.tolist()))
+    entities = get_entities(
+        sections, tuple(data[_s.FIELD_ID].values.tolist()), get_session_entity_types()
+    )
     if entities is not None:
         st.subheader(f"{title} distribution")
         st.plotly_chart(
@@ -404,8 +422,14 @@ def show_entities(
         show_entities_in_context(section, doc_idx)
 
 
+def get_session_entity_types() -> list[str]:
+    return st.session_state.entity_types
+
+
 @st.experimental_memo
-def get_entities(sections: list[str], ids: tuple[str]) -> Optional[pd.DataFrame]:
+def get_entities(
+    sections: list[str], ids: tuple[str], entity_types: list[str]
+) -> Optional[pd.DataFrame]:
     data = pd.DataFrame()
 
     for section in sections:
@@ -416,6 +440,7 @@ def get_entities(sections: list[str], ids: tuple[str]) -> Optional[pd.DataFrame]
     if data is not None:
         entities = get_rows_by_id(data, ids)
         if entities is not None:
+            entities = entities[entities[_s.FEATURE_ENTITY_LABEL].isin(entity_types)]
             return entities[
                 [_s.FEATURE_ENTITY_LABEL, _s.FEATURE_ENTITY_ENTITY]
             ].sort_values(by=_s.FEATURE_ENTITY_ENTITY)
@@ -499,6 +524,14 @@ def show_geo(data: pd.DataFrame):
     )
 
 
+def get_session_geo_entity_types() -> list[str]:
+    return st.session_state.entity_types_geo
+
+
+def get_session_geo_min_mentions() -> int:
+    return st.session_state.geo_min_mentions
+
+
 @st.experimental_memo
 def get_places(
     ids: tuple[str], entity_types: list[str], section: Optional[str] = None
@@ -539,14 +572,6 @@ def get_places(
             )
 
     return None
-
-
-def get_session_geo_min_mentions() -> int:
-    return st.session_state.geo_min_mentions
-
-
-def get_session_geo_entity_types() -> list[str]:
-    return st.session_state.geo_entity_types
 
 
 if __name__ == "__main__":
