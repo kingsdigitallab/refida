@@ -50,15 +50,14 @@ def sidebar():
         or show_fields_of_research_view()
     ):
         topics_sidebar()
-        return
 
     if show_partners_view() or show_beneficiaries_view():
         entities_sidebar()
-        return
 
     if show_geo_view():
         geo_sidebar()
-        return
+
+    filters_sidebar()
 
 
 def show_impact_categories_view():
@@ -85,14 +84,6 @@ def topics_sidebar():
         f"Aggregate {view.lower()} by",
         ("count", "mean"),
         help=_s.DASHBOARD_HELP_TOPICS_AGGR_FUNCTION,
-    )
-    st.session_state.topics_score_threshold = st.slider(
-        "Minimum score/confidence",
-        0.0,
-        1.0,
-        0.75,
-        0.05,
-        help=_s.DASHBOARD_HELP_TOPICS_SCORE_THRESHOLD,
     )
 
 
@@ -133,11 +124,43 @@ def geo_sidebar():
     )
 
 
+def filters_sidebar():
+    st.subheader("Filter the data")
+    st.session_state.filter_topics_score_threshold = st.slider(
+        "Topics classification minimum score/confidence",
+        0.0,
+        1.0,
+        0.5,
+        0.05,
+        help=_s.DASHBOARD_HELP_TOPICS_SCORE_THRESHOLD,
+    )
+
+    impact_categories = sorted(_s.TOPIC_CLASSIFICATION_TOPICS)
+    with st.expander("Filter by impact categories", expanded=True):
+        st.session_state.filter_impact_categories = st.multiselect(
+            "Impact categories", impact_categories
+        )
+
+    types_of_impact = sorted(_s.TOPIC_CLASSIFICATION_IMPACTS)
+    with st.expander("Filter by types of impact", expanded=True):
+        st.session_state.filter_types_of_impact = st.multiselect(
+            "Types of impact", types_of_impact
+        )
+
+    fields_of_research = sorted(_s.get_fields_of_research())
+    with st.expander("Filter by fields of research", expanded=True):
+        st.session_state.filter_fields_of_research = st.multiselect(
+            "Fields of research", fields_of_research
+        )
+
+
 def data_section():
     st.header("Documents")
 
     data = dm.get_etl_data()
     if data is not None:
+        data = filter_data(data)
+
         with st.expander("Using the data grid"):
             st.markdown(_s.DASHBOARD_HELP_DATA_GRID)
         grid = get_data_grid(data)
@@ -150,6 +173,53 @@ def data_section():
             selection = grid["data"]
 
         show_data(data, selection)
+
+
+def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
+    impact_categories = get_topics(
+        [_s.DATA_TEXT],
+        get_session_filter_topics_score_threshold(),
+        topics=get_session_filter_impact_categories(),
+    )
+    if impact_categories is not None:
+        data = data[data[_s.FIELD_ID].isin(impact_categories[_s.FIELD_ID])]
+
+    types_of_impact = get_topics(
+        [_s.DATA_SUMMARY, _s.DATA_DETAILS],
+        get_session_filter_topics_score_threshold(),
+        topics=get_session_filter_types_of_impact(),
+    )
+    if types_of_impact is not None:
+        data = data[data[_s.FIELD_ID].isin(types_of_impact[_s.FIELD_ID])]
+
+    fields_of_research = get_topics(
+        [_s.DATA_RESEARCH],
+        get_session_filter_topics_score_threshold(),
+        topics=get_session_filter_fields_of_research(),
+    )
+    if fields_of_research is not None:
+        data = data[
+            data[_s.DATA_RESEARCH].isnull()
+            | data[_s.FIELD_ID].isin(fields_of_research[_s.FIELD_ID])
+        ]
+
+    return data
+
+
+def get_session_filter_topics_score_threshold() -> float:
+    return st.session_state.filter_topics_score_threshold
+
+
+def get_session_filter_impact_categories() -> list[str]:
+    return st.session_state.filter_impact_categories
+
+
+def get_session_filter_types_of_impact() -> list[str]:
+    return st.session_state.filter_types_of_impact
+
+
+def get_session_filter_fields_of_research() -> list[str]:
+    return st.session_state.filter_fields_of_research
 
 
 def get_data_grid(data: pd.DataFrame) -> dict:
@@ -277,17 +347,13 @@ def show_topics(
     if n_rows == 1:
         aggr = _s.FEATURE_TOPIC_SCORE
 
-    threshold = get_session_topics_score_threshold()
-
-    topics = get_topics(sources, tuple(data[_s.FIELD_ID].values.tolist()))
+    threshold = get_session_filter_topics_score_threshold()
+    topics = get_topics(sources, threshold, tuple(data[_s.FIELD_ID].values.tolist()))
     if topics is None or topics.empty:
         st.warning("No topics found")
         return
 
     topics = topics.merge(data, on=_s.FIELD_ID)
-
-    if threshold > 0.0:
-        topics = topics[topics[_s.FEATURE_TOPIC_SCORE] >= threshold]
 
     topics = topics.sort_values(by=_s.FEATURE_TOPIC_TOPIC, ascending=True)
     topics_aggr = (
@@ -359,12 +425,13 @@ def get_session_topics_aggr_function() -> str:
     return st.session_state.topics_aggr_function
 
 
-def get_session_topics_score_threshold() -> float:
-    return st.session_state.topics_score_threshold
-
-
 @st.experimental_memo
-def get_topics(sections: list[str], ids: tuple[str]) -> Optional[pd.DataFrame]:
+def get_topics(
+    sections: list[str],
+    threshold: float = 0.0,
+    ids: tuple[str] = None,
+    topics: list[str] = None,
+) -> Optional[pd.DataFrame]:
     data = pd.DataFrame()
 
     for section in sections:
@@ -375,7 +442,15 @@ def get_topics(sections: list[str], ids: tuple[str]) -> Optional[pd.DataFrame]:
     if data is not None:
         data = data.drop_duplicates()
         if data is not None:
-            return get_rows_by_id(data, ids)
+            data = data[data[_s.FEATURE_TOPIC_SCORE] >= threshold]
+
+            if topics:
+                data = data[data[_s.FEATURE_TOPIC_TOPIC].isin(topics)]
+
+            if ids:
+                return get_rows_by_id(data, ids)
+
+            return data
 
     return None
 
@@ -440,7 +515,10 @@ def get_entities(
     if data is not None:
         entities = get_rows_by_id(data, ids)
         if entities is not None:
-            entities = entities[entities[_s.FEATURE_ENTITY_LABEL].isin(entity_types)]
+            if entity_types:
+                entities = entities[
+                    entities[_s.FEATURE_ENTITY_LABEL].isin(entity_types)
+                ]
             return entities[
                 [_s.FEATURE_ENTITY_LABEL, _s.FEATURE_ENTITY_ENTITY]
             ].sort_values(by=_s.FEATURE_ENTITY_ENTITY)
@@ -504,11 +582,12 @@ def show_geo(data: pd.DataFrame):
     )
 
     st.subheader("Map")
+    places = places[places[_s.FEATURE_GEO_CATEGORY] != "Local"]
+    places = places.drop(columns=[_s.FEATURE_ENTITY_LABEL, _s.FEATURE_GEO_CATEGORY])
+    places = places.groupby(places.columns[:-1].values.tolist()).sum().reset_index()
+    places = places.sort_values(by="count", ascending=False)
     with st.expander("Map data", expanded=False):
         st.write(places)
-    places = places[places[_s.FEATURE_GEO_CATEGORY] != "Local"]
-    places = places.drop(columns=[_s.FEATURE_GEO_CATEGORY])
-    places = places.sort_values(by="count", ascending=False)
 
     focus = places.iloc[0]
     st.plotly_chart(
@@ -551,7 +630,8 @@ def get_places(
     if data is not None:
         places = get_rows_by_id(data, ids)
         if places is not None:
-            places = places[places[_s.FEATURE_ENTITY_LABEL].isin(entity_types)]
+            if entity_types:
+                places = places[places[_s.FEATURE_ENTITY_LABEL].isin(entity_types)]
             columns = [
                 _s.FIELD_ID,
                 _s.FEATURE_ENTITY_LABEL,

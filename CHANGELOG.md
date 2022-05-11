@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `explain` module to explain the outputs of the classification models.
+- Entity type filters to the dashboard.
+- Topic based filters to the dashboard.
 
 ## [0.3.0] - 2022-05-10
 
