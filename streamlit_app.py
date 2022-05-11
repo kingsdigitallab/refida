@@ -33,8 +33,9 @@ def sidebar():
     st.title("Insights")
 
     st.session_state.view = st.radio(
-        "Choose view",
+        "Choose insights",
         (
+            "About the data",
             "Impact categories",
             "Types of impact",
             "Fields of research",
@@ -60,12 +61,16 @@ def sidebar():
     filters_sidebar()
 
 
-def show_impact_categories_view():
-    return get_session_view() == "Impact categories"
+def show_about_data_view():
+    return get_session_view() == "About the data"
 
 
 def get_session_view() -> str:
     return st.session_state.view
+
+
+def show_impact_categories_view():
+    return get_session_view() == "Impact categories"
 
 
 def show_types_of_impact_view():
@@ -155,7 +160,7 @@ def filters_sidebar():
 
 
 def data_section():
-    st.header("Documents")
+    st.header("Data")
 
     data = dm.get_etl_data()
     if data is not None:
@@ -255,13 +260,18 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
     doc = None
     doc_idx = None
 
+    if show_about_data_view():
+        st.header("About the data")
+        show_about_data(data)
+    else:
+        with st.expander("About the data", expanded=False):
+            show_about_data(data)
+
     if n_rows == 1:
         doc = selection.iloc[0]
         doc_idx = data[data[_s.FIELD_ID] == selection[_s.FIELD_ID].iloc[0]].index[0]
 
         show_doc(selection)
-    else:
-        st.info(f"{n_rows} documents available, showing aggregate information")
 
     if show_impact_categories_view():
         show_topics("Impact categories", selection)
@@ -288,6 +298,86 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
     if show_geo_view():
         show_geo(selection)
         return
+
+
+def show_about_data(data: pd.DataFrame):
+    n_rows = data.shape[0]
+    if "metric_n_rows" not in st.session_state:
+        st.session_state.metric_n_rows = n_rows
+
+    n_impact_case_studies = data[data[_s.DATA_TYPE].str.startswith("Impact")].shape[0]
+    if "metric_n_impact_case_studies" not in st.session_state:
+        st.session_state.metric_n_impact_case_studies = n_impact_case_studies
+
+    n_env_statements = data[data[_s.DATA_TYPE].str.startswith("Unit")].shape[0]
+    if "metric_n_env_statements" not in st.session_state:
+        st.session_state.metric_n_env_statements = n_env_statements
+
+    research = data.dropna(
+        subset=[
+            _s.DATA_RESEARCH_START,
+            _s.DATA_RESEARCH_END,
+            _s.DATA_IMPACT_START,
+            _s.DATA_IMPACT_END,
+        ]
+    )
+    research["research_duration"] = (
+        research[_s.DATA_RESEARCH_END] - research[_s.DATA_RESEARCH_START]
+    )
+    research["impact_duration"] = (
+        research[_s.DATA_IMPACT_END] - research[_s.DATA_IMPACT_START]
+    )
+    research["research_to_impact"] = (
+        research[_s.DATA_IMPACT_START] - research[_s.DATA_RESEARCH_START]
+    )
+
+    research_duration_avg = research["research_duration"].mean().round(decimals=1)
+    if "metric_research_duration_avg" not in st.session_state:
+        st.session_state.metric_research_duration_avg = research_duration_avg
+
+    impact_duration_avg = research["impact_duration"].mean().round(decimals=1)
+    if "metric_impact_duration_avg" not in st.session_state:
+        st.session_state.metric_impact_duration_avg = impact_duration_avg
+
+    research_to_impact_avg = research["research_to_impact"].mean().round(decimals=1)
+    if "metric_research_to_impact_avg" not in st.session_state:
+        st.session_state.metric_research_to_impact_avg = research_to_impact_avg
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Documents", n_rows, delta=n_rows - st.session_state.metric_n_rows)
+    st.session_state.metric_n_rows = n_rows
+    col2.metric(
+        "Impact case studies",
+        n_impact_case_studies,
+        delta=n_impact_case_studies - st.session_state.metric_n_impact_case_studies,
+    )
+    st.session_state.metric_n_impact_case_studies = n_impact_case_studies
+    col3.metric(
+        "Environment staments",
+        n_env_statements,
+        delta=n_env_statements - st.session_state.metric_n_env_statements,
+    )
+    st.session_state.metric_n_env_statements = n_env_statements
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric(
+        "Research duration (avg)",
+        research_duration_avg,
+        delta=research_duration_avg - st.session_state.metric_research_duration_avg,
+    )
+    st.session_state.metric_research_duration_avg = research_duration_avg
+    col2.metric(
+        "Impact duration (avg)",
+        impact_duration_avg,
+        delta=impact_duration_avg - st.session_state.metric_impact_duration_avg,
+    )
+    st.session_state.metric_impact_duration_avg = impact_duration_avg
+    col3.metric(
+        "Time to impact (avg)",
+        research_to_impact_avg,
+        delta=research_to_impact_avg - st.session_state.metric_research_to_impact_avg,
+    )
+    st.session_state.metric_research_to_impact_avg = research_to_impact_avg
 
 
 def show_doc(data: pd.DataFrame):
