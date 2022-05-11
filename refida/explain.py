@@ -1,16 +1,16 @@
-from txtai.pipeline import Labels
-from settings import memory
 import shap
-from transformers import (
-    ZeroShotClassificationPipeline,
-)
+from transformers import ZeroShotClassificationPipeline
+from txtai.pipeline import Labels
+
 import settings as _s
+from settings import memory
 
 
 class ExplainableZeroShotClassificationPipeline(ZeroShotClassificationPipeline):
     """
     Explainable ZeroShotClassificationPipeline to workaround shap not currently
-    supporting zero shot classification.
+    supporting zero shot classification because it doesn't pass the extra parameters
+    (labels) needed by zero shot classification.
 
     https://stackoverflow.com/questions/69628487
     """
@@ -19,7 +19,7 @@ class ExplainableZeroShotClassificationPipeline(ZeroShotClassificationPipeline):
         """
         Call the ZeroShotClassificationPipeline with the workaround labels.
         """
-        output = super().__call__(args[0], self.explain_labels)[0]
+        output = super().__call__(args[0], self.explain_labels, multi_label=True)[0]
 
         return [
             [
@@ -47,7 +47,7 @@ def topic_classification(
     model.config.id2label.update({k: v for k, v in enumerate(topics)})
 
     pipeline = ExplainableZeroShotClassificationPipeline(
-        model=model, tokenizer=tokenizer, return_all_scores=True
+        model=model, tokenizer=tokenizer
     )
     pipeline.set_explain_labels(topics)
 

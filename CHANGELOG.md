@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+
+- `explain` module to explain the outputs of the classification models.
+
 ## [0.3.0] - 2022-05-10
 
 ### Added
