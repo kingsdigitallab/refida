@@ -22,6 +22,8 @@ en-core-web-trf = {url = "https://github.com/explosion/spacy-models/releases/dow
 plotly = "^5.7.0"
 joblib = "^1.1.0"
 geojson = "^2.5.0"
+shap = "^0.40.0"
+matplotlib = "^3.5.2"
 
 [tool.poetry.dev-dependencies]
 autoflake = "*"
