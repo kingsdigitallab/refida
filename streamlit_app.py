@@ -110,6 +110,11 @@ def geo_sidebar():
     st.session_state.geo_min_mentions = st.slider(
         "Minimum number of mentions", 1, 20, 1, 1
     )
+    st.session_state.geo_entity_types = st.multiselect(
+        "Choose location entity types",
+        _s.SPACY_LOCATION_ENTITY_TYPES,
+        default=_s.SPACY_LOCATION_ENTITY_TYPES,
+    )
 
 
 def data_section():
@@ -434,7 +439,9 @@ def show_geo(data: pd.DataFrame):
     with st.expander("About locations", expanded=False):
         st.markdown(_s.DASHBOARD_HELP_LOCATIONS)
 
-    places = get_places(tuple(data[_s.FIELD_ID].values.tolist()))
+    places = get_places(
+        tuple(data[_s.FIELD_ID].values.tolist()), get_session_geo_entity_types()
+    )
     if places is None:
         st.warning("No places data found")
         return
@@ -459,7 +466,7 @@ def show_geo(data: pd.DataFrame):
         use_container_width=True,
     )
 
-    st.subheader("Countries distribution")
+    st.subheader("Places distribution")
     st.plotly_chart(
         vm.bar(
             places,
@@ -494,7 +501,7 @@ def show_geo(data: pd.DataFrame):
 
 @st.experimental_memo
 def get_places(
-    ids: tuple[str], section: Optional[str] = None
+    ids: tuple[str], entity_types: list[str], section: Optional[str] = None
 ) -> Optional[pd.DataFrame]:
     data = pd.DataFrame()
 
@@ -511,8 +518,10 @@ def get_places(
     if data is not None:
         places = get_rows_by_id(data, ids)
         if places is not None:
+            places = places[places[_s.FEATURE_ENTITY_LABEL].isin(entity_types)]
             columns = [
                 _s.FIELD_ID,
+                _s.FEATURE_ENTITY_LABEL,
                 _s.FEATURE_GEO_CATEGORY,
                 _s.FEATURE_GEO_PLACE,
                 _s.FEATURE_GEO_PLACE_LAT,
@@ -534,6 +543,10 @@ def get_places(
 
 def get_session_geo_min_mentions() -> int:
     return st.session_state.geo_min_mentions
+
+
+def get_session_geo_entity_types() -> list[str]:
+    return st.session_state.geo_entity_types
 
 
 if __name__ == "__main__":
