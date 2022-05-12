@@ -379,6 +379,27 @@ def show_about_data(data: pd.DataFrame):
     )
     st.session_state.metric_research_to_impact_avg = research_to_impact_avg
 
+    st.subheader("Units of assessment distribution")
+    st.plotly_chart(
+        vm.histogram(data, None, _s.DATA_UOA, _s.DATA_TYPE), use_container_width=True
+    )
+
+    research[_s.DATA_RESEARCH_START] = pd.to_datetime(
+        research[_s.DATA_RESEARCH_START].apply(lambda x: str(int(x))), yearfirst=True
+    )
+    research[_s.DATA_RESEARCH_END] = pd.to_datetime(
+        research[_s.DATA_RESEARCH_END].apply(lambda x: str(int(x))), yearfirst=True
+    )
+    st.plotly_chart(
+        px.timeline(
+            research,
+            x_start=_s.DATA_RESEARCH_START,
+            x_end=_s.DATA_RESEARCH_END,
+            y=_s.FIELD_ID,
+        ),
+        use_container_width=True,
+    )
+
 
 def show_doc(data: pd.DataFrame):
     doc = data.iloc[0]
