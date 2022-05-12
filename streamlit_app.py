@@ -325,14 +325,15 @@ def show_about_data(data: pd.DataFrame):
     if "metric_n_env_statements" not in st.session_state:
         st.session_state.metric_n_env_statements = n_env_statements
 
-    research = data.dropna(
-        subset=[
+    research = data[
+        [
+            _s.FIELD_ID,
             _s.DATA_RESEARCH_START,
             _s.DATA_RESEARCH_END,
             _s.DATA_IMPACT_START,
             _s.DATA_IMPACT_END,
         ]
-    )
+    ].dropna()
     research["research_duration"] = (
         research[_s.DATA_RESEARCH_END] - research[_s.DATA_RESEARCH_START]
     )
@@ -396,18 +397,34 @@ def show_about_data(data: pd.DataFrame):
         vm.histogram(data, None, _s.DATA_UOA, _s.DATA_TYPE), use_container_width=True
     )
 
+    st.subheader("Research/impact timeline")
     research[_s.DATA_RESEARCH_START] = pd.to_datetime(
         research[_s.DATA_RESEARCH_START].apply(lambda x: str(int(x))), yearfirst=True
     )
     research[_s.DATA_RESEARCH_END] = pd.to_datetime(
         research[_s.DATA_RESEARCH_END].apply(lambda x: str(int(x))), yearfirst=True
     )
+    research["type"] = "Research period"
+    impact = research[[_s.FIELD_ID, _s.DATA_IMPACT_START, _s.DATA_IMPACT_END]]
+    impact[_s.DATA_RESEARCH_START] = pd.to_datetime(
+        impact[_s.DATA_IMPACT_START].apply(lambda x: str(int(x))), yearfirst=True
+    )
+    impact[_s.DATA_RESEARCH_END] = pd.to_datetime(
+        impact[_s.DATA_IMPACT_END].apply(lambda x: str(int(x))), yearfirst=True
+    )
+    impact["type"] = "Impact period"
+    research = pd.concat([research, impact])
+    research["title"] = research[_s.FIELD_ID].apply(
+        lambda x: " ".join(x.split("_")[3:])
+    )
     st.plotly_chart(
         px.timeline(
             research,
             x_start=_s.DATA_RESEARCH_START,
             x_end=_s.DATA_RESEARCH_END,
-            y=_s.FIELD_ID,
+            y="title",
+            color="type",
+            opacity=0.7,
         ),
         use_container_width=True,
     )
