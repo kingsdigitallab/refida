@@ -11,6 +11,4 @@ services:
     image: refida:0.3.0
     volumes:
       - data:/app/data
-    ports:
-      - "8201:8000"
     restart: unless-stopped
