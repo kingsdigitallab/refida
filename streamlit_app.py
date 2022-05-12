@@ -365,7 +365,7 @@ def show_about_data(data: pd.DataFrame):
     )
     st.session_state.metric_n_impact_case_studies = n_impact_case_studies
     col3.metric(
-        "Environment staments",
+        "Environment statements",
         n_env_statements,
         delta=n_env_statements - st.session_state.metric_n_env_statements,
     )
@@ -373,19 +373,19 @@ def show_about_data(data: pd.DataFrame):
 
     col1, col2, col3 = st.columns(3)
     col1.metric(
-        "Research duration (avg)",
+        "Research duration in years (avg)",
         research_duration_avg,
         delta=research_duration_avg - st.session_state.metric_research_duration_avg,
     )
     st.session_state.metric_research_duration_avg = research_duration_avg
     col2.metric(
-        "Impact duration (avg)",
+        "Impact duration in years (avg)",
         impact_duration_avg,
         delta=impact_duration_avg - st.session_state.metric_impact_duration_avg,
     )
     st.session_state.metric_impact_duration_avg = impact_duration_avg
     col3.metric(
-        "Time to impact (avg)",
+        "Years to impact (avg)",
         research_to_impact_avg,
         delta=research_to_impact_avg - st.session_state.metric_research_to_impact_avg,
     )
