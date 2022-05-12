@@ -131,6 +131,11 @@ def geo_sidebar():
 
 def filters_sidebar():
     st.subheader("Filter the data")
+    with st.expander("Filter by unit of assessment", expanded=True):
+        st.session_state.filter_uoa = st.multiselect(
+            "Unit of assessment", _s.UOA.values()
+        )
+
     st.session_state.filter_topics_score_threshold = st.slider(
         "Topics classification minimum score/confidence",
         0.0,
@@ -139,7 +144,6 @@ def filters_sidebar():
         0.05,
         help=_s.DASHBOARD_HELP_TOPICS_SCORE_THRESHOLD,
     )
-
     impact_categories = sorted(_s.TOPIC_CLASSIFICATION_TOPICS)
     with st.expander("Filter by impact categories", expanded=True):
         st.session_state.filter_impact_categories = st.multiselect(
@@ -181,6 +185,10 @@ def data_section():
 
 
 def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
+    uoas = get_session_filter_uoa()
+    if uoas:
+        data = data[data[_s.DATA_UOA].isin(uoas)]
+
     impact_categories = get_topics(
         [_s.DATA_TEXT],
         get_session_filter_topics_score_threshold(),
@@ -209,6 +217,10 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
         ]
 
     return data
+
+
+def get_session_filter_uoa() -> list[str]:
+    return st.session_state.filter_uoa
 
 
 def get_session_filter_topics_score_threshold() -> float:
