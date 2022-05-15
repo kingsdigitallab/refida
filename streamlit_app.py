@@ -830,15 +830,19 @@ def show_text_search(data: pd.DataFrame, selection: pd.DataFrame):
 
         st.header(f"{hit_idx+1}. {title}")
 
-        st.write(f"({repr(hit[0])})")
+        st.write(f"(score: {hit[1]:.2f}, id: {repr(hit[0])})")
 
 
 def read_semindex():
     ret = st.session_state.get("semindex", None)
     if ret is None:
         ret = Embeddings()
-        ret.load(str(dm.get_semindex_path()))
-        st.session_state.semindex = ret
+        try:
+            ret.load(str(dm.get_semindex_path()))
+            st.session_state.semindex = ret
+        except FileNotFoundError:
+            st.error("The search index is missing. Run `python cli.py semindex` to build it.")
+
     return ret
 
 

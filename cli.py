@@ -189,15 +189,11 @@ def semindex(datadir: str = DATA_DIR.name):
     :param datadir: Path to the data directory.
     """
 
-    with typer.progressbar(length=2, label="Semantic indexing...") as progress:
-        data = dm.get_etl_data(datadir)
-
-        progress.update(1)
+    data = dm.get_etl_data(datadir)
+    with typer.progressbar(length=len(data), label="Semantic indexing...") as progress:
 
         if data is None:
             error("No data found. Run the `etl` command first.")
-
-        progress.update(1)
 
         # data = ["US tops 5 million confirmed virus cases",
         #         "Canada's last fully intact ice shelf has suddenly collapsed, forming a Manhattan-sized iceberg",
@@ -211,11 +207,11 @@ def semindex(datadir: str = DATA_DIR.name):
             {"path": "sentence-transformers/nli-mpnet-base-v2"}
         )
 
-        embeddings.index([
-            (r.id, r.text, None)
-            for r
-            in data.itertuples(False)
-        ])
+        for r in data.itertuples(False):
+            progress.update(1)
+            embeddings.upsert([
+                (r.id, r.text, None)
+            ])
 
         embeddings.save(str(dm.get_semindex_path()))
 
