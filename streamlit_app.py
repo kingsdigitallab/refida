@@ -7,6 +7,7 @@ import streamlit as st
 from spacy_streamlit import visualize_ner
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
+from txtai.embeddings import Embeddings
 
 import settings as _s
 from refida import data as dm
@@ -42,6 +43,7 @@ def sidebar():
             "Partners",
             "Beneficiaries",
             "Locations",
+            "Text search",
         ),
     )
 
@@ -66,7 +68,7 @@ def show_about_data_view():
 
 
 def get_session_view() -> str:
-    return st.session_state.view
+    return st.session_state.get('view', 'About the data')
 
 
 def show_impact_categories_view():
@@ -81,6 +83,22 @@ def show_fields_of_research_view():
     return get_session_view() == "Fields of research"
 
 
+def show_partners_view():
+    return get_session_view() == "Partners"
+
+
+def show_beneficiaries_view():
+    return get_session_view() == "Beneficiaries"
+
+
+def show_geo_view():
+    return get_session_view() == "Locations"
+
+
+def show_text_search_view():
+    return get_session_view() == "Text search"
+
+
 def topics_sidebar():
     view = get_session_view()
 
@@ -92,14 +110,6 @@ def topics_sidebar():
     )
 
 
-def show_partners_view():
-    return get_session_view() == "Partners"
-
-
-def show_beneficiaries_view():
-    return get_session_view() == "Beneficiaries"
-
-
 def entities_sidebar():
     view = get_session_view()
     st.subheader(f"{view} options")
@@ -109,10 +119,6 @@ def entities_sidebar():
         _s.SPACY_ENTITY_TYPES,
         default=_s.SPACY_ENTITY_TYPES,
     )
-
-
-def show_geo_view():
-    return get_session_view() == "Locations"
 
 
 def geo_sidebar():
@@ -220,23 +226,26 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
 
 
 def get_session_filter_uoa() -> list[str]:
-    return st.session_state.filter_uoa
+    return st.session_state.get('filter_uoa', [])
 
 
 def get_session_filter_topics_score_threshold() -> float:
-    return st.session_state.filter_topics_score_threshold
+    return st.session_state.get(
+        'filter_topics_score_threshold',
+        _s.DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD
+    )
 
 
 def get_session_filter_impact_categories() -> list[str]:
-    return st.session_state.filter_impact_categories
+    return st.session_state.get("filter_impact_categories", [])
 
 
 def get_session_filter_types_of_impact() -> list[str]:
-    return st.session_state.filter_types_of_impact
+    return st.session_state.get("filter_types_of_impact", [])
 
 
 def get_session_filter_fields_of_research() -> list[str]:
-    return st.session_state.filter_fields_of_research
+    return st.session_state.get("filter_fields_of_research", [])
 
 
 def get_data_grid(data: pd.DataFrame) -> dict:
@@ -309,6 +318,10 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
 
     if show_geo_view():
         show_geo(selection)
+        return
+
+    if show_text_search_view():
+        show_text_search(data, selection)
         return
 
 
@@ -583,7 +596,7 @@ def get_topics(
 
     if data is not None:
         data = data.drop_duplicates()
-        if data is not None:
+        if len(data):
             data = data[data[_s.FEATURE_TOPIC_SCORE] >= threshold]
 
             if topics:
@@ -794,6 +807,39 @@ def get_places(
             )
 
     return None
+
+
+def show_text_search(data: pd.DataFrame, selection: pd.DataFrame):
+    st.title("Text Search")
+
+    phrase = st.text_input("Search phrase")
+
+    hits = []
+    if phrase:
+        # the cache might be a better place for that?
+        semindex = read_semindex()
+        hits = semindex.search(phrase, 10)
+
+    for hit_idx, hit in enumerate(hits):
+        # hit = [id, score]
+        row = data[data["id"] == hit[0]]
+        title = hit[0]
+        if len(row):
+            row = row.iloc[0]
+            title = row['title']
+
+        st.header(f"{hit_idx+1}. {title}")
+
+        st.write(f"({repr(hit[0])})")
+
+
+def read_semindex():
+    ret = st.session_state.get("semindex", None)
+    if ret is None:
+        ret = Embeddings()
+        ret.load(str(dm.get_semindex_path()))
+        st.session_state.semindex = ret
+    return ret
 
 
 if __name__ == "__main__":

@@ -181,5 +181,44 @@ def geolocate(
         progress.update(1)
 
 
+@app.command()
+def semindex(datadir: str = DATA_DIR.name):
+    """
+    Semantic indexation of full text of the cases using txtai.
+
+    :param datadir: Path to the data directory.
+    """
+
+    with typer.progressbar(length=2, label="Semantic indexing...") as progress:
+        data = dm.get_etl_data(datadir)
+
+        progress.update(1)
+
+        if data is None:
+            error("No data found. Run the `etl` command first.")
+
+        progress.update(1)
+
+        # data = ["US tops 5 million confirmed virus cases",
+        #         "Canada's last fully intact ice shelf has suddenly collapsed, forming a Manhattan-sized iceberg",
+        #         "Beijing mobilises invasion craft along coast as Taiwan tensions escalate",
+        #         "The National Park Service warns against sacrificing slower friends in a bear attack",
+        #         "Maine man wins $1M from $25 lottery ticket",
+        #         "Make huge profits without work, earn up to $100,000 a day"]
+
+        from txtai.embeddings import Embeddings
+        embeddings = Embeddings(
+            {"path": "sentence-transformers/nli-mpnet-base-v2"}
+        )
+
+        embeddings.index([
+            (r.id, r.text, None)
+            for r
+            in data.itertuples(False)
+        ])
+
+        embeddings.save(str(dm.get_semindex_path()))
+
+
 if __name__ == "__main__":
     app()

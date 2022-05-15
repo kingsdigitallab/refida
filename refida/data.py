@@ -124,3 +124,8 @@ def get_geojson(label: str, datadir: str = DATA_DIR.name) -> Optional[list[str]]
 
 def get_geojson_path(label: str, datadir: str = DATA_DIR.name) -> Path:
     return get_data_path(datadir, "1_interim", f"geojson_{label}")
+
+
+def get_semindex_path(datadir: str = DATA_DIR.name) -> Path:
+    return get_data_path(datadir, "1_interim", "semindex")
+
