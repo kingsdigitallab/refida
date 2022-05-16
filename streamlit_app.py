@@ -8,6 +8,7 @@ from spacy_streamlit import visualize_ner
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
 from txtai.embeddings import Embeddings
+from txtai.pipeline import Segmentation
 
 import settings as _s
 from refida import data as dm
@@ -813,22 +814,45 @@ def show_text_search(data: pd.DataFrame, selection: pd.DataFrame):
     st.title("Text Search")
 
     phrase = st.text_input("Search phrase")
+    # temporary flag, for experimentation
+    # 0: show summary, 1: use txtai explain, 2: use sentence similarity
+    EXPLAIN = 0
 
     hits = []
     if phrase:
         # the cache might be a better place for that?
         semindex = read_semindex()
-        hits = semindex.search(phrase, 10)
+        if EXPLAIN == 1:
+            texts = data["summary"].tolist()[:3]
+            # taht call never seems to end
+            hits = semindex.explain(phrase, texts)
+            st.write(hits)
+        else:
+            hits = semindex.search(phrase, 50)
+
+    # getAllInflections()
+
+    # https://github.com/neuml/txtai/blob/master/src/python/txtai/console/base.py#L199
 
     for hit_idx, hit in enumerate(hits):
         # hit = [id, score]
-        row = data[data["id"] == hit[0]]
+        rows = data[data["id"] == hit[0]]
         title = hit[0]
-        if len(row):
-            row = row.iloc[0]
+        if len(rows):
+            row = rows.iloc[0]
             title = row['title']
 
         st.header(f"{hit_idx+1}. {title}")
+
+        if len(rows):
+            if EXPLAIN == 0:
+                st.write(row['summary'])
+            if EXPLAIN == 2:
+                seg = Segmentation(sentences=True)
+                sents = seg(row['text'])
+                sims = semindex.similarity(phrase, sents)
+                st.write(sims[0])
+                st.write(sents[sims[0][0]])
 
         st.write(f"(score: {hit[1]:.2f}, id: {repr(hit[0])})")
 
