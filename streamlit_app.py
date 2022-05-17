@@ -7,6 +7,8 @@ import streamlit as st
 from spacy_streamlit import visualize_ner
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
+from txtai.embeddings import Embeddings
+from txtai.pipeline import Segmentation
 
 import settings as _s
 from refida import data as dm
@@ -42,6 +44,7 @@ def sidebar():
             "Partners",
             "Beneficiaries",
             "Locations",
+            "Text search",
         ),
     )
 
@@ -66,7 +69,7 @@ def show_about_data_view():
 
 
 def get_session_view() -> str:
-    return st.session_state.view
+    return st.session_state.get('view', 'About the data')
 
 
 def show_impact_categories_view():
@@ -81,6 +84,22 @@ def show_fields_of_research_view():
     return get_session_view() == "Fields of research"
 
 
+def show_partners_view():
+    return get_session_view() == "Partners"
+
+
+def show_beneficiaries_view():
+    return get_session_view() == "Beneficiaries"
+
+
+def show_geo_view():
+    return get_session_view() == "Locations"
+
+
+def show_text_search_view():
+    return get_session_view() == "Text search"
+
+
 def topics_sidebar():
     view = get_session_view()
 
@@ -92,14 +111,6 @@ def topics_sidebar():
     )
 
 
-def show_partners_view():
-    return get_session_view() == "Partners"
-
-
-def show_beneficiaries_view():
-    return get_session_view() == "Beneficiaries"
-
-
 def entities_sidebar():
     view = get_session_view()
     st.subheader(f"{view} options")
@@ -109,10 +120,6 @@ def entities_sidebar():
         _s.SPACY_ENTITY_TYPES,
         default=_s.SPACY_ENTITY_TYPES,
     )
-
-
-def show_geo_view():
-    return get_session_view() == "Locations"
 
 
 def geo_sidebar():
@@ -220,23 +227,26 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
 
 
 def get_session_filter_uoa() -> list[str]:
-    return st.session_state.filter_uoa
+    return st.session_state.get('filter_uoa', [])
 
 
 def get_session_filter_topics_score_threshold() -> float:
-    return st.session_state.filter_topics_score_threshold
+    return st.session_state.get(
+        'filter_topics_score_threshold',
+        _s.DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD
+    )
 
 
 def get_session_filter_impact_categories() -> list[str]:
-    return st.session_state.filter_impact_categories
+    return st.session_state.get("filter_impact_categories", [])
 
 
 def get_session_filter_types_of_impact() -> list[str]:
-    return st.session_state.filter_types_of_impact
+    return st.session_state.get("filter_types_of_impact", [])
 
 
 def get_session_filter_fields_of_research() -> list[str]:
-    return st.session_state.filter_fields_of_research
+    return st.session_state.get("filter_fields_of_research", [])
 
 
 def get_data_grid(data: pd.DataFrame) -> dict:
@@ -306,6 +316,10 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
 
     if show_geo_view():
         show_geo(selection)
+        return
+
+    if show_text_search_view():
+        show_text_search(data, selection)
         return
 
 
@@ -603,7 +617,7 @@ def get_topics(
 
     if data is not None:
         data = data.drop_duplicates()
-        if data is not None:
+        if len(data):
             data = data[data[_s.FEATURE_TOPIC_SCORE] >= threshold]
 
             if topics:
@@ -806,6 +820,85 @@ def get_places(
             )
 
     return None
+
+
+def show_text_search(data: pd.DataFrame, selection: pd.DataFrame):
+    st.title("Text Search")
+
+    phrase = st.text_input("Search phrase")
+
+    # EXPLAIN_STRATEGY = temporary flag, for experimentation
+    # 0: show summary, 1: use txtai explain, 2: use sentence similarity
+    # 3: sentence similarity using semindex_sents
+    # --
+    # 1: is unacceptably slow without a GPU (~1min to explain just two paras)
+    # 2: also quite slow (few seconds per result)
+    # 3: fast but inexplicable results: some docs with no sentences
+    # others not relevant
+    EXPLAIN_STRATEGY = 0
+    limit = 50
+
+    st.write(len(data))
+
+    hits = []
+    if phrase:
+        query = f"select id, text, score, from txtai where similar('{phrase}')"
+        # the cache might be a better place for that?
+        semindex = read_semindex()
+        semindex_sents = read_semindex("_sents")
+        if EXPLAIN_STRATEGY == 1:
+            # that call never seems to end
+            hits = semindex.explain(query, limit=limit)
+            st.write(hits)
+        else:
+            hits = semindex.search(query, limit=limit)
+
+    # getAllInflections()
+
+    # https://github.com/neuml/txtai/blob/master/src/python/txtai/console/base.py#L199
+
+    for hit_idx, hit in enumerate(hits):
+        # hit = [id, score]
+        # st.write(hit)
+        rows = data[data["id"] == hit["id"]]
+        title = hit["id"]
+        if len(rows):
+            row = rows.iloc[0]
+            title = row['title']
+
+        st.header(f"{hit_idx+1}. {title}")
+
+        if len(rows):
+            if EXPLAIN_STRATEGY == 0:
+                st.write(row['summary'])
+            if EXPLAIN_STRATEGY == 3:
+                seg = Segmentation(sentences=True)
+                sents = seg(row['text'])
+                sims = semindex.similarity(phrase, sents)
+                st.write(sims[0])
+                st.write(sents[sims[0][0]])
+            if EXPLAIN_STRATEGY == 3:
+                docid = hit["id"]
+                sents = semindex_sents.search(f"select id, text, score, docid from txtai where similar({phrase}) and docid = '{docid}'", limit=3)
+                for sent in sents:
+                    st.write(phrase)
+                    st.write(sent)
+
+        st.write(f"(score: {hit['score']:.2f}, id: {repr(hit['id'])})")
+
+
+def read_semindex(suffix="") -> Embeddings:
+    state_name = "semindex"+suffix
+    ret = st.session_state.get(state_name, None)
+    if ret is None:
+        ret = Embeddings()
+        try:
+            ret.load(str(dm.get_semindex_path())+suffix)
+            st.session_state[state_name] = ret
+        except FileNotFoundError:
+            st.error("The search index is missing. Run `python cli.py semindex` to build it.")
+
+    return ret
 
 
 if __name__ == "__main__":
