@@ -275,9 +275,6 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
     if show_about_data_view():
         st.header("About the data")
         show_about_data(data)
-    else:
-        with st.expander("About the data", expanded=False):
-            show_about_data(data)
 
     if n_rows == 1:
         doc = selection.iloc[0]
@@ -393,6 +390,7 @@ def show_about_data(data: pd.DataFrame):
     st.session_state.metric_research_to_impact_avg = research_to_impact_avg
 
     st.subheader("Units of assessment distribution")
+    view_and_download_data("Units of assessment", data)
     st.plotly_chart(
         vm.histogram(data, None, _s.DATA_UOA, _s.DATA_TYPE), use_container_width=True
     )
@@ -419,17 +417,40 @@ def show_about_data(data: pd.DataFrame):
     research["title"] = research[_s.FIELD_ID].apply(
         lambda x: " ".join(x.split("_")[3:])
     )
+    research["start"] = research[_s.DATA_RESEARCH_START]
+    research["end"] = research[_s.DATA_RESEARCH_END]
+    research = research[[_s.FIELD_ID, "title", "start", "end", "type"]]
+    view_and_download_data("Timeline", research)
     st.plotly_chart(
         px.timeline(
             research,
-            x_start=_s.DATA_RESEARCH_START,
-            x_end=_s.DATA_RESEARCH_END,
+            x_start="start",
+            x_end="end",
             y="title",
             color="type",
             opacity=0.7,
         ),
         use_container_width=True,
     )
+
+
+def view_and_download_data(title: str, data: pd.DataFrame):
+    if data is not None:
+        with st.expander("View data", expanded=False):
+            # https://stackoverflow.com/questions/69578431/how-to-fix-streamlitapiexception-expected-bytes-got-a-int-object-conver
+            # https://issues.apache.org/jira/browse/ARROW-14087
+            st.write(data.astype(str))
+            st.download_button(
+                label="Download data as CSV",
+                data=convert_df(data),
+                file_name=f"{title.lower().replace(' ', '_')}.csv",
+                mime="text/csv",
+            )
+
+
+@st.experimental_memo
+def convert_df(df):
+    return df.to_csv().encode("utf-8")
 
 
 def show_doc(data: pd.DataFrame):
@@ -503,18 +524,12 @@ def show_topics(
     )
 
     st.subheader(f"{title} with confidence >= {threshold} aggregated by {aggr}")
-    with st.expander("View data", expanded=False):
-        # https://stackoverflow.com/questions/69578431/how-to-fix-streamlitapiexception-expected-bytes-got-a-int-object-conver
-        # https://issues.apache.org/jira/browse/ARROW-14087
-        st.write(topics.astype(str))
-        st.download_button(
-            label="Download data as CSV",
-            data=convert_df(topics),
-            file_name="topics.csv",
-            mime="text/csv",
-        )
 
     st.subheader(f"{title} distribution")
+    view_and_download_data(
+        f"{title} distribution",
+        topics_aggr[[_s.FEATURE_TOPIC_TOPIC, _s.FEATURE_TOPIC_SCORE]],
+    )
     st.plotly_chart(
         vm.histogram(
             topics_aggr,
@@ -533,6 +548,7 @@ def show_topics(
     )
 
     st.subheader(f"Connections between {title.lower()} and unit of assessment")
+    view_and_download_data(f"{title} alluvial", topics)
     st.plotly_chart(
         vm.parallel_categories(topics, [_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA], colours),
         use_container_width=True,
@@ -543,6 +559,10 @@ def show_topics(
         topics.groupby([_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA])
         .agg(aggr_function)
         .reset_index()
+    )
+    view_and_download_data(
+        f"{title} correlation",
+        topics_aggr[[_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA, _s.FEATURE_TOPIC_SCORE]],
     )
     st.plotly_chart(
         vm.scatter(
@@ -597,11 +617,6 @@ def get_topics(
     return None
 
 
-@st.experimental_memo
-def convert_df(df):
-    return df.to_csv().encode("utf-8")
-
-
 def show_entities(
     title: str,
     data: pd.DataFrame,
@@ -618,6 +633,7 @@ def show_entities(
     )
     if entities is not None:
         st.subheader(f"{title} distribution")
+        view_and_download_data(title, entities)
         st.plotly_chart(
             vm.histogram(
                 entities,
@@ -691,15 +707,12 @@ def show_geo(data: pd.DataFrame):
         st.warning("No places data found")
         return
 
-    st.subheader("Local/national/global mentions")
-
     places = places.sort_values(by=_s.FEATURE_GEO_CATEGORY)
-    with st.expander("View data", expanded=False):
-        st.write(places)
-
     min_mentions = get_session_geo_min_mentions()
     places = places[places["count"] >= min_mentions]
 
+    st.subheader("Local/national/global mentions")
+    view_and_download_data("Places mentions", places)
     st.plotly_chart(
         vm.histogram(
             places,
@@ -712,6 +725,7 @@ def show_geo(data: pd.DataFrame):
     )
 
     st.subheader("Places distribution")
+    view_and_download_data("Places distribution", places)
     st.plotly_chart(
         vm.bar(
             places,
@@ -728,10 +742,8 @@ def show_geo(data: pd.DataFrame):
     places = places.drop(columns=[_s.FEATURE_ENTITY_LABEL, _s.FEATURE_GEO_CATEGORY])
     places = places.groupby(places.columns[:-1].values.tolist()).sum().reset_index()
     places = places.sort_values(by="count", ascending=False)
-    with st.expander("Map data", expanded=False):
-        st.write(places)
-
     focus = places.iloc[0]
+    view_and_download_data("Places map", places)
     st.plotly_chart(
         vm.scatter_mapbox(
             places,
