@@ -18,6 +18,7 @@ from settings import (
     TOPIC_CLASSIFICATION_TOPICS,
     get_fields_of_research,
     SEARCH_COLUMN,
+    SEARCH_EXPLAIN_STRATEGY
 )
 from txtai.embeddings import Embeddings
 
