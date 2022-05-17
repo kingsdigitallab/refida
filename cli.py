@@ -2,6 +2,7 @@ import pickle
 from enum import Enum
 
 import typer
+from txtai.pipeline import Segmentation
 
 from refida import data as dm
 from refida import etl as em
@@ -16,7 +17,9 @@ from settings import (
     TOPIC_CLASSIFICATION_IMPACTS,
     TOPIC_CLASSIFICATION_TOPICS,
     get_fields_of_research,
+    SEARCH_COLUMN,
 )
+from txtai.embeddings import Embeddings
 
 app = typer.Typer()
 
@@ -190,30 +193,48 @@ def semindex(datadir: str = DATA_DIR.name):
     """
 
     data = dm.get_etl_data(datadir)
+
+    if data is None:
+        error("No data found. Run the `etl` command first.")
+
+    data = data[data[SEARCH_COLUMN].astype("str").str.len() > 3]
+    seg = Segmentation(sentences=True)
+
     with typer.progressbar(length=len(data), label="Semantic indexing...") as progress:
+        embeddings = get_embeddings()
+        embeddings_sents = get_embeddings()
 
-        if data is None:
-            error("No data found. Run the `etl` command first.")
-
-        # data = ["US tops 5 million confirmed virus cases",
-        #         "Canada's last fully intact ice shelf has suddenly collapsed, forming a Manhattan-sized iceberg",
-        #         "Beijing mobilises invasion craft along coast as Taiwan tensions escalate",
-        #         "The National Park Service warns against sacrificing slower friends in a bear attack",
-        #         "Maine man wins $1M from $25 lottery ticket",
-        #         "Make huge profits without work, earn up to $100,000 a day"]
-
-        from txtai.embeddings import Embeddings
-        embeddings = Embeddings(
-            {"path": "sentence-transformers/nli-mpnet-base-v2"}
-        )
-
+        sent_idx = -1
         for r in data.itertuples(False):
-            progress.update(1)
-            embeddings.upsert([
-                (r.id, r.text, None)
-            ])
+            text = getattr(r, SEARCH_COLUMN, None)
+            if isinstance(text, str) and text:
+                # index text
+                progress.update(1)
+                embeddings.upsert([
+                    (r.id, {"text": text}, None)
+                ])
+
+                # index sentences
+                sents = seg(text)
+                for sent in sents:
+                    sent_idx += 1
+                    embeddings_sents.upsert([
+                        (sent_idx, {"text": sent, "docid": r.id}, None)
+                    ])
 
         embeddings.save(str(dm.get_semindex_path()))
+
+    embeddings_sents.save(str(dm.get_semindex_path())+'_sents')
+
+
+def get_embeddings() -> Embeddings:
+    return Embeddings({
+        "path": "sentence-transformers/nli-mpnet-base-v2",
+        # to enable text & metadata storage (i.e. 'documents' sqlite file)
+        "content": True,
+        # ?
+        "objects": True
+    })
 
 
 if __name__ == "__main__":

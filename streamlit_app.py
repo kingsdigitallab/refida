@@ -814,21 +814,32 @@ def show_text_search(data: pd.DataFrame, selection: pd.DataFrame):
     st.title("Text Search")
 
     phrase = st.text_input("Search phrase")
-    # temporary flag, for experimentation
+
+    # EXPLAIN_STRATEGY = temporary flag, for experimentation
     # 0: show summary, 1: use txtai explain, 2: use sentence similarity
-    EXPLAIN = 0
+    # 3: sentence similarity using semindex_sents
+    # --
+    # 1: is unacceptably slow without a GPU (~1min to explain just two paras)
+    # 2: also quite slow (few seconds per result)
+    # 3: fast but inexplicable results: some docs with no sentences
+    # others not relevant
+    EXPLAIN_STRATEGY = 0
+    limit = 50
+
+    st.write(len(data))
 
     hits = []
     if phrase:
+        query = f"select id, text, score, from txtai where similar('{phrase}')"
         # the cache might be a better place for that?
         semindex = read_semindex()
-        if EXPLAIN == 1:
-            texts = data["summary"].tolist()[:3]
-            # taht call never seems to end
-            hits = semindex.explain(phrase, texts)
+        semindex_sents = read_semindex("_sents")
+        if EXPLAIN_STRATEGY == 1:
+            # that call never seems to end
+            hits = semindex.explain(query, limit=limit)
             st.write(hits)
         else:
-            hits = semindex.search(phrase, 50)
+            hits = semindex.search(query, limit=limit)
 
     # getAllInflections()
 
@@ -836,8 +847,9 @@ def show_text_search(data: pd.DataFrame, selection: pd.DataFrame):
 
     for hit_idx, hit in enumerate(hits):
         # hit = [id, score]
-        rows = data[data["id"] == hit[0]]
-        title = hit[0]
+        # st.write(hit)
+        rows = data[data["id"] == hit["id"]]
+        title = hit["id"]
         if len(rows):
             row = rows.iloc[0]
             title = row['title']
@@ -845,25 +857,32 @@ def show_text_search(data: pd.DataFrame, selection: pd.DataFrame):
         st.header(f"{hit_idx+1}. {title}")
 
         if len(rows):
-            if EXPLAIN == 0:
+            if EXPLAIN_STRATEGY == 0:
                 st.write(row['summary'])
-            if EXPLAIN == 2:
+            if EXPLAIN_STRATEGY == 3:
                 seg = Segmentation(sentences=True)
                 sents = seg(row['text'])
                 sims = semindex.similarity(phrase, sents)
                 st.write(sims[0])
                 st.write(sents[sims[0][0]])
+            if EXPLAIN_STRATEGY == 3:
+                docid = hit["id"]
+                sents = semindex_sents.search(f"select id, text, score, docid from txtai where similar({phrase}) and docid = '{docid}'", limit=3)
+                for sent in sents:
+                    st.write(phrase)
+                    st.write(sent)
 
-        st.write(f"(score: {hit[1]:.2f}, id: {repr(hit[0])})")
+        st.write(f"(score: {hit['score']:.2f}, id: {repr(hit['id'])})")
 
 
-def read_semindex():
-    ret = st.session_state.get("semindex", None)
+def read_semindex(suffix="") -> Embeddings:
+    state_name = "semindex"+suffix
+    ret = st.session_state.get(state_name, None)
     if ret is None:
         ret = Embeddings()
         try:
-            ret.load(str(dm.get_semindex_path()))
-            st.session_state.semindex = ret
+            ret.load(str(dm.get_semindex_path())+suffix)
+            st.session_state[state_name] = ret
         except FileNotFoundError:
             st.error("The search index is missing. Run `python cli.py semindex` to build it.")
 

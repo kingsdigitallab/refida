@@ -64,6 +64,8 @@ FEATURE_GEO_GEOJSON = "geojson"
 
 DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD = 0.5
 
+SEARCH_COLUMN = "summary"
+
 # =====================================================================================
 # etl module settings
 ETL_SORT_BY: list[str] = [DATA_UOA_N, FIELD_ID]
