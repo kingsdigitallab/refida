@@ -44,7 +44,7 @@ def sidebar():
             "Partners",
             "Beneficiaries",
             "Locations",
-            "Text search",
+            "Search results",
         ),
     )
 
@@ -97,7 +97,7 @@ def show_geo_view():
 
 
 def show_text_search_view():
-    return get_session_view() == "Text search"
+    return get_session_view() == "Search results"
 
 
 def topics_sidebar():
@@ -169,6 +169,8 @@ def filters_sidebar():
             "Fields of research", fields_of_research
         )
 
+    st.session_state.search_phrase = st.text_input('Text search')
+
 
 def data_section():
     st.header("Data")
@@ -222,6 +224,9 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
             data[_s.DATA_RESEARCH].isnull()
             | data[_s.FIELD_ID].isin(fields_of_research[_s.FIELD_ID])
         ]
+
+    text_search(data)
+    data = filter_data_by_text_search(data)
 
     return data
 
@@ -319,7 +324,7 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
         return
 
     if show_text_search_view():
-        show_text_search(data, selection)
+        show_search_results(data, selection)
         return
 
 
@@ -822,10 +827,43 @@ def get_places(
     return None
 
 
-def show_text_search(data: pd.DataFrame, selection: pd.DataFrame):
-    st.title("Text Search")
+def text_search(data: pd.DataFrame):
+    '''Run a text search
+        and sets st.session_state.search_hits = [
+            {id:, text:, score: },
+        ]
+        or None if no search phrase provided by user
+    '''
+    hits = None
+    phrase = st.session_state.search_phrase.strip()
 
-    phrase = st.text_input("Search phrase")
+    if phrase:
+        query = f"select id, text, score, from txtai where similar('{phrase}')"
+        semindex = read_semindex()
+        search_method = semindex.search
+        if _s.SEARCH_EXPLAIN_STRATEGY == 1:
+            # that call never seems to end
+            search_method = semindex.explain
+
+        hits = search_method(query, limit=_s.SEARCH_LIMIT)
+        
+        # filter by SEARCH_MIN_SCORE
+        hits = [hit for hit in hits if hit["score"] >= _s.SEARCH_MIN_SCORE]
+
+    st.session_state.search_hits = hits
+
+
+def filter_data_by_text_search(data):
+    hits = st.session_state.search_hits
+    if hits is not None:
+        data = data[data.id.isin([
+            hit["id"] for hit in hits
+        ])]
+    return data
+
+
+def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
+    st.title("Search results")
 
     # EXPLAIN_STRATEGY = temporary flag, for experimentation
     # 0: show summary, 1: use txtai explain, 2: use sentence similarity
@@ -835,27 +873,18 @@ def show_text_search(data: pd.DataFrame, selection: pd.DataFrame):
     # 2: also quite slow (few seconds per result)
     # 3: fast but inexplicable results: some docs with no sentences
     # others not relevant
-    EXPLAIN_STRATEGY = 0
-    limit = 50
 
-    st.write(len(data))
+    hits = st.session_state.search_hits
+    # st.write(hits)
+    if hits is None:
+        st.warning("Use the 'Text search' in the side bar to start a search.")
+        return
 
-    hits = []
-    if phrase:
-        query = f"select id, text, score, from txtai where similar('{phrase}')"
-        # the cache might be a better place for that?
-        semindex = read_semindex()
-        semindex_sents = read_semindex("_sents")
-        if EXPLAIN_STRATEGY == 1:
-            # that call never seems to end
-            hits = semindex.explain(query, limit=limit)
-            st.write(hits)
-        else:
-            hits = semindex.search(query, limit=limit)
+    st.write(len(selection), len(data))
 
-    # getAllInflections()
-
-    # https://github.com/neuml/txtai/blob/master/src/python/txtai/console/base.py#L199
+    phrase = st.session_state.search_phrase
+    semindex = read_semindex()
+    semindex_sents = read_semindex("_sents")
 
     for hit_idx, hit in enumerate(hits):
         # hit = [id, score]
@@ -869,15 +898,15 @@ def show_text_search(data: pd.DataFrame, selection: pd.DataFrame):
         st.header(f"{hit_idx+1}. {title}")
 
         if len(rows):
-            if EXPLAIN_STRATEGY == 0:
-                st.write(row['summary'])
-            if EXPLAIN_STRATEGY == 3:
+            if _s.SEARCH_EXPLAIN_STRATEGY == 0:
+                st.write(hit["text"])
+            if _s.SEARCH_EXPLAIN_STRATEGY == 2:
                 seg = Segmentation(sentences=True)
-                sents = seg(row['text'])
+                sents = seg(hit["text"])
                 sims = semindex.similarity(phrase, sents)
                 st.write(sims[0])
                 st.write(sents[sims[0][0]])
-            if EXPLAIN_STRATEGY == 3:
+            if _s.SEARCH_EXPLAIN_STRATEGY == 3:
                 docid = hit["id"]
                 sents = semindex_sents.search(f"select id, text, score, docid from txtai where similar({phrase}) and docid = '{docid}'", limit=3)
                 for sent in sents:

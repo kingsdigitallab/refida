@@ -64,7 +64,13 @@ FEATURE_GEO_GEOJSON = "geojson"
 
 DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD = 0.5
 
+# which column we search on
 SEARCH_COLUMN = "summary"
+# strat used to explain the results (see streamlit_app.py)
+SEARCH_EXPLAIN_STRATEGY = 0
+SEARCH_LIMIT = 10
+# minimum score for a match to be part of the results
+SEARCH_MIN_SCORE = 0.10
 
 # =====================================================================================
 # etl module settings
