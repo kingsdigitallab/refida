@@ -7,6 +7,7 @@ import streamlit as st
 from spacy_streamlit import visualize_ner
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
+from txtai.database import SQLError
 from txtai.embeddings import Embeddings
 from txtai.pipeline import Segmentation
 
@@ -295,7 +296,7 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
         doc = selection.iloc[0]
         doc_idx = data[data[_s.FIELD_ID] == selection[_s.FIELD_ID].iloc[0]].index[0]
 
-        show_doc(selection)
+        show_first_doc(selection)
 
     if show_impact_categories_view():
         show_topics("Impact categories", selection)
@@ -472,11 +473,15 @@ def convert_df(df):
     return df.to_csv().encode("utf-8")
 
 
-def show_doc(data: pd.DataFrame):
-    doc = data.iloc[0]
+def show_first_doc(data: pd.DataFrame):
+    if len(data):
+        doc = data.iloc[0]
 
-    st.subheader(doc["title"])
+        st.subheader(doc["title"])
+        show_doc(doc)
 
+
+def show_doc(doc: pd.Series, hide_summary = False):
     with st.expander("View document", expanded=False):
         with open(doc["file"], "rb") as f:
             base64_pdf = base64.b64encode(f.read()).decode("utf-8")
@@ -486,11 +491,12 @@ def show_doc(data: pd.DataFrame):
             )
             st.markdown(pdf_display, unsafe_allow_html=True)
 
-    summary = get_summary(tuple([doc[_s.FIELD_ID]]))
-    if summary is not None:
-        st.write(summary)
-    else:
-        st.write(doc[_s.DATA_SUMMARY])
+    if not hide_summary:
+        summary = get_summary(tuple([doc[_s.FIELD_ID]]))
+        if summary is not None:
+            st.write(summary)
+        else:
+            st.write(doc[_s.DATA_SUMMARY])
 
 
 @st.experimental_memo
@@ -863,8 +869,6 @@ def filter_data_by_text_search(data):
 
 
 def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
-    st.title("Search results")
-
     # EXPLAIN_STRATEGY = temporary flag, for experimentation
     # 0: show summary, 1: use txtai explain, 2: use sentence similarity
     # 3: sentence similarity using semindex_sents
@@ -875,16 +879,19 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
     # others not relevant
 
     hits = st.session_state.search_hits
+
+    # st.write(selection)
+
     # st.write(hits)
     if hits is None:
         st.warning("Use the 'Text search' in the side bar to start a search.")
         return
 
-    st.write(len(selection), len(data))
-
     phrase = st.session_state.search_phrase
     semindex = read_semindex()
     semindex_sents = read_semindex("_sents")
+
+    st.header(f"Search results ({len(hits)})")
 
     for hit_idx, hit in enumerate(hits):
         # hit = [id, score]
@@ -895,25 +902,44 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
             row = rows.iloc[0]
             title = row['title']
 
-        st.header(f"{hit_idx+1}. {title}")
+        st.subheader(f"{hit_idx+1}. {title}")
+
+        indicator_width = min(1.0, (hit["score"] - _s.SEARCH_MIN_SCORE) / (0.5 - _s.SEARCH_MIN_SCORE)) * 100
+        st.write(f"<div style='border-bottom:1px solid black; width:{indicator_width}%'></div>", unsafe_allow_html=True)
 
         if len(rows):
-            if _s.SEARCH_EXPLAIN_STRATEGY == 0:
-                st.write(hit["text"])
+            show_doc(row, True)
+
+            explanation = hit["text"]
+
+            message = ""
+
             if _s.SEARCH_EXPLAIN_STRATEGY == 2:
                 seg = Segmentation(sentences=True)
-                sents = seg(hit["text"])
                 sims = semindex.similarity(phrase, sents)
                 st.write(sims[0])
                 st.write(sents[sims[0][0]])
             if _s.SEARCH_EXPLAIN_STRATEGY == 3:
                 docid = hit["id"]
-                sents = semindex_sents.search(f"select id, text, score, docid from txtai where similar({phrase}) and docid = '{docid}'", limit=3)
-                for sent in sents:
-                    st.write(phrase)
-                    st.write(sent)
+                try:
+                    sents = semindex_sents.search(
+                        f"select id, text, docid, score from txtai where docid = '{docid}' and similar({phrase})", limit=1)
 
-        st.write(f"(score: {hit['score']:.2f}, id: {repr(hit['id'])})")
+                    explanation = hit["text"]
+
+                    for sent in sents:
+                        bgcolor = int((1 - min(sent["score"], 0.5)) * 128)
+                        explanation = explanation.replace(
+                            sent["text"],
+                            f"<span style='background-color: rgb(255, 255, {bgcolor});'>{sent['text']}</span>"
+                        )
+                except SQLError:
+                    message = '(WARNING: search explanation failed)'
+                    pass
+
+            st.write(explanation, unsafe_allow_html=True)
+
+        st.write(f"(score: {hit['score']:.2f}, id: {repr(hit['id'])}) {message}")
 
 
 def read_semindex(suffix="") -> Embeddings:
