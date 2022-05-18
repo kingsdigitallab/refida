@@ -139,6 +139,9 @@ def geo_sidebar():
 
 def filters_sidebar():
     st.subheader("Filter the data")
+
+    st.session_state.search_phrase = st.text_input('Text search')
+
     with st.expander("Filter by unit of assessment", expanded=True):
         st.session_state.filter_uoa = st.multiselect(
             "Unit of assessment", _s.UOA.values()
@@ -169,8 +172,6 @@ def filters_sidebar():
         st.session_state.filter_fields_of_research = st.multiselect(
             "Fields of research", fields_of_research
         )
-
-    st.session_state.search_phrase = st.text_input('Text search')
 
 
 def data_section():
