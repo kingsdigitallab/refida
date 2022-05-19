@@ -917,6 +917,7 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
 
             if _s.SEARCH_EXPLAIN_STRATEGY == 2:
                 seg = Segmentation(sentences=True)
+                sents = seg(hit["text"])
                 sims = semindex.similarity(phrase, sents)
                 st.write(sims[0])
                 st.write(sents[sims[0][0]])
