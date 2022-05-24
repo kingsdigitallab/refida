@@ -894,6 +894,8 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
 
     st.header(f"Search results ({len(hits)})")
 
+    seg = Segmentation(sentences=True)
+
     for hit_idx, hit in enumerate(hits):
         # hit = [id, score]
         # st.write(hit)
@@ -915,29 +917,30 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
 
             message = ""
 
+            highlights = []
+
+            # st.header(_s.SEARCH_EXPLAIN_STRATEGY)
             if _s.SEARCH_EXPLAIN_STRATEGY == 2:
-                seg = Segmentation(sentences=True)
-                sents = seg(hit["text"])
-                sims = semindex.similarity(phrase, sents)
-                st.write(sims[0])
-                st.write(sents[sims[0][0]])
+                sents = [s for s in seg(hit["text"]) if len(s) > 4]
+                highlights = [[sents[sim[0]], sim[1]] for sim in semindex.similarity(phrase, sents)]
             if _s.SEARCH_EXPLAIN_STRATEGY == 3:
                 docid = hit["id"]
                 try:
                     sents = semindex_sents.search(
-                        f"select id, text, docid, score from txtai where docid = '{docid}' and similar({phrase})", limit=1)
+                        f"select id, text, docid, score from txtai where docid = '{docid}' and similar({phrase})", limit=2)
 
-                    explanation = hit["text"]
-
-                    for sent in sents:
-                        bgcolor = int((1 - min(sent["score"], 0.5)) * 128)
-                        explanation = explanation.replace(
-                            sent["text"],
-                            f"<span style='background-color: rgb(255, 255, {bgcolor});'>{sent['text']}</span>"
-                        )
+                    highlights = [[sent['text'], sent['score']] for sent in sents]
                 except SQLError:
                     message = '(WARNING: search explanation failed)'
                     pass
+
+            for highlight in highlights:
+                bgcolor = int((1 - min(highlight[1], 0.5)) * 128)
+                explanation = explanation.replace(
+                    highlight[0],
+                    f"<span style='background-color: rgb(255, 255, {bgcolor});'>{highlight[0]}</span>"
+                )
+                break
 
             st.write(explanation, unsafe_allow_html=True)
 

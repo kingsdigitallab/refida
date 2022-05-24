@@ -230,11 +230,11 @@ def semindex(datadir: str = DATA_DIR.name):
 
 def get_embeddings() -> Embeddings:
     return Embeddings({
-        "path": "sentence-transformers/nli-mpnet-base-v2",
+        # "path": "sentence-transformers/nli-mpnet-base-v2",
+        # "path": "sentence-transformers/paraphrase-MiniLM-L3-v2",
+        "path": "sentence-transformers/all-MiniLM-L6-v2",
         # to enable text & metadata storage (i.e. 'documents' sqlite file)
         "content": True,
-        # ?
-        "objects": True
     })
 
 
