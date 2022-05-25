@@ -128,6 +128,7 @@ def get_sections_environment(end: str) -> list[tuple[str, str, str]]:
     ]
 
 
+# https://www.ref.ac.uk/panels/units-of-assessment/
 UOA_PATTERN: re.Pattern = re.compile(r"(\d+)")
 UOA: dict[str, str] = {
     "1": "Clinical Medicine",
@@ -156,20 +157,21 @@ UOA: dict[str, str] = {
     "33": "Film and Music",
     "34": "Communication, Cultural and Media Studies",
 }
+PANELS: list[str] = ["A", "B", "C", "D"]
 
 
 def get_uoa_panel(uoa: int) -> Optional[str]:
     if uoa <= 6:
-        return "A"
+        return PANELS[0]
 
     if 6 < uoa <= 12:
-        return "B"
+        return PANELS[1]
 
     if 12 < uoa <= 24:
-        return "C"
+        return PANELS[1]
 
     if 24 < uoa <= 34:
-        return "D"
+        return PANELS[1]
 
     return None
 

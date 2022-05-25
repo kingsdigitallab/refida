@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - KDL footer.
 - Extract unit of assessment panel.
+- Panel filter to the dashboard.
 
 ### Changed
 
