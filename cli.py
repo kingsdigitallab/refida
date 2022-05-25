@@ -6,8 +6,8 @@ import typer
 from refida import data as dm
 from refida import etl as em
 from refida import features
-from refida.searchindex import (
-    SearchIndexDoc, SearchIndexSent, LexicalIndexDoc
+from refida.search_index import (
+    SemIndexDoc, SemIndexSent, LexicalIndexDoc
 )
 
 from settings import (
@@ -198,12 +198,12 @@ def reindex(datadir: str = DATA_DIR.name):
     if data is None:
         error("No data found. Run the `etl` command first.")
 
-    index = SearchIndexDoc(datadir)
+    index = SemIndexDoc(datadir)
     with typer.progressbar(length=len(data),
                            label="Semantic indexing docs...") as progressbar:
         index.reindex(data, SEARCH_COLUMN, progressbar)
 
-    index = SearchIndexSent(datadir)
+    index = SemIndexSent(datadir)
     with typer.progressbar(length=len(data),
                            label="Semantic indexing sents...") as progressbar:
         index.reindex(data, SEARCH_COLUMN, progressbar)

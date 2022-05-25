@@ -15,7 +15,7 @@ import settings as _s
 from refida import data as dm
 from refida import visualize as vm
 from refida.__init__ import __version__
-from refida.searchindex import LexicalIndexDoc
+from refida.search_index import LexicalIndexDoc, SemIndexDoc, SemIndexSent
 
 STYLE_RADIO_INLINE = ""
 
@@ -148,7 +148,7 @@ def filters_sidebar():
             ["semantic", "lexical"],
             help=_s.DASHBOARD_HELP_SEARCH_MODE,
         )
-        st.session_state.search_score_threshold = st.slider(
+        st.session_state.search_limit = st.slider(
             "Maximum number of results",
             10, 300, _s.SEARCH_LIMIT, 10,
             help=_s.DASHBOARD_HELP_SEARCH_LIMIT,
@@ -338,7 +338,7 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
         return
 
     if show_text_search_view():
-        show_search_results(data, selection)
+        show_search_results(data)
         return
 
 
@@ -858,21 +858,13 @@ def text_search(data: pd.DataFrame):
 
     if phrase:
         if st.session_state.search_mode == 'semantic':
-            query = f"select id, text, score, from txtai where similar('{phrase}')"
-            semindex = read_semindex()
-            search_method = semindex.search
-            if _s.SEARCH_EXPLAIN_STRATEGY == 1:
-                # that call never seems to end
-                search_method = semindex.explain
-
-            hits = search_method(query, limit=_s.SEARCH_LIMIT)
-
-            # filter by SEARCH_MIN_SCORE
-            hits = [hit for hit in hits if hit["score"] >= _s.SEARCH_MIN_SCORE]
+            index = SemIndexDoc()
 
         if st.session_state.search_mode == 'lexical':
             index = LexicalIndexDoc()
-            hits = index.search(phrase)
+            index.set_highlight_pattern(*get_highlight_parts())
+
+        hits = index.search_phrase(phrase, limit=st.session_state.search_limit)
 
     st.session_state.search_hits = hits
 
@@ -886,7 +878,15 @@ def filter_data_by_text_search(data):
     return data
 
 
-def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
+def get_highlight_parts(score=1):
+    bgcolor = int((1 - min(score, 0.5)) * 128)
+    return [
+        f'<span style="background-color: rgb(255, 255, {bgcolor});">',
+        '</span>'
+    ]
+
+
+def show_search_results(data: pd.DataFrame):
     # EXPLAIN_STRATEGY = temporary flag, for experimentation
     # 0: show summary, 1: use txtai explain, 2: use sentence similarity
     # 3: sentence similarity using semindex_sents
@@ -903,12 +903,14 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
         return
 
     phrase = st.session_state.search_phrase
-    semindex = read_semindex()
-    semindex_sents = read_semindex("_sents")
+    semindex = SemIndexDoc().read_index()
+    semindex_sents = SemIndexSent().read_index()
 
     st.header(f"Search results ({len(hits)})")
 
     seg = Segmentation(sentences=True)
+
+    highlight_before, highlight_after = get_highlight_parts()
 
     for hit_idx, hit in enumerate(hits):
         # hit = [id, score]
@@ -931,66 +933,52 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
             unsafe_allow_html=True
         )
 
+
         if len(rows):
             show_doc(row, True)
 
-            explanation = hit["text"]
-
             message = ""
 
-            highlights = []
+            if st.session_state.search_mode == 'lexical':
+                explanation = hit['highlighted']
+            else:
+                explanation = hit["text"]
 
-            # st.header(_s.SEARCH_EXPLAIN_STRATEGY)
-            if _s.SEARCH_EXPLAIN_STRATEGY == 2:
-                sents = [s for s in seg(hit["text"]) if len(s) > 4]
-                highlights = [
-                    [sents[sim[0]], sim[1]]
-                    for sim
-                    in semindex.similarity(phrase, sents)
-                ]
-            if _s.SEARCH_EXPLAIN_STRATEGY == 3:
-                docid = hit["id"]
-                try:
-                    sents = semindex_sents.search(
-                        f"select id, text, docid, score from txtai "
-                        f"where docid = '{docid}' and similar({phrase})",
-                        limit=2
+                highlights = []
+
+                # st.header(_s.SEARCH_EXPLAIN_STRATEGY)
+                if _s.SEARCH_EXPLAIN_STRATEGY == 2:
+                    sents = [s for s in seg(hit["text"]) if len(s) > 4]
+                    highlights = [
+                        [sents[sim[0]], sim[1]]
+                        for sim
+                        in semindex.similarity(phrase, sents)
+                    ]
+                if _s.SEARCH_EXPLAIN_STRATEGY == 3:
+                    docid = hit["id"]
+                    try:
+                        sents = semindex_sents.search(
+                            f"select id, text, docid, score from txtai "
+                            f"where docid = '{docid}' and similar({phrase})",
+                            limit=2
+                        )
+
+                        highlights = [[sent['text'], sent['score']] for sent in sents]
+                    except SQLError:
+                        message = '(WARNING: search explanation failed)'
+                        pass
+
+                for highlight in highlights:
+                    parts = get_highlight_parts(score=highlight[1])
+                    explanation = explanation.replace(
+                        highlight[0],
+                        parts[0] + highlight[0] + parts[1],
                     )
-
-                    highlights = [[sent['text'], sent['score']] for sent in sents]
-                except SQLError:
-                    message = '(WARNING: search explanation failed)'
-                    pass
-
-            for highlight in highlights:
-                bgcolor = int((1 - min(highlight[1], 0.5)) * 128)
-                explanation = explanation.replace(
-                    highlight[0],
-                    f"<span style='background-color: rgb(255, 255, {bgcolor})"
-                    f";'>{highlight[0]}</span>"
-                )
-                break
+                    break
 
             st.write(explanation, unsafe_allow_html=True)
 
         st.write(f"(score: {hit['score']:.2f}, id: {repr(hit['id'])}) {message}")
-
-
-def read_semindex(suffix="") -> Embeddings:
-    state_name = "semindex"+suffix
-    ret = st.session_state.get(state_name, None)
-    if ret is None:
-        ret = Embeddings()
-        try:
-            ret.load(str(dm.get_semindex_path())+suffix)
-            st.session_state[state_name] = ret
-        except FileNotFoundError:
-            st.error(
-                "The search index is missing."
-                " Run `python cli.py semindex` to build it."
-            )
-
-    return ret
 
 
 def get_search_phrase():

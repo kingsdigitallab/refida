@@ -6,20 +6,30 @@ from txtai.embeddings import Embeddings
 from refida.data import get_data_path
 
 
-class SearchIndexDoc:
+class SemIndexDoc:
+    '''txtai semantic index of the documents'''
 
     def __init__(self, datadir: str = settings.DATA_DIR.name):
         self.datadir = datadir
         self.segmenter = Segmentation(sentences=True)
+        self.set_highlight_pattern()
 
-    def search(self, phrase):
-        ret = []
+    def search_phrase(
+            self, phrase, limit=None, min_score=settings.SEARCH_MIN_SCORE
+    ):
+        query = f"select id, text, score, from txtai where similar('{phrase}')"
+        if min_score:
+            query += f" and score >= {min_score}"
+        ret = self.search_sql(query, limit=limit)
 
         return ret
 
+    def search_sql(self, query, limit=None):
+        semindex = self.read_index()
+        return semindex.search(query, limit=limit)
+
     def reindex(self, dataframe, search_column, progressbar=None):
 
-        # index docs
         self.embeddings = self.new_embeddings()
 
         for r in dataframe.itertuples(False):
@@ -54,12 +64,35 @@ class SearchIndexDoc:
     def get_path_suffix(self):
         return ""
 
+    def read_index(self) -> Embeddings:
+        # TODO: st should be passed to this fct or constructor
+        import streamlit as st
+        state_name = "semindex" + self.get_path_suffix()
+        ret = st.session_state.get(state_name, None)
+        if ret is None:
+            ret = Embeddings()
+            try:
+                ret.load(self.get_index_path())
+                st.session_state[state_name] = ret
+            except FileNotFoundError:
+                st.error(
+                    "The search index is missing."
+                    " Run `python cli.py reindex` to build it."
+                )
 
-class SearchIndexSent(SearchIndexDoc):
+        return ret
+
+    def set_highlight_pattern(self, before='', after=''):
+        self.highlight_before = before
+        self.highlight_after = after
+
+
+class SemIndexSent(SemIndexDoc):
+    '''txtai semantic index of the sentences'''
 
     def reindex(self, dataframe, search_column, progressbar=None):
         self.sent_idx = -1
-        super(SearchIndexSent, self).reindex(dataframe, search_column, progressbar)
+        super(SemIndexSent, self).reindex(dataframe, search_column, progressbar)
 
     def reindex_doc(self, embeddings, row, text):
         # index sentences
@@ -74,7 +107,8 @@ class SearchIndexSent(SearchIndexDoc):
         return "_sents"
 
 
-class LexicalIndexDoc(SearchIndexDoc):
+class LexicalIndexDoc(SemIndexDoc):
+    '''sqlite fst5 lexical index (bm25) of the documents'''
 
     def reindex(self, dataframe, search_column, progressbar=None):
         # con = self.embeddings.database.connection
@@ -100,26 +134,38 @@ class LexicalIndexDoc(SearchIndexDoc):
     def get_index_path(self):
         return str(get_data_path(self.datadir, "1_interim", "lexindex"))
 
-    def search(self, phrase, limit=None):
-        ret = []
-
-        import re
-        fields = 'id, text'
+    def search_phrase(
+            self, phrase, limit=None,
+            min_score=settings.SEARCH_MIN_SCORE
+    ):
+        fields = "id, text"
+        if self.highlight_before:
+            fields += ", highlight(txtsql, 0, '{}', '{}') as highlighted".format(
+                self.highlight_before,
+                self.highlight_after
+            )
 
         query = f'''
             select {fields}, 1.0 as score
             from txtsql(?)
         '''
         query += ' order by rank'
-        if limit is not None:
+
+        return self.search_sql(query=query, limit=limit, parameters=[phrase])
+
+    def search_sql(self, query, limit=None, parameters=None):
+        ret = []
+
+        if limit:
             query += f' limit {limit}'
+
         con = sqlite3.connect(self.get_index_path())
         cur = con.cursor()
-        rows = cur.execute(query, [phrase])
+        rows = cur.execute(query, parameters)
         for row in rows:
             hit = {
-                col: row[idx]
-                for idx, col in enumerate(re.findall(r'\w+', fields))
+                col[0]: row[idx]
+                for idx, col in enumerate(cur.description)
             }
             hit['score'] = 1.0
             ret.append(hit)
@@ -127,12 +173,15 @@ class LexicalIndexDoc(SearchIndexDoc):
 
         return ret
 
+
 # TODO:
+# M: highlight for fts5
 # M: universal phrase (OR, AND. ...)
-# M: snippets for fts5
 # M: index the text (not just summary)
-# S: optimise
+    # S: snippets
+    # S: optimise
 # S: check caching
 # C: additional fields
 # C: move semsearch to classes
-# C rename classes
+# S: dropbox for limit
+# S: fix lexical score
