@@ -619,7 +619,7 @@ DASHBOARD_HELP_TOPICS_SCORE_THRESHOLD: str = """
 The topics are assigned to the case studies by the classification algorithm using a
 confidence score (0-100%), the higher the score the more relevant the topics are.
 """
-DASHBOARD_HELP_ENTITIES: str = f"""
+DASHBOARD_HELP_ENTITIES: str = """
 Entity extraction has been applied using the free open-source Python library
 [SpaCy](https://spacy.io/) to different sections of the case studies to extract
 mentions of Organisations, Places and Products.
@@ -633,7 +633,7 @@ mentions of Organisations, Places and Products.
 Entities extracted from the sections *Summary*, *Details of the impact* are grouped
 together in the **Partners** view. Entities extracted from the section *Details of the
 impact* appear in the **Beneficiaries** view.
-"""  # noqa
+"""
 DASHBOARD_HELP_LOCATIONS: str = f"""
 Entity extraction has been applied to the documents to extract Places mentions
 ({", ".join(SPACY_LOCATION_ENTITY_TYPES)}). The extracted entities were geocoded and
