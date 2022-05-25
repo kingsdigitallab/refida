@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+
+- KDL footer.
+- Extract unit of assessment panel.
+
+### Changed
+
+- Rename types of impact to outputs.
 
 ## [0.3.1] - 2022-05-17
 

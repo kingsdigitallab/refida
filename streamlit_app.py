@@ -32,6 +32,8 @@ def streamlit():
 
     data_section()
 
+    st.markdown(_s.DASHBOARD_FOOTER, unsafe_allow_html=True)
+
 
 def sidebar():
     st.title("Insights")
@@ -41,7 +43,7 @@ def sidebar():
         (
             "About the data",
             "Impact categories",
-            "Types of impact",
+            "Outputs",
             "Fields of research",
             "Partners",
             "Beneficiaries",
@@ -52,7 +54,7 @@ def sidebar():
 
     if (
         show_impact_categories_view()
-        or show_types_of_impact_view()
+        or show_outputs_view()
         or show_fields_of_research_view()
     ):
         topics_sidebar()
@@ -71,15 +73,15 @@ def show_about_data_view():
 
 
 def get_session_view() -> str:
-    return st.session_state.get('view', 'About the data')
+    return st.session_state.get("view", "About the data")
 
 
 def show_impact_categories_view():
     return get_session_view() == "Impact categories"
 
 
-def show_types_of_impact_view():
-    return get_session_view() == "Types of impact"
+def show_outputs_view():
+    return get_session_view() == "Outputs"
 
 
 def show_fields_of_research_view():
@@ -150,7 +152,10 @@ def filters_sidebar():
         )
         st.session_state.search_score_threshold = st.slider(
             "Maximum number of results",
-            10, 300, _s.SEARCH_LIMIT, 10,
+            10,
+            300,
+            _s.SEARCH_LIMIT,
+            10,
             help=_s.DASHBOARD_HELP_SEARCH_LIMIT,
         )
 
@@ -173,11 +178,9 @@ def filters_sidebar():
             "Impact categories", impact_categories
         )
 
-    types_of_impact = sorted(_s.TOPIC_CLASSIFICATION_IMPACTS)
-    with st.expander("Filter by types of impact", expanded=True):
-        st.session_state.filter_types_of_impact = st.multiselect(
-            "Types of impact", types_of_impact
-        )
+    outputs = sorted(_s.TOPIC_CLASSIFICATION_IMPACTS)
+    with st.expander("Filter by outputs", expanded=True):
+        st.session_state.filter_outputs = st.multiselect("Outputs", outputs)
 
     fields_of_research = sorted(_s.get_fields_of_research())
     with st.expander("Filter by fields of research", expanded=True):
@@ -220,13 +223,13 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
     if impact_categories is not None:
         data = data[data[_s.FIELD_ID].isin(impact_categories[_s.FIELD_ID])]
 
-    types_of_impact = get_topics(
+    outputs = get_topics(
         [_s.DATA_SUMMARY, _s.DATA_DETAILS],
         get_session_filter_topics_score_threshold(),
-        topics=get_session_filter_types_of_impact(),
+        topics=get_session_filter_outputs(),
     )
-    if types_of_impact is not None:
-        data = data[data[_s.FIELD_ID].isin(types_of_impact[_s.FIELD_ID])]
+    if outputs is not None:
+        data = data[data[_s.FIELD_ID].isin(outputs[_s.FIELD_ID])]
 
     fields_of_research = get_topics(
         [_s.DATA_RESEARCH],
@@ -246,13 +249,12 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
 
 
 def get_session_filter_uoa() -> list[str]:
-    return st.session_state.get('filter_uoa', [])
+    return st.session_state.get("filter_uoa", [])
 
 
 def get_session_filter_topics_score_threshold() -> float:
     return st.session_state.get(
-        'filter_topics_score_threshold',
-        _s.DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD
+        "filter_topics_score_threshold", _s.DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD
     )
 
 
@@ -260,8 +262,8 @@ def get_session_filter_impact_categories() -> list[str]:
     return st.session_state.get("filter_impact_categories", [])
 
 
-def get_session_filter_types_of_impact() -> list[str]:
-    return st.session_state.get("filter_types_of_impact", [])
+def get_session_filter_outputs() -> list[str]:
+    return st.session_state.get("filter_outputs", [])
 
 
 def get_session_filter_fields_of_research() -> list[str]:
@@ -291,7 +293,7 @@ def get_data_grid(data: pd.DataFrame) -> dict:
     return grid
 
 
-def show_data(data: pd.DataFrame, selection: pd.DataFrame):
+def show_data(data: pd.DataFrame, selection: pd.DataFrame):  # noqa
     n_rows = selection.shape[0]
 
     if n_rows == 0:
@@ -315,8 +317,8 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
         show_topics("Impact categories", selection)
         return
 
-    if show_types_of_impact_view():
-        show_topics("Types of impact", selection, [_s.DATA_SUMMARY, _s.DATA_DETAILS])
+    if show_outputs_view():
+        show_topics("Outputs", selection, [_s.DATA_SUMMARY, _s.DATA_DETAILS])
         return
 
     if show_fields_of_research_view():
@@ -847,17 +849,17 @@ def get_places(
 
 
 def text_search(data: pd.DataFrame):
-    '''Run a text search
-        and sets st.session_state.search_hits = [
-            {id:, text:, score: },
-        ]
-        or None if no search phrase provided by user
-    '''
+    """Run a text search
+    and sets st.session_state.search_hits = [
+        {id:, text:, score: },
+    ]
+    or None if no search phrase provided by user
+    """
     hits = None
     phrase = st.session_state.search_phrase.strip()
 
     if phrase:
-        if st.session_state.search_mode == 'semantic':
+        if st.session_state.search_mode == "semantic":
             query = f"select id, text, score, from txtai where similar('{phrase}')"
             semindex = read_semindex()
             search_method = semindex.search
@@ -870,7 +872,7 @@ def text_search(data: pd.DataFrame):
             # filter by SEARCH_MIN_SCORE
             hits = [hit for hit in hits if hit["score"] >= _s.SEARCH_MIN_SCORE]
 
-        if st.session_state.search_mode == 'lexical':
+        if st.session_state.search_mode == "lexical":
             index = LexicalIndexDoc()
             hits = index.search(phrase)
 
@@ -880,9 +882,7 @@ def text_search(data: pd.DataFrame):
 def filter_data_by_text_search(data):
     hits = st.session_state.search_hits
     if hits is not None:
-        data = data[data.id.isin([
-            hit["id"] for hit in hits
-        ])]
+        data = data[data.id.isin([hit["id"] for hit in hits])]
     return data
 
 
@@ -917,18 +917,19 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
         title = hit["id"]
         if len(rows):
             row = rows.iloc[0]
-            title = row['title']
+            title = row["title"]
 
         st.subheader(f"{hit_idx+1}. {title}")
 
-        indicator_width = min(
-            1.0,
-            (hit["score"] - _s.SEARCH_MIN_SCORE) / (0.5 - _s.SEARCH_MIN_SCORE)
-        ) * 100
+        indicator_width = (
+            min(1.0, (hit["score"] - _s.SEARCH_MIN_SCORE) / (0.5 - _s.SEARCH_MIN_SCORE))
+            * 100
+        )
         st.write(
             "<div style='border-bottom:1px solid black; "
-            f"width:{indicator_width}%'></div>""",
-            unsafe_allow_html=True
+            f"width:{indicator_width}%'></div>"
+            "",
+            unsafe_allow_html=True,
         )
 
         if len(rows):
@@ -945,8 +946,7 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
                 sents = [s for s in seg(hit["text"]) if len(s) > 4]
                 highlights = [
                     [sents[sim[0]], sim[1]]
-                    for sim
-                    in semindex.similarity(phrase, sents)
+                    for sim in semindex.similarity(phrase, sents)
                 ]
             if _s.SEARCH_EXPLAIN_STRATEGY == 3:
                 docid = hit["id"]
@@ -954,12 +954,12 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
                     sents = semindex_sents.search(
                         f"select id, text, docid, score from txtai "
                         f"where docid = '{docid}' and similar({phrase})",
-                        limit=2
+                        limit=2,
                     )
 
-                    highlights = [[sent['text'], sent['score']] for sent in sents]
+                    highlights = [[sent["text"], sent["score"]] for sent in sents]
                 except SQLError:
-                    message = '(WARNING: search explanation failed)'
+                    message = "(WARNING: search explanation failed)"
                     pass
 
             for highlight in highlights:
@@ -967,7 +967,7 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
                 explanation = explanation.replace(
                     highlight[0],
                     f"<span style='background-color: rgb(255, 255, {bgcolor})"
-                    f";'>{highlight[0]}</span>"
+                    f";'>{highlight[0]}</span>",
                 )
                 break
 
@@ -977,12 +977,12 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
 
 
 def read_semindex(suffix="") -> Embeddings:
-    state_name = "semindex"+suffix
+    state_name = "semindex" + suffix
     ret = st.session_state.get(state_name, None)
     if ret is None:
         ret = Embeddings()
         try:
-            ret.load(str(dm.get_semindex_path())+suffix)
+            ret.load(str(dm.get_semindex_path()) + suffix)
             st.session_state[state_name] = ret
         except FileNotFoundError:
             st.error(

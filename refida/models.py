@@ -6,6 +6,7 @@ from pydantic import BaseModel
 class REFDocument(BaseModel):
     id: str
     type: str
+    panel: Optional[str] = None
     uoa_n: Optional[int] = None
     uoa: Optional[str] = None
     title: Optional[str] = None

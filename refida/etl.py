@@ -15,6 +15,7 @@ from settings import (
     UOA_PATTERN,
     get_sections_environment,
     get_sections_impact_case_study,
+    get_uoa_panel,
 )
 
 
@@ -111,6 +112,7 @@ def get_document(
     if uoa:
         doc.uoa_n = uoa[0]
         doc.uoa = uoa[1]
+        doc.panel = get_uoa_panel(doc.uoa_n)
 
     title = get_title(paragraphs)
     if not title:

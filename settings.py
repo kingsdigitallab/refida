@@ -26,6 +26,7 @@ memory = Memory(CACHE_DIR, verbose=0)
 # field names to access the data
 FIELD_ID = "id"
 DATA_TYPE = "type"
+DATA_PANEL = "panel"
 DATA_UOA_N = "uoa_n"
 DATA_UOA = "uoa"
 DATA_TITLE = "title"
@@ -155,6 +156,23 @@ UOA = {
     "33": "Film and Music",
     "34": "Communication, Cultural and Media Studies",
 }
+
+
+def get_uoa_panel(uoa: int) -> Optional[str]:
+    if uoa <= 6:
+        return "A"
+
+    if 6 < uoa <= 12:
+        return "B"
+
+    if 12 < uoa <= 24:
+        return "C"
+
+    if 24 < uoa <= 34:
+        return "D"
+
+    return None
+
 
 # =====================================================================================
 # features module settings
@@ -534,6 +552,7 @@ def get_place_category(name: str, country: str) -> Optional[str]:
 DASHBOARD_COLUMNS_FOR_DATA_GRID: list[str] = [
     FIELD_ID,
     DATA_TYPE,
+    DATA_PANEL,
     DATA_UOA_N,
     DATA_UOA,
     DATA_TITLE,
@@ -612,7 +631,6 @@ Entity extraction has been applied to the documents to extract Places mentions
 classified according to the categories *local* (to London), *national* (UK) and
 *global* (rest of the world).
 """
-
 DASHBOARD_HELP_SEARCH_MODE: str = """
 * semantic: rank the documents by the similarity to your query
 * lexical: return documents that contain at least one of your search terms
@@ -623,4 +641,31 @@ returned
 """
 DASHBOARD_HELP_SEARCH_LIMIT: str = """
 Maximum number of the matching documents displayed on the result page
+"""
+DASHBOARD_FOOTER: str = """
+<style>
+.footer {
+    bottom: -150px;
+    color: rgba(49, 51, 63, 0.4);
+    display: block;
+    font-size: 14px;
+    padding: 0;
+    position: absolute;
+    width: 100%;
+}
+
+.footer a:active, a:link, a:visited {
+    color: rgba(49, 51, 63, 0.4);
+    text-decoration: none;
+}
+
+.footer a:hover {
+  color: rgb(49, 51, 63);
+  text-decoration: underline;
+}
+</style>
+<div class="footer">
+Designed, developed and maintained by
+<a href="https://kdl.kcl.ac.uk">King's Digital Lab</a>
+</div>
 """
