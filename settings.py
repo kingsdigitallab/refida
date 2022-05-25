@@ -71,6 +71,7 @@ SEARCH_EXPLAIN_STRATEGY = 2
 SEARCH_LIMIT = 20
 # minimum score for a match to be part of the results
 SEARCH_MIN_SCORE = 0.15
+SEARCH_TRANSFORMER = "sentence-transformers/all-MiniLM-L6-v2"
 
 # =====================================================================================
 # etl module settings
@@ -610,4 +611,16 @@ Entity extraction has been applied to the documents to extract Places mentions
 ({", ".join(SPACY_LOCATION_ENTITY_TYPES)}). The extracted entities were geocoded and
 classified according to the categories *local* (to London), *national* (UK) and
 *global* (rest of the world).
+"""
+
+DASHBOARD_HELP_SEARCH_MODE: str = """
+* semantic: rank the documents by the similarity to your query
+* lexical: return documents that contain at least one of your search terms
+"""
+DASHBOARD_HELP_SEARCH_SCORE_THRESHOLD: str = """
+Only documents with a similarity score above the given threshold will be
+returned
+"""
+DASHBOARD_HELP_SEARCH_LIMIT: str = """
+Maximum number of the matching documents displayed on the result page
 """

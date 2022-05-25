@@ -15,6 +15,7 @@ import settings as _s
 from refida import data as dm
 from refida import visualize as vm
 from refida.__init__ import __version__
+from refida.searchindex import LexicalIndexDoc
 
 STYLE_RADIO_INLINE = ""
 
@@ -140,7 +141,18 @@ def geo_sidebar():
 def filters_sidebar():
     st.subheader("Filter the data")
 
-    st.session_state.search_phrase = st.text_input('Text search')
+    with st.expander("Text search", expanded=bool(get_search_phrase())):
+        st.session_state.search_phrase = st.text_input("Search phrase")
+        st.session_state.search_mode = st.selectbox(
+            "Type of search",
+            ["semantic", "lexical"],
+            help=_s.DASHBOARD_HELP_SEARCH_MODE,
+        )
+        st.session_state.search_score_threshold = st.slider(
+            "Maximum number of results",
+            10, 300, _s.SEARCH_LIMIT, 10,
+            help=_s.DASHBOARD_HELP_SEARCH_LIMIT,
+        )
 
     with st.expander("Filter by unit of assessment", expanded=True):
         st.session_state.filter_uoa = st.multiselect(
@@ -293,7 +305,7 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):
         st.header("About the data")
         show_about_data(data)
 
-    if n_rows == 1:
+    if n_rows == 1 and not show_text_search_view():
         doc = selection.iloc[0]
         doc_idx = data[data[_s.FIELD_ID] == selection[_s.FIELD_ID].iloc[0]].index[0]
 
@@ -482,7 +494,7 @@ def show_first_doc(data: pd.DataFrame):
         show_doc(doc)
 
 
-def show_doc(doc: pd.Series, hide_summary = False):
+def show_doc(doc: pd.Series, hide_summary=False):
     with st.expander("View document", expanded=False):
         with open(doc["file"], "rb") as f:
             base64_pdf = base64.b64encode(f.read()).decode("utf-8")
@@ -845,17 +857,22 @@ def text_search(data: pd.DataFrame):
     phrase = st.session_state.search_phrase.strip()
 
     if phrase:
-        query = f"select id, text, score, from txtai where similar('{phrase}')"
-        semindex = read_semindex()
-        search_method = semindex.search
-        if _s.SEARCH_EXPLAIN_STRATEGY == 1:
-            # that call never seems to end
-            search_method = semindex.explain
+        if st.session_state.search_mode == 'semantic':
+            query = f"select id, text, score, from txtai where similar('{phrase}')"
+            semindex = read_semindex()
+            search_method = semindex.search
+            if _s.SEARCH_EXPLAIN_STRATEGY == 1:
+                # that call never seems to end
+                search_method = semindex.explain
 
-        hits = search_method(query, limit=_s.SEARCH_LIMIT)
-        
-        # filter by SEARCH_MIN_SCORE
-        hits = [hit for hit in hits if hit["score"] >= _s.SEARCH_MIN_SCORE]
+            hits = search_method(query, limit=_s.SEARCH_LIMIT)
+
+            # filter by SEARCH_MIN_SCORE
+            hits = [hit for hit in hits if hit["score"] >= _s.SEARCH_MIN_SCORE]
+
+        if st.session_state.search_mode == 'lexical':
+            index = LexicalIndexDoc()
+            hits = index.search(phrase)
 
     st.session_state.search_hits = hits
 
@@ -881,9 +898,6 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
 
     hits = st.session_state.search_hits
 
-    # st.write(selection)
-
-    # st.write(hits)
     if hits is None:
         st.warning("Use the 'Text search' in the side bar to start a search.")
         return
@@ -907,8 +921,15 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
 
         st.subheader(f"{hit_idx+1}. {title}")
 
-        indicator_width = min(1.0, (hit["score"] - _s.SEARCH_MIN_SCORE) / (0.5 - _s.SEARCH_MIN_SCORE)) * 100
-        st.write(f"<div style='border-bottom:1px solid black; width:{indicator_width}%'></div>", unsafe_allow_html=True)
+        indicator_width = min(
+            1.0,
+            (hit["score"] - _s.SEARCH_MIN_SCORE) / (0.5 - _s.SEARCH_MIN_SCORE)
+        ) * 100
+        st.write(
+            "<div style='border-bottom:1px solid black; "
+            f"width:{indicator_width}%'></div>""",
+            unsafe_allow_html=True
+        )
 
         if len(rows):
             show_doc(row, True)
@@ -922,12 +943,19 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
             # st.header(_s.SEARCH_EXPLAIN_STRATEGY)
             if _s.SEARCH_EXPLAIN_STRATEGY == 2:
                 sents = [s for s in seg(hit["text"]) if len(s) > 4]
-                highlights = [[sents[sim[0]], sim[1]] for sim in semindex.similarity(phrase, sents)]
+                highlights = [
+                    [sents[sim[0]], sim[1]]
+                    for sim
+                    in semindex.similarity(phrase, sents)
+                ]
             if _s.SEARCH_EXPLAIN_STRATEGY == 3:
                 docid = hit["id"]
                 try:
                     sents = semindex_sents.search(
-                        f"select id, text, docid, score from txtai where docid = '{docid}' and similar({phrase})", limit=2)
+                        f"select id, text, docid, score from txtai "
+                        f"where docid = '{docid}' and similar({phrase})",
+                        limit=2
+                    )
 
                     highlights = [[sent['text'], sent['score']] for sent in sents]
                 except SQLError:
@@ -938,7 +966,8 @@ def show_search_results(data: pd.DataFrame, selection: pd.DataFrame):
                 bgcolor = int((1 - min(highlight[1], 0.5)) * 128)
                 explanation = explanation.replace(
                     highlight[0],
-                    f"<span style='background-color: rgb(255, 255, {bgcolor});'>{highlight[0]}</span>"
+                    f"<span style='background-color: rgb(255, 255, {bgcolor})"
+                    f";'>{highlight[0]}</span>"
                 )
                 break
 
@@ -956,8 +985,16 @@ def read_semindex(suffix="") -> Embeddings:
             ret.load(str(dm.get_semindex_path())+suffix)
             st.session_state[state_name] = ret
         except FileNotFoundError:
-            st.error("The search index is missing. Run `python cli.py semindex` to build it.")
+            st.error(
+                "The search index is missing."
+                " Run `python cli.py semindex` to build it."
+            )
 
+    return ret
+
+
+def get_search_phrase():
+    ret = st.session_state.get("search_phrase", "").strip()
     return ret
 
 

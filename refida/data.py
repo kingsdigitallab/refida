@@ -128,4 +128,3 @@ def get_geojson_path(label: str, datadir: str = DATA_DIR.name) -> Path:
 
 def get_semindex_path(datadir: str = DATA_DIR.name) -> Path:
     return get_data_path(datadir, "1_interim", "semindex")
-
