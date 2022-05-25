@@ -558,7 +558,9 @@ def show_topics(
 
     topics = topics.merge(data, on=_s.FIELD_ID)
 
-    topics = topics.sort_values(by=_s.FEATURE_TOPIC_TOPIC, ascending=True)
+    topics[_s.DATA_UOA] = topics.apply(
+        lambda x: f"{str(x[_s.DATA_UOA_N]).zfill(2)}: {x[_s.DATA_UOA]}", axis=1
+    )
     topics_aggr = (
         topics.groupby(_s.FEATURE_TOPIC_TOPIC).agg(aggr_function).reset_index()
     )
@@ -580,7 +582,7 @@ def show_topics(
         use_container_width=True,
     )
 
-    colour_df = topics[_s.DATA_UOA].copy()
+    colour_df = topics[_s.DATA_PANEL].copy()
     palette = px.colors.qualitative.Plotly
     palette_len = len(palette)
     colours = colour_df.map(
@@ -590,7 +592,9 @@ def show_topics(
     st.subheader(f"Connections between {title.lower()} and unit of assessment")
     view_and_download_data(f"{title} alluvial", topics)
     st.plotly_chart(
-        vm.parallel_categories(topics, [_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA], colours),
+        vm.parallel_categories(
+            topics, [_s.FEATURE_TOPIC_TOPIC, _s.DATA_PANEL, _s.DATA_UOA], colours
+        ),
         use_container_width=True,
     )
 

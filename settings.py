@@ -129,7 +129,7 @@ def get_sections_environment(end: str) -> list[tuple[str, str, str]]:
 
 
 UOA_PATTERN: re.Pattern = re.compile(r"(\d+)")
-UOA = {
+UOA: dict[str, str] = {
     "1": "Clinical Medicine",
     "2": "Public Health",
     "3": "Dentistry, Nursing, Pharmacy",
