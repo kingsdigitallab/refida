@@ -11,7 +11,10 @@ import re
 class SemIndexDoc:
     """txtai semantic index for the documents"""
 
-    def __init__(self, datadir: str = settings.DATA_DIR.name):
+    def __init__(self, datadir: str = settings.DATA_DIR.name, session_state=None):
+        if session_state is None:
+            session_state = {}
+        self.session_state = session_state
         self.datadir = datadir
         self.segmenter = Segmentation(sentences=True)
         self.set_highlight_format()
@@ -75,20 +78,19 @@ class SemIndexDoc:
         return ""
 
     def read_index(self) -> Embeddings:
-        # TODO: this class should be independent from streamlit
-        import streamlit as st
 
         state_name = "semindex" + self.get_path_suffix()
-        ret = st.session_state.get(state_name, None)
+        ret = self.session_state.get(state_name, None)
         if ret is None:
             ret = Embeddings()
             try:
+                # print(f'LOAD EMBDEDDINGS {self.get_index_path()}')
                 ret.load(self.get_index_path())
-                st.session_state[state_name] = ret
+                self.session_state[state_name] = ret
             except FileNotFoundError:
-                st.error(
+                raise Exception(
                     "The search index is missing."
-                    " Run `python cli.py reindex` to build it."
+                    " Run `python cli.py index` to build it."
                 )
 
         return ret
@@ -136,6 +138,20 @@ class SemIndexDoc:
 
         return ret
 
+    def get_info(self):
+        index = self.read_index()
+        config = index.config.copy()
+        config.pop("ids", None)
+
+        ret = {
+            'class': type(self).__name__,
+            'filepath': self.get_index_path(),
+            'type': 'txtai.Embeddings',
+            'config': config,
+        }
+
+        return ret
+
 
 class SemIndexSent(SemIndexDoc):
     """txtai semantic index for the sentences"""
@@ -179,6 +195,8 @@ class LexicalIndexDoc(SemIndexDoc):
               VALUES(?,?)"""
             cur.execute(sql, [text, row.id])
             idx += 1
+            if progressbar:
+                progressbar.update(1)
 
         con.commit()
         con.close()
@@ -189,9 +207,13 @@ class LexicalIndexDoc(SemIndexDoc):
     def search_phrase(self, phrase, limit=None, min_score=settings.SEARCH_MIN_SCORE):
         fields = "id, text"
         if self.highlight_before:
-            fields += ", highlight(txtsql, 0, '{}', '{}') as highlighted".format(
+            # fields += ", highlight(txtsql, 0, '{}', '{}') as highlighted".format(
+            #     self.highlight_before, self.highlight_after
+            # )
+            fields += ", snippet(txtsql, 0, '{}', '{}', '...', 64) as highlighted".format(
                 self.highlight_before, self.highlight_after
             )
+
 
         query = f"""
             select {fields}, 1.0 as score
@@ -199,9 +221,13 @@ class LexicalIndexDoc(SemIndexDoc):
         """
         query += " order by rank"
 
+        phrase = self.clean_search_phrase(phrase)
+
         return self.search_sql(query=query, limit=limit, parameters=[phrase])
 
     def clean_search_phrase(self, phrase):
+        # king's returns Runtime error: fts5: syntax error near "'"
+        phrase = phrase.replace("'", ' ')
         return phrase
 
     def search_sql(self, query, limit=None, parameters=None):
@@ -210,8 +236,12 @@ class LexicalIndexDoc(SemIndexDoc):
         if limit:
             query += f" limit {limit}"
 
+        if parameters is None:
+            parameters = []
+
         con = sqlite3.connect(self.get_index_path())
         cur = con.cursor()
+        # print(query, parameters)
         rows = cur.execute(query, parameters)
         for row in rows:
             hit = {col[0]: row[idx] for idx, col in enumerate(cur.description)}
@@ -225,6 +255,25 @@ class LexicalIndexDoc(SemIndexDoc):
         ret = hit.get("highlighted", None)
         if ret is None:
             ret = hit["text"]
+
+        return ret
+
+    def get_info(self):
+        columns = self.search_sql("pragma table_info('txtsql')")
+        counts = self.search_sql("select count(*) as count from txtsql")
+
+        ret = {
+            'class': type(self).__name__,
+            'filepath': self.get_index_path(),
+            'type': 'sqlite3',
+            'config': {
+                'backend': 'FTS5'
+            },
+            'schema': {
+                'cols': {col['name']: '' for col in columns}
+            },
+            'size': counts[0]["count"],
+        }
 
         return ret
 

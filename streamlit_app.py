@@ -912,9 +912,10 @@ def filter_data_by_text_search(data):
 
 def get_search_index():
     if is_search_semantic():
-        ret = SemIndexDoc()
+        Index = SemIndexDoc
     else:
-        ret = LexicalIndexDoc()
+        Index = LexicalIndexDoc
+    ret = Index(session_state=st.session_state)
     ret.set_highlight_format(
         '<span style="background-color: rgb(255, 255, 128);">', "</span>"
     )
@@ -945,12 +946,7 @@ def show_search_results(data: pd.DataFrame):
 
     multiple_terms_without_and = len(phrase.split()) > 1 and "OR" not in phrase
     if not is_search_semantic() and multiple_terms_without_and:
-        st.info(
-            "Tip: by default only documents that contain all the terms"
-            " in your query will be returned by the lexical search."
-            " `health OR medical` will return documents"
-            " that contain any of those words. "
-        )
+        st.info(_s.DASHBOARD_HELP_QUERY_TIP_NO_OR)
 
     for hit_idx, hit in enumerate(hits):
         rows = data[data["id"] == hit["id"]]
@@ -971,11 +967,10 @@ def show_search_results(data: pd.DataFrame):
 
         if len(rows):
             show_doc(row, True)
-
             message = ""
-
             explanation = index.get_highlighted_text_from_hit(hit, phrase)
-
+            # No way to prevent streamlit from reformatting the supplied html.
+            # It will expand $ into latex, etc.
             st.write(explanation, unsafe_allow_html=True)
 
         st.write(f"(score: {hit['score']:.2f}, id: {repr(hit['id'])}) {message}")

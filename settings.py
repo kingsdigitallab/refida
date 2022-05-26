@@ -65,13 +65,15 @@ FEATURE_GEO_GEOJSON = "geojson"
 
 DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD = 0.5
 
+# =====================================================================================
+# search module settings
 # which column we search on
-SEARCH_COLUMN = "summary"
-# strat used to explain the results (see streamlit_app.py)
+SEARCH_COLUMN = "text"
+# strat used to explain the results (see search_index.py)
 SEARCH_EXPLAIN_STRATEGY = 2
 SEARCH_LIMIT_OPTIONS = [10, 20, 50, 100, 500]
 SEARCH_LIMIT_INDEX = SEARCH_LIMIT_OPTIONS.index(20)
-# minimum score for a match to be part of the results
+# minimum score for a match to be part of the results with semsearch
 SEARCH_MIN_SCORE = 0.15
 SEARCH_TRANSFORMER = "sentence-transformers/all-MiniLM-L6-v2"
 
@@ -695,4 +697,10 @@ DASHBOARD_FOOTER: str = """
 Designed, developed and maintained by
 <a href="https://kdl.kcl.ac.uk">King's Digital Lab</a>
 </div>
+"""
+
+DASHBOARD_HELP_QUERY_TIP_NO_OR = """
+Tip: by default only documents that contain all the terms in your query 
+will be returned by the lexical search.
+`health OR medical` will return documents that contain any of those words.
 """
