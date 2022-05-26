@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Rename types of impact to outputs.
 - Sort units of assessment by number.
+- Group types of output.
 
 ## [0.3.1] - 2022-05-17
 

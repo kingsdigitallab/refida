@@ -6,10 +6,7 @@ import typer
 from refida import data as dm
 from refida import etl as em
 from refida import features
-from refida.searchindex import (
-    SearchIndexDoc, SearchIndexSent, LexicalIndexDoc
-)
-
+from refida.searchindex import LexicalIndexDoc, SearchIndexDoc, SearchIndexSent
 from settings import (
     DATA_DETAILS,
     DATA_DIR,
@@ -17,10 +14,10 @@ from settings import (
     DATA_SOURCES,
     DATA_SUMMARY,
     DATA_TEXT,
-    TOPIC_CLASSIFICATION_IMPACTS,
+    SEARCH_COLUMN,
     TOPIC_CLASSIFICATION_TOPICS,
     get_fields_of_research,
-    SEARCH_COLUMN,
+    get_outputs,
 )
 
 app = typer.Typer()
@@ -76,7 +73,7 @@ def topics(datadir: str = DATA_DIR.name, column: TopicsSection = TopicsSection.t
 
         labels = TOPIC_CLASSIFICATION_TOPICS
         if column in [TopicsSection.details, TopicsSection.summary]:
-            labels = TOPIC_CLASSIFICATION_IMPACTS
+            labels = get_outputs()
         elif column == TopicsSection.research:
             labels = get_fields_of_research()
 
@@ -199,18 +196,21 @@ def reindex(datadir: str = DATA_DIR.name):
         error("No data found. Run the `etl` command first.")
 
     index = SearchIndexDoc(datadir)
-    with typer.progressbar(length=len(data),
-                           label="Semantic indexing docs...") as progressbar:
+    with typer.progressbar(
+        length=len(data), label="Semantic indexing docs..."
+    ) as progressbar:
         index.reindex(data, SEARCH_COLUMN, progressbar)
 
     index = SearchIndexSent(datadir)
-    with typer.progressbar(length=len(data),
-                           label="Semantic indexing sents...") as progressbar:
+    with typer.progressbar(
+        length=len(data), label="Semantic indexing sents..."
+    ) as progressbar:
         index.reindex(data, SEARCH_COLUMN, progressbar)
 
     index = LexicalIndexDoc(datadir)
-    with typer.progressbar(length=len(data),
-                           label="Lexical indexing docs...") as progressbar:
+    with typer.progressbar(
+        length=len(data), label="Lexical indexing docs..."
+    ) as progressbar:
         index.reindex(data, SEARCH_COLUMN, progressbar)
 
 
