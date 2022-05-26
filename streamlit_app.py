@@ -181,7 +181,7 @@ def filters_sidebar():
             "Impact categories", impact_categories
         )
 
-    outputs = sorted(_s.TOPIC_CLASSIFICATION_IMPACTS)
+    outputs = sorted(_s.TOPIC_CLASSIFICATION_OUTPUTS)
     with st.expander("Filter by outputs", expanded=True):
         st.session_state.filter_outputs = st.multiselect("Outputs", outputs)
 
@@ -190,6 +190,13 @@ def filters_sidebar():
         st.session_state.filter_fields_of_research = st.multiselect(
             "Fields of research", fields_of_research
         )
+
+    entities = get_entities([_s.DATA_SUMMARY, _s.DATA_DETAILS, _s.DATA_SOURCES])
+    if entities is not None:
+        entities = entities[_s.FEATURE_ENTITY_ENTITY]
+        entities = entities.drop_duplicates()
+    with st.expander("Filter by entities", expanded=True):
+        st.session_state.filter_entities = st.multiselect("Entities", entities)
 
 
 def data_section():
@@ -249,6 +256,13 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
             | data[_s.FIELD_ID].isin(fields_of_research[_s.FIELD_ID])
         ]
 
+    entities = get_entities(
+        [_s.DATA_SUMMARY, _s.DATA_DETAILS, _s.DATA_SOURCES],
+        entities=get_session_filter_entities(),
+    )
+    if entities is not None:
+        data = data[data[_s.FIELD_ID].isin(entities[_s.FIELD_ID])]
+
     text_search(data)
     data = filter_data_by_text_search(data)
 
@@ -279,6 +293,10 @@ def get_session_filter_outputs() -> list[str]:
 
 def get_session_filter_fields_of_research() -> list[str]:
     return st.session_state.get("filter_fields_of_research", [])
+
+
+def get_session_filter_entities() -> list[str]:
+    return st.session_state.get("filter_entities", [])
 
 
 def get_data_grid(data: pd.DataFrame) -> dict:
@@ -716,7 +734,10 @@ def get_session_entity_types() -> list[str]:
 
 @st.experimental_memo
 def get_entities(
-    sections: list[str], ids: tuple[str], entity_types: list[str]
+    sections: list[str],
+    ids: tuple[str] = None,
+    entity_types: list[str] = None,
+    entities: list[str] = None,
 ) -> Optional[pd.DataFrame]:
     data = pd.DataFrame()
 
@@ -726,15 +747,18 @@ def get_entities(
             data = pd.concat([data, section_df], ignore_index=True)
 
     if data is not None:
-        entities = get_rows_by_id(data, ids)
-        if entities is not None:
-            if entity_types:
-                entities = entities[
-                    entities[_s.FEATURE_ENTITY_LABEL].isin(entity_types)
-                ]
-            return entities[
-                [_s.FEATURE_ENTITY_LABEL, _s.FEATURE_ENTITY_ENTITY]
-            ].sort_values(by=_s.FEATURE_ENTITY_ENTITY)
+        if entity_types:
+            data = data[data[_s.FEATURE_ENTITY_LABEL].isin(entity_types)]
+
+        if entities:
+            data = data[data[_s.FEATURE_ENTITY_ENTITY].isin(entities)]
+
+        if ids:
+            data = get_rows_by_id(data, ids)
+
+        return data[
+            [_s.FIELD_ID, _s.FEATURE_ENTITY_LABEL, _s.FEATURE_ENTITY_ENTITY]
+        ].sort_values(by=_s.FEATURE_ENTITY_ENTITY)
 
     return None
 

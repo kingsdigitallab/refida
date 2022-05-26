@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extract unit of assessment panel.
 - Panel filter to the dashboard.
 - Entity type glossary.
+- Entities filter.
 
 ### Changed
 
