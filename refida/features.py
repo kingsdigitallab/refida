@@ -117,6 +117,7 @@ def geolocate(
         _s.FEATURE_GEO_LAT,
         _s.FEATURE_GEO_LON,
         _s.FEATURE_GEO_CATEGORY,
+        _s.FEATURE_GEO_STATE,
         _s.FEATURE_GEO_PLACE,
         _s.FEATURE_GEO_PLACE_LAT,
         _s.FEATURE_GEO_PLACE_LON,
@@ -158,6 +159,7 @@ def get_place_data(
         float,
         Optional[str],
         Optional[str],
+        Optional[str],
         Optional[float],
         Optional[float],
         dict,
@@ -180,6 +182,7 @@ def get_place_data(
 
     city = name
     place = display_name = raw["display_name"]
+    state = None
     place_location = None
 
     # continents
@@ -187,10 +190,13 @@ def get_place_data(
         place_location = location
 
     if "address" in raw:
-        if "city" in raw["address"]:
-            city = raw["address"]["city"]
-        if "country" in raw["address"]:
-            place = raw["address"]["country"]
+        address = raw["address"]
+        if "city" in address:
+            city = address["city"]
+        if "state" in address:
+            state = address["state"]
+        if "country" in address:
+            place = address["country"]
 
             place_location = geocode(place)
 
@@ -199,6 +205,7 @@ def get_place_data(
         location.latitude,
         location.longitude,
         _s.get_place_category(city, place),
+        state,
         place,
         place_location.latitude if place_location else None,
         place_location.longitude if place_location else None,

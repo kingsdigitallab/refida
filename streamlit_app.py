@@ -812,6 +812,26 @@ def show_geo(data: pd.DataFrame):
         use_container_width=True,
     )
 
+    st.subheader("United Kingdom distribution")
+    uk_places = get_places(
+        tuple(data[_s.FIELD_ID].values.tolist()),
+        get_session_geo_entity_types(),
+        state=True,
+    )
+    uk_places = uk_places[uk_places["count"] >= min_mentions]
+    uk_places = uk_places[uk_places[_s.FEATURE_GEO_PLACE] == "United Kingdom"]
+    view_and_download_data("United Kingdom distribution", uk_places)
+    st.plotly_chart(
+        vm.histogram(
+            uk_places,
+            "count",
+            _s.FEATURE_GEO_STATE,
+            _s.FEATURE_GEO_CATEGORY,
+            labels={"count": "number of mentions"},
+        ),
+        use_container_width=True,
+    )
+
     st.subheader("Places distribution")
     view_and_download_data("Places distribution", places)
     st.plotly_chart(
@@ -855,7 +875,10 @@ def get_session_geo_min_mentions() -> int:
 
 @st.experimental_memo
 def get_places(
-    ids: tuple[str], entity_types: list[str], section: Optional[str] = None
+    ids: tuple[str],
+    entity_types: list[str],
+    section: Optional[str] = None,
+    state: bool = False,
 ) -> Optional[pd.DataFrame]:
     data = pd.DataFrame()
 
@@ -882,6 +905,8 @@ def get_places(
                 _s.FEATURE_GEO_PLACE_LAT,
                 _s.FEATURE_GEO_PLACE_LON,
             ]
+            if state:
+                columns.insert(1, _s.FEATURE_GEO_STATE)
 
             places = places[columns]
             places = places.drop_duplicates()
