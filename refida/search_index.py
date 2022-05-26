@@ -1,27 +1,36 @@
 import sqlite3
 
+from txtai.database import SQLError
 from txtai.pipeline import Segmentation
 import settings
 from txtai.embeddings import Embeddings
 from refida.data import get_data_path
-
+import re
 
 class SemIndexDoc:
-    '''txtai semantic index of the documents'''
+    '''txtai semantic index for the documents'''
 
     def __init__(self, datadir: str = settings.DATA_DIR.name):
         self.datadir = datadir
         self.segmenter = Segmentation(sentences=True)
-        self.set_highlight_pattern()
+        self.set_highlight_format()
 
     def search_phrase(
             self, phrase, limit=None, min_score=settings.SEARCH_MIN_SCORE
     ):
+        phrase = self.clean_search_phrase(phrase)
+
         query = f"select id, text, score, from txtai where similar('{phrase}')"
         if min_score:
             query += f" and score >= {min_score}"
         ret = self.search_sql(query, limit=limit)
 
+        return ret
+
+    def clean_search_phrase(self, phrase):
+        # drop all boolean operators
+        ret = re.sub(r'\b(OR|AND|NOT)\b', '', phrase)
+        ret = re.sub(r'\s+', ' ', ret).strip()
         return ret
 
     def search_sql(self, query, limit=None):
@@ -65,7 +74,7 @@ class SemIndexDoc:
         return ""
 
     def read_index(self) -> Embeddings:
-        # TODO: st should be passed to this fct or constructor
+        # TODO: this class should be independent from streamlit
         import streamlit as st
         state_name = "semindex" + self.get_path_suffix()
         ret = st.session_state.get(state_name, None)
@@ -82,13 +91,52 @@ class SemIndexDoc:
 
         return ret
 
-    def set_highlight_pattern(self, before='', after=''):
+    def set_highlight_format(self, before='', after=''):
         self.highlight_before = before
         self.highlight_after = after
 
+    def get_highlighted_text_from_hit(self, hit, phrase):
+        ret = hit["text"]
+
+        if not self.highlight_before:
+            return ret
+
+        highlights = []
+
+        phrase = self.clean_search_phrase(phrase)
+
+        if settings.SEARCH_EXPLAIN_STRATEGY == 2:
+            sents = [s for s in self.segmenter(hit["text"]) if len(s) > 4]
+            highlights = [
+                [sents[sim[0]], sim[1]]
+                for sim in self.read_index().similarity(phrase, sents)
+            ]
+        if settings.SEARCH_EXPLAIN_STRATEGY == 3:
+            index_sents = SemIndexSent()
+            docid = hit["id"]
+            try:
+                sents = index_sents.search_sql(
+                    f"select id, text, docid, score from txtai "
+                    f"where docid = '{docid}' and similar({phrase})",
+                    limit=2,
+                )
+
+                highlights = [[sent["text"], sent["score"]] for sent in sents]
+            except SQLError:
+                message = "(WARNING: search explanation failed)"
+
+        for highlight in highlights:
+            ret = ret.replace(
+                highlight[0],
+                self.highlight_before + highlight[0] + self.highlight_after,
+            )
+            break
+
+        return ret
+
 
 class SemIndexSent(SemIndexDoc):
-    '''txtai semantic index of the sentences'''
+    '''txtai semantic index for the sentences'''
 
     def reindex(self, dataframe, search_column, progressbar=None):
         self.sent_idx = -1
@@ -108,7 +156,7 @@ class SemIndexSent(SemIndexDoc):
 
 
 class LexicalIndexDoc(SemIndexDoc):
-    '''sqlite fst5 lexical index (bm25) of the documents'''
+    '''sqlite fst5 lexical index (bm25) for the documents'''
 
     def reindex(self, dataframe, search_column, progressbar=None):
         # con = self.embeddings.database.connection
@@ -153,6 +201,9 @@ class LexicalIndexDoc(SemIndexDoc):
 
         return self.search_sql(query=query, limit=limit, parameters=[phrase])
 
+    def clean_search_phrase(self, phrase):
+        return phrase
+
     def search_sql(self, query, limit=None, parameters=None):
         ret = []
 
@@ -173,15 +224,19 @@ class LexicalIndexDoc(SemIndexDoc):
 
         return ret
 
+    def get_highlighted_text_from_hit(self, hit, phrase):
+        ret = hit.get("highlighted", None)
+        if ret is None:
+            ret = hit["text"]
+
+        return ret
+
 
 # TODO:
-# M: highlight for fts5
-# M: universal phrase (OR, AND. ...)
 # M: index the text (not just summary)
     # S: snippets
     # S: optimise
 # S: check caching
 # C: additional fields
 # C: move semsearch to classes
-# S: dropbox for limit
 # S: fix lexical score

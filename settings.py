@@ -68,7 +68,8 @@ DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD = 0.5
 SEARCH_COLUMN = "summary"
 # strat used to explain the results (see streamlit_app.py)
 SEARCH_EXPLAIN_STRATEGY = 2
-SEARCH_LIMIT = 20
+SEARCH_LIMIT_OPTIONS = [10, 20, 50, 100, 500]
+SEARCH_LIMIT_INDEX = SEARCH_LIMIT_OPTIONS.index(20)
 # minimum score for a match to be part of the results
 SEARCH_MIN_SCORE = 0.15
 SEARCH_TRANSFORMER = "sentence-transformers/all-MiniLM-L6-v2"

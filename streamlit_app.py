@@ -8,7 +8,6 @@ from spacy_streamlit import visualize_ner
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode
 from txtai.database import SQLError
-from txtai.embeddings import Embeddings
 from txtai.pipeline import Segmentation
 
 import settings as _s
@@ -71,7 +70,7 @@ def show_about_data_view():
 
 
 def get_session_view() -> str:
-    return st.session_state.get('view', 'About the data')
+    return st.session_state.get("view", "About the data")
 
 
 def show_impact_categories_view():
@@ -143,14 +142,14 @@ def filters_sidebar():
 
     with st.expander("Text search", expanded=bool(get_search_phrase())):
         st.session_state.search_phrase = st.text_input("Search phrase")
-        st.session_state.search_mode = st.selectbox(
-            "Type of search",
-            ["semantic", "lexical"],
-            help=_s.DASHBOARD_HELP_SEARCH_MODE,
+        st.session_state.is_search_semantic = st.checkbox(
+            "Semantic search", True,
+            help = _s.DASHBOARD_HELP_SEARCH_MODE,
         )
-        st.session_state.search_limit = st.slider(
+        st.session_state.search_limit = st.selectbox(
             "Maximum number of results",
-            10, 300, _s.SEARCH_LIMIT, 10,
+            [10, 20, 50, 100, 500],
+            _s.SEARCH_LIMIT_INDEX,
             help=_s.DASHBOARD_HELP_SEARCH_LIMIT,
         )
 
@@ -246,13 +245,12 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
 
 
 def get_session_filter_uoa() -> list[str]:
-    return st.session_state.get('filter_uoa', [])
+    return st.session_state.get("filter_uoa", [])
 
 
 def get_session_filter_topics_score_threshold() -> float:
     return st.session_state.get(
-        'filter_topics_score_threshold',
-        _s.DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD
+        "filter_topics_score_threshold", _s.DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD
     )
 
 
@@ -847,43 +845,43 @@ def get_places(
 
 
 def text_search(data: pd.DataFrame):
-    '''Run a text search
-        and sets st.session_state.search_hits = [
-            {id:, text:, score: },
-        ]
-        or None if no search phrase provided by user
-    '''
+    """Run a text search
+    and sets st.session_state.search_hits = [
+        {id:, text:, score: },
+    ]
+    or None if no search phrase provided by user
+    """
     hits = None
     phrase = st.session_state.search_phrase.strip()
 
     if phrase:
-        if st.session_state.search_mode == 'semantic':
-            index = SemIndexDoc()
-
-        if st.session_state.search_mode == 'lexical':
-            index = LexicalIndexDoc()
-            index.set_highlight_pattern(*get_highlight_parts())
-
+        index = get_search_index()
         hits = index.search_phrase(phrase, limit=st.session_state.search_limit)
 
     st.session_state.search_hits = hits
 
 
+def is_search_semantic():
+    return st.session_state.is_search_semantic
+
+
 def filter_data_by_text_search(data):
     hits = st.session_state.search_hits
     if hits is not None:
-        data = data[data.id.isin([
-            hit["id"] for hit in hits
-        ])]
+        data = data[data.id.isin([hit["id"] for hit in hits])]
     return data
 
 
-def get_highlight_parts(score=1):
-    bgcolor = int((1 - min(score, 0.5)) * 128)
-    return [
-        f'<span style="background-color: rgb(255, 255, {bgcolor});">',
-        '</span>'
-    ]
+def get_search_index():
+    if is_search_semantic():
+        ret = SemIndexDoc()
+    else:
+        ret = LexicalIndexDoc()
+    ret.set_highlight_format(
+        '<span style="background-color: rgb(255, 255, 128);">',
+        "</span>"
+    )
+    return ret
 
 
 def show_search_results(data: pd.DataFrame):
@@ -902,79 +900,43 @@ def show_search_results(data: pd.DataFrame):
         st.warning("Use the 'Text search' in the side bar to start a search.")
         return
 
-    phrase = st.session_state.search_phrase
-    semindex = SemIndexDoc().read_index()
-    semindex_sents = SemIndexSent().read_index()
+    index = get_search_index()
+
+    phrase = st.session_state.search_phrase.strip()
 
     st.header(f"Search results ({len(hits)})")
 
-    seg = Segmentation(sentences=True)
-
-    highlight_before, highlight_after = get_highlight_parts()
+    multiple_terms_without_and = len(phrase.split()) > 1 and 'OR' not in phrase
+    if not is_search_semantic() and multiple_terms_without_and:
+        st.info('Tip: by default only documents that contain all the terms'
+                ' in your query will be returned by the lexical search.'
+                ' `health OR medical` will return documents'
+                ' that contain any of those words. '
+        )
 
     for hit_idx, hit in enumerate(hits):
-        # hit = [id, score]
-        # st.write(hit)
         rows = data[data["id"] == hit["id"]]
         title = hit["id"]
         if len(rows):
             row = rows.iloc[0]
-            title = row['title']
+            title = row["title"]
 
         st.subheader(f"{hit_idx+1}. {title}")
 
-        indicator_width = min(
-            1.0,
-            (hit["score"] - _s.SEARCH_MIN_SCORE) / (0.5 - _s.SEARCH_MIN_SCORE)
-        ) * 100
+        indicator_width = min(1.0, hit["score"]) * 100
         st.write(
             "<div style='border-bottom:1px solid black; "
-            f"width:{indicator_width}%'></div>""",
-            unsafe_allow_html=True
+            f"width:{indicator_width}%'></div>"
+            "",
+            unsafe_allow_html=True,
         )
-
 
         if len(rows):
             show_doc(row, True)
 
             message = ""
 
-            if st.session_state.search_mode == 'lexical':
-                explanation = hit['highlighted']
-            else:
-                explanation = hit["text"]
-
-                highlights = []
-
-                # st.header(_s.SEARCH_EXPLAIN_STRATEGY)
-                if _s.SEARCH_EXPLAIN_STRATEGY == 2:
-                    sents = [s for s in seg(hit["text"]) if len(s) > 4]
-                    highlights = [
-                        [sents[sim[0]], sim[1]]
-                        for sim
-                        in semindex.similarity(phrase, sents)
-                    ]
-                if _s.SEARCH_EXPLAIN_STRATEGY == 3:
-                    docid = hit["id"]
-                    try:
-                        sents = semindex_sents.search(
-                            f"select id, text, docid, score from txtai "
-                            f"where docid = '{docid}' and similar({phrase})",
-                            limit=2
-                        )
-
-                        highlights = [[sent['text'], sent['score']] for sent in sents]
-                    except SQLError:
-                        message = '(WARNING: search explanation failed)'
-                        pass
-
-                for highlight in highlights:
-                    parts = get_highlight_parts(score=highlight[1])
-                    explanation = explanation.replace(
-                        highlight[0],
-                        parts[0] + highlight[0] + parts[1],
-                    )
-                    break
+            explanation = index.get_highlighted_text_from_hit(hit, phrase)
 
             st.write(explanation, unsafe_allow_html=True)
 
