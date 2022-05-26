@@ -181,11 +181,11 @@ def filters_sidebar():
             "Impact categories", impact_categories
         )
 
-    outputs = sorted(_s.TOPIC_CLASSIFICATION_OUTPUTS)
+    outputs = sorted(_s.get_outputs()[1])
     with st.expander("Filter by outputs", expanded=True):
         st.session_state.filter_outputs = st.multiselect("Outputs", outputs)
 
-    fields_of_research = sorted(_s.get_fields_of_research())
+    fields_of_research = sorted(_s.get_fields_of_research()[1])
     with st.expander("Filter by fields of research", expanded=True):
         st.session_state.filter_fields_of_research = st.multiselect(
             "Fields of research", fields_of_research
@@ -590,8 +590,13 @@ def show_topics(
     topics[_s.DATA_UOA] = topics.apply(
         lambda x: f"{str(x[_s.DATA_UOA_N]).zfill(2)}: {x[_s.DATA_UOA]}", axis=1
     )
+    topics = topics.sort_values(
+        [_s.FEATURE_TOPIC_GROUP, _s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA], ascending=False
+    )
     topics_aggr = (
-        topics.groupby(_s.FEATURE_TOPIC_TOPIC).agg(aggr_function).reset_index()
+        topics.groupby([_s.FEATURE_TOPIC_GROUP, _s.FEATURE_TOPIC_TOPIC])
+        .agg(aggr_function)
+        .reset_index()
     )
 
     st.subheader(f"{title} with confidence >= {threshold} aggregated by {aggr}")
@@ -599,15 +604,17 @@ def show_topics(
     st.subheader(f"{title} distribution")
     view_and_download_data(
         f"{title} distribution",
-        topics_aggr[[_s.FEATURE_TOPIC_TOPIC, _s.FEATURE_TOPIC_SCORE]],
+        topics_aggr[
+            [_s.FEATURE_TOPIC_GROUP, _s.FEATURE_TOPIC_TOPIC, _s.FEATURE_TOPIC_SCORE]
+        ],
     )
     st.plotly_chart(
         vm.histogram(
             topics_aggr,
             _s.FEATURE_TOPIC_SCORE,
             _s.FEATURE_TOPIC_TOPIC,
-            _s.FEATURE_TOPIC_TOPIC,
-        ).update_layout(yaxis=dict(categoryorder="category ascending")),
+            _s.FEATURE_TOPIC_GROUP,
+        ),
         use_container_width=True,
     )
 
@@ -629,28 +636,35 @@ def show_topics(
 
     st.subheader(f"Correlation between {title.lower()} and unit of assessment")
     topics_aggr = (
-        topics.groupby([_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA])
+        topics.groupby([_s.FEATURE_TOPIC_GROUP, _s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA])
         .agg(aggr_function)
         .reset_index()
     )
     view_and_download_data(
         f"{title} correlation",
-        topics_aggr[[_s.FEATURE_TOPIC_TOPIC, _s.DATA_UOA, _s.FEATURE_TOPIC_SCORE]],
+        topics_aggr[
+            [
+                _s.FEATURE_TOPIC_GROUP,
+                _s.FEATURE_TOPIC_TOPIC,
+                _s.DATA_UOA,
+                _s.FEATURE_TOPIC_SCORE,
+            ]
+        ],
     )
     st.plotly_chart(
         vm.scatter(
             topics_aggr,
             _s.DATA_UOA,
             _s.FEATURE_TOPIC_TOPIC,
-            _s.FEATURE_TOPIC_TOPIC,
+            _s.FEATURE_TOPIC_GROUP,
             _s.FEATURE_TOPIC_SCORE,
         ).update_layout(
             xaxis=dict(categoryorder="category ascending", tickangle=-45),
-            yaxis=dict(
-                categoryorder="category ascending",
-                tickmode="linear",
-                type="category",
-            ),
+            # yaxis=dict(
+            # categoryorder="category ascending",
+            # tickmode="linear",
+            # type="category",
+            # ),
         ),
         use_container_width=True,
     )

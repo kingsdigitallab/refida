@@ -14,6 +14,8 @@ from settings import (
     DATA_SOURCES,
     DATA_SUMMARY,
     DATA_TEXT,
+    FEATURE_TOPIC_GROUP,
+    FEATURE_TOPIC_TOPIC,
     SEARCH_COLUMN,
     TOPIC_CLASSIFICATION_TOPICS,
     get_fields_of_research,
@@ -72,12 +74,17 @@ def topics(datadir: str = DATA_DIR.name, column: TopicsSection = TopicsSection.t
             error(f"Column {column} not found in data.")
 
         labels = TOPIC_CLASSIFICATION_TOPICS
+        groups = None
         if column in [TopicsSection.details, TopicsSection.summary]:
-            labels = get_outputs()
+            groups, labels = get_outputs()
         elif column == TopicsSection.research:
-            labels = get_fields_of_research()
+            groups, labels = get_fields_of_research()
 
         topics = features.topic_classification(data, column, labels)
+        topics[FEATURE_TOPIC_GROUP] = topics[FEATURE_TOPIC_TOPIC]
+        if groups:
+            topics[FEATURE_TOPIC_GROUP] = topics[FEATURE_TOPIC_GROUP].apply(groups.get)
+
         topics.to_csv(dm.get_topics_data_path(column, datadir), index=False)
 
         progress.update(1)

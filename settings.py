@@ -45,6 +45,7 @@ DATA_ENTITY_SECTIONS: list[str] = [
     DATA_SOURCES,
 ]
 
+FEATURE_TOPIC_GROUP = "group"
 FEATURE_TOPIC_TOPIC = "topic"
 FEATURE_TOPIC_SCORE = "score"
 
@@ -437,8 +438,14 @@ TOPIC_CLASSIFICATION_FIELDS_OF_RESEARCH: dict[str, list[str]] = {
 }
 
 
-def get_fields_of_research() -> list[str]:
-    return list(chain.from_iterable(TOPIC_CLASSIFICATION_FIELDS_OF_RESEARCH.values()))
+def get_fields_of_research() -> tuple[dict[str, str], list[str]]:
+    return invert_topics(TOPIC_CLASSIFICATION_FIELDS_OF_RESEARCH), list(
+        chain.from_iterable(TOPIC_CLASSIFICATION_FIELDS_OF_RESEARCH.values())
+    )
+
+
+def invert_topics(topics: dict[str, list[str]]) -> dict[str, str]:
+    return {v: k for k, values in topics.items() for v in values}
 
 
 TOPIC_CLASSIFICATION_OUTPUTS: dict[str, list[str]] = {
@@ -518,8 +525,10 @@ TOPIC_CLASSIFICATION_OUTPUTS: dict[str, list[str]] = {
 }
 
 
-def get_outputs() -> list[str]:
-    return list(chain.from_iterable(TOPIC_CLASSIFICATION_OUTPUTS.values()))
+def get_outputs() -> tuple[dict[str, str], list[str]]:
+    return invert_topics(TOPIC_CLASSIFICATION_OUTPUTS), list(
+        chain.from_iterable(TOPIC_CLASSIFICATION_OUTPUTS.values())
+    )
 
 
 # model used for summarisation

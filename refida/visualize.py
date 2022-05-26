@@ -68,6 +68,11 @@ def parallel_categories(
     margin_left = data[dimensions[0]].map(len).max() + 150
     margin_right = data[dimensions[-1]].map(len).max() + 150
 
+    dimensions_options = [
+        {"categoryorder": "category descending"} for _ in dimensions[1:]
+    ]
+    dimensions_options.insert(0, None)
+
     return (
         px.parallel_categories(
             data,
@@ -77,7 +82,7 @@ def parallel_categories(
         )
         .update_layout(margin=dict(l=margin_left, r=margin_right))
         .update_traces(
-            dimensions=[{"categoryorder": "category descending"} for _ in dimensions],
+            dimensions=dimensions_options,
             line=dict(shape="hspline"),
         )
     )
