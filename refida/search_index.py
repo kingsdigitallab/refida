@@ -228,12 +228,12 @@ class LexicalIndexDoc(SemIndexDoc):
 
         return ret
 
-
-# TODO:
-# M: index the text (not just summary)
-# S: snippets
-# S: optimise
-# S: check caching
-# C: additional fields
-# C: move semsearch to classes
-# S: fix lexical score
+"""
+TODO:
+M: index the text (not just summary)
+    S: snippets
+    S: optimise
+S: check caching
+C: additional fields
+S: fix lexical score (all 1.0...)
+"""
