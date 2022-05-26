@@ -463,7 +463,7 @@ def show_about_data(data: pd.DataFrame):
         yearfirst=True,
     )
     research["type"] = "Research period"
-    impact = research[[_s.FIELD_ID, _s.DATA_IMPACT_START, _s.DATA_IMPACT_END]]
+    impact = research[[_s.FIELD_ID, _s.DATA_IMPACT_START, _s.DATA_IMPACT_END]].copy()
     impact[_s.DATA_RESEARCH_START] = pd.to_datetime(
         impact[_s.DATA_IMPACT_START].apply(lambda x: str(int(x))), yearfirst=True
     )
