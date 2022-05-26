@@ -12,11 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - KDL footer.
 - Extract unit of assessment panel.
 - Panel filter to the dashboard.
+- Entity type glossary.
+- Entities filter.
 
 ### Changed
 
 - Rename types of impact to outputs.
 - Sort units of assessment by number.
+- Group types of output.
 
 ## [0.3.1] - 2022-05-17
 

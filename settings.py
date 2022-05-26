@@ -442,71 +442,85 @@ def get_fields_of_research() -> list[str]:
     return list(chain.from_iterable(TOPIC_CLASSIFICATION_FIELDS_OF_RESEARCH.values()))
 
 
-TOPIC_CLASSIFICATION_IMPACTS: list[str] = [
-    "Publications",
-    "Journal articles",
-    "Conference proceedings",
-    "Reports",
-    "Policy briefs",
-    "Book",
-    "Guide",
-    "Collaborations and partnerships",
-    "Research grant",
-    "Fellowship",
-    "Co-funding",
-    "Capital funding",
-    "Travel funding",
-    "Engagement activities",
-    "Working group",
-    "Expert panel",
-    "Talk",
-    "Magazine",
-    "Event",
-    "Open day",
-    "Media interaction",
-    "Blog",
-    "Social media",
-    "Broadcast",
-    "Influence on policy",
-    "Letter to parliament",
-    "Training of policymakers",
-    "Citation in guidance",
-    "Citation in policy",
-    "Evidence to government",
-    "Consultations",
-    "Influence on business",
-    "Citation in working procedures",
-    "Revisions to guidance docs",
-    "Citation in industry report",
-    "Article in trade press",
-    "Talk at trade event",
-    "Research tools and methods",
-    "Research databases and models",
-    "Intellectual property and licensing",
-    "Copyright",
-    "Patent application",
-    "Trademark",
-    "Open source",
-    "Artistic and creative products",
-    "Image",
-    "Artwork",
-    "Creative writing",
-    "Music score",
-    "Animation",
-    "Exhibition",
-    "Performance",
-    "Software and technical products",
-    "Software",
-    "Web application",
-    "Improved technology",
-    "Spin-outs",
-    "Awards and recognition",
-    "Research prize",
-    "Honorary membership",
-    "Editor of journal",
-    "National honour",
-    "Use of facilities and resources",
-]
+TOPIC_CLASSIFICATION_OUTPUTS: dict[str, list[str]] = {
+    "Publications": [
+        "Journal articles",
+        "Conference proceedings",
+        "Reports",
+        "Policy briefs",
+        "Book",
+        "Guide",
+    ],
+    "Collaborations and partnerships": ["Collaborations and partnerships"],
+    "Further funding": [
+        "Research grant",
+        "Fellowship",
+        "Co-funding",
+        "Capital funding",
+        "Travel funding",
+    ],
+    "Engagement activities": [
+        "Working group",
+        "Expert panel",
+        "Talk",
+        "Magazine",
+        "Event",
+        "Open day",
+        "Media interaction",
+        "Blog",
+        "Social media",
+        "Broadcast",
+    ],
+    "Influence on policy": [
+        "Letter to parliament",
+        "Training of policymakers",
+        "Citation in guidance",
+        "Citation in policy",
+        "Evidence to government",
+        "Consultations",
+    ],
+    "Influence on business": [
+        "Citation in working procedures",
+        "Revisions to guidance docs",
+        "Citation in industry report",
+        "Article in trade press",
+        "Talk at trade event",
+    ],
+    "Research tools and methods": ["Research tools and methods"],
+    "Research databases and models": ["Research databases and models"],
+    "Intellectual property and licensing": [
+        "Copyright",
+        "Patent application",
+        "Trademark",
+        "Open source",
+    ],
+    "Artistic and creative products": [
+        "Image",
+        "Artwork",
+        "Creative writing",
+        "Music score",
+        "Animation",
+        "Exhibition",
+        "Performance",
+    ],
+    "Software and technical products": [
+        "Software",
+        "Web application",
+        "Improved technology",
+    ],
+    "Spin-outs": ["Spin-outs"],
+    "Awards and recognition": [
+        "Research prize",
+        "Honorary membership",
+        "Editor of journal",
+        "National honour",
+    ],
+    "Use of facilities and resources": ["Use of facilities and resources"],
+}
+
+
+def get_outputs() -> list[str]:
+    return list(chain.from_iterable(TOPIC_CLASSIFICATION_OUTPUTS.values()))
 
 
 # model used for summarisation
@@ -620,10 +634,17 @@ DASHBOARD_HELP_TOPICS_SCORE_THRESHOLD: str = """
 The topics are assigned to the case studies by the classification algorithm using a
 confidence score (0-100%), the higher the score the more relevant the topics are.
 """
-DASHBOARD_HELP_ENTITIES: str = f"""
+DASHBOARD_HELP_ENTITIES: str = """
 Entity extraction has been applied using the free open-source Python library
 [SpaCy](https://spacy.io/) to different sections of the case studies to extract
-mentions of Organisations, Places and Products ({", ".join(SPACY_ENTITY_TYPES)}).
+mentions of Organisations, Places and Products.
+
+- GPE: Geo-political entities, countries, cities, states
+- LOC: Non-GPE locations, mountain ranges, bodies of water
+- NORP: Nationalities or religious or political groups
+- ORG: Companies, agencies, institutions, etc.
+- PRODUCT: Objects, vehicles, foods, etc. (not services)
+
 Entities extracted from the sections *Summary*, *Details of the impact* are grouped
 together in the **Partners** view. Entities extracted from the section *Details of the
 impact* appear in the **Beneficiaries** view.
@@ -657,14 +678,17 @@ DASHBOARD_FOOTER: str = """
     width: 100%;
 }
 
-.footer a:active, a:link, a:visited {
-    color: rgba(49, 51, 63, 0.4);
+.footer a,
+.footer a:active,
+.footer a:link,
+.footer a:visited {
+    color: rgba(49, 51, 63, 0.6);
     text-decoration: none;
 }
 
 .footer a:hover {
-  color: rgb(49, 51, 63);
-  text-decoration: underline;
+    opacity: 1;
+    text-decoration: underline;
 }
 </style>
 <div class="footer">
