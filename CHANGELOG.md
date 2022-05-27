@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Entity type glossary.
 - Entities filter.
 - UK nations distribution.
+- Command to extract strengths, areas for improvement and future plans.
 
 ### Changed
 

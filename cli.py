@@ -120,7 +120,7 @@ def areas(datadir: str = DATA_DIR.name, threshold: float = 0.5):
         if data is None:
             error("No data found. Run the `etl` command first.")
 
-        column = TopicsSection.text
+        column = TopicsSection.details
         labels = TOPIC_CLASSIFICATION_AREAS
         topics = features.topic_classification(
             data, column, labels, sentences=True, threshold=threshold
