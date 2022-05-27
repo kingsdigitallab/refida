@@ -6,7 +6,7 @@ import typer
 from refida import data as dm
 from refida import etl as em
 from refida import features
-from refida.search_index import SemIndexDoc, SemIndexSent, LexicalIndexDoc
+from refida.search_index import LexicalIndexDoc, SemIndexDoc, SemIndexSent
 from settings import (
     DATA_DETAILS,
     DATA_DIR,
@@ -17,6 +17,7 @@ from settings import (
     FEATURE_TOPIC_GROUP,
     FEATURE_TOPIC_TOPIC,
     SEARCH_COLUMN,
+    TOPIC_CLASSIFICATION_AREAS,
     TOPIC_CLASSIFICATION_TOPICS,
     get_fields_of_research,
     get_outputs,
@@ -42,6 +43,17 @@ def etl(datadir: str = DATA_DIR.name):
         data = em.extract(files)
         data.to_csv(dm.get_etl_data_path(datadir), index=False)
         progress.update(1)
+
+
+def error(msg: str):
+    """
+    Print an error message and exit.
+
+    :param msg: Error message.
+    """
+    typer.echo()
+    typer.secho(f"Error: {msg}", fg=typer.colors.RED)
+    raise typer.Abort()
 
 
 class TopicsSection(str, Enum):
@@ -90,15 +102,32 @@ def topics(datadir: str = DATA_DIR.name, column: TopicsSection = TopicsSection.t
         progress.update(1)
 
 
-def error(msg: str):
+@app.command()
+def areas(datadir: str = DATA_DIR.name, threshold: float = 0.5):
     """
-    Print an error message and exit.
+    Apply topic classification to the data to extracts areas of strenght, improvements,
+    and future plans.
 
-    :param msg: Error message.
+    :param datadir: Path to the data directory.
+    :param threshold: Minimum score for the topics to be included in the results.
     """
-    typer.echo()
-    typer.secho(f"Error: {msg}", fg=typer.colors.RED)
-    raise typer.Abort()
+    with typer.progressbar(
+        length=2, label="Topic classification, areas..."
+    ) as progress:
+        data = dm.get_etl_data(datadir)
+        progress.update(1)
+
+        if data is None:
+            error("No data found. Run the `etl` command first.")
+
+        column = TopicsSection.text
+        labels = TOPIC_CLASSIFICATION_AREAS
+        topics = features.topic_classification(
+            data, column, labels, sentences=True, threshold=threshold
+        )
+        topics.to_csv(dm.get_topics_data_path(f"areas_{column}", datadir), index=False)
+
+        progress.update(1)
 
 
 @app.command()

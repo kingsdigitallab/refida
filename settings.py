@@ -533,6 +533,12 @@ def get_outputs() -> tuple[dict[str, str], list[str]]:
     )
 
 
+TOPIC_CLASSIFICATION_AREAS: list[str] = [
+    "strength",
+    "area for improvment",
+    "future plans",
+]
+
 # model used for summarisation
 SUMMARISATION_MODEL: str = "sshleifer/distilbart-cnn-12-6"
 

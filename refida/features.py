@@ -6,7 +6,7 @@ import geopy
 import pandas as pd
 import spacy
 from geopy.location import Location
-from txtai.pipeline import Labels, Summary
+from txtai.pipeline import Labels, Segmentation, Summary
 
 import settings as _s
 
@@ -15,6 +15,8 @@ def topic_classification(
     data: pd.DataFrame,
     column: str,
     topics: list[str] = _s.TOPIC_CLASSIFICATION_TOPICS,
+    sentences: bool = False,
+    threshold: float = 0.0,
     model: str = _s.TOPIC_CLASSIFICATION_MODEL,
 ) -> pd.DataFrame:
     """
@@ -22,13 +24,24 @@ def topic_classification(
 
     :param data: DataFrame with text to classify.
     :param column: Column with text to classify.
-    :param model: Model to use.
     :param topics: Topics to classify.
+    :param sentences: Wether to segment the text into sentences before applying topic
+        classification.
+    :param threshold: Topics with a score lower than the threshold will be excluded from
+        the results.
+    :param model: Model to use.
     """
     classifier = Labels(model)
 
     topics_df = data[[_s.FIELD_ID, column]].copy()
     topics_df = topics_df.dropna(subset=[column])
+
+    if sentences:
+        segment = Segmentation(sentences=True)
+        topics_df["sentence"] = segment(topics_df[column].values.tolist())
+        topics_df = topics_df.drop(columns=[column])
+        topics_df = topics_df.explode("sentence")
+        topics_df[column] = topics_df["sentence"]
 
     topics_df["topics"] = classifier(
         topics_df[column].values.tolist(), topics, multilabel=True
@@ -41,6 +54,7 @@ def topic_classification(
         topics_df["topics"].tolist(), index=topics_df.index
     )
     topics_df = topics_df.drop(columns=[column, "topics"])
+    topics_df = topics_df[topics_df[_s.FEATURE_TOPIC_SCORE] >= threshold]
 
     return topics_df
 
