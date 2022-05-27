@@ -535,7 +535,7 @@ def get_outputs() -> tuple[dict[str, str], list[str]]:
 
 TOPIC_CLASSIFICATION_AREAS: list[str] = [
     "strength",
-    "area for improvment",
+    "area for improvement",
     "future plans",
 ]
 
