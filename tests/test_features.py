@@ -1,8 +1,11 @@
+import nltk
 import pandas as pd
 import pytest
 
 from refida import features
 from settings import TOPIC_CLASSIFICATION_AREAS
+
+nltk.download("punkt")
 
 
 @pytest.fixture
