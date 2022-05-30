@@ -22,7 +22,8 @@ RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 RUN python -m venv /venv
 
 RUN . /venv/bin/activate \
-    && pip install --no-cache-dir --upgrade -r requirements.txt
+    && pip install --no-cache-dir --upgrade -r requirements.txt \
+    && python -c "import nltk; nltk.download('punkt');"
 
 # base image
 FROM python:3.9-slim as base

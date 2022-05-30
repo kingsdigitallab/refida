@@ -10,7 +10,7 @@ from txtai.embeddings import Embeddings, Transform
 from refida.data import get_data_path
 import re
 
-DUMMYDOCID = 'FIRSTDOC'
+DUMMYDOCID = "FIRSTDOC"
 
 
 class SemIndexDoc:
@@ -97,8 +97,7 @@ class SemIndexDoc:
         # Create transform action
         transform = Transform(self.embeddings, Action.UPSERT)
 
-        with tempfile.NamedTemporaryFile(mode="wb",
-                                         suffix=".npy") as buffer:
+        with tempfile.NamedTemporaryFile(mode="wb", suffix=".npy") as buffer:
             # Load documents into database and transform to vectors
             ids, _, embeddings = transform(documents, buffer)
             if ids:
@@ -119,8 +118,7 @@ class SemIndexDoc:
         # Create transform action
         transform = Transform(self.embeddings, Action.UPSERT)
 
-        with tempfile.NamedTemporaryFile(mode="wb",
-                                         suffix=".npy") as buffer:
+        with tempfile.NamedTemporaryFile(mode="wb", suffix=".npy") as buffer:
             # Load documents into database and transform to vectors
             ids, _, embeddings = transform([document], buffer)
             if ids:
@@ -174,12 +172,15 @@ class SemIndexDoc:
         self.highlight_before = before
         self.highlight_after = after
 
-    def get_highlighted_text_from_hit(self, hit, phrase, limit=settings.SEARCH_MAX_SNIPPETS):
+    def get_highlighted_text_from_hit(
+        self, hit, phrase, limit=settings.SEARCH_MAX_SNIPPETS
+    ):
         ret = hit["text"]
 
         if not self.highlight_before:
             return ret
 
+        message = ""
         highlights = []
 
         phrase = self.clean_search_phrase(phrase)
@@ -212,11 +213,12 @@ class SemIndexDoc:
                     self.highlight_before + highlight[0] + self.highlight_after,
                 )
         else:
-            ret = '<br><br>'.join([
-                f'...{highlight[0]}...'
-                for highlight
-                in highlights[:limit]
-            ])
+            ret = "<br><br>".join(
+                [f"...{highlight[0]}..." for highlight in highlights[:limit]]
+            )
+
+        if message:
+            ret += '<br>'+message
 
         return ret
 
@@ -226,11 +228,11 @@ class SemIndexDoc:
         config.pop("ids", None)
 
         ret = {
-            'class': type(self).__name__,
-            'filepath': self.get_index_path(),
-            'type': 'txtai.Embeddings',
-            'config': config,
-            'size': index.count(),
+            "class": type(self).__name__,
+            "filepath": self.get_index_path(),
+            "type": "txtai.Embeddings",
+            "config": config,
+            "size": index.count(),
         }
 
         return ret
@@ -242,21 +244,19 @@ class SemIndexSent(SemIndexDoc):
     def search_docs(self, phrase, limit=None, min_score=settings.SEARCH_MIN_SCORE):
         ret = []
         phrase = self.clean_search_phrase(phrase)
-        query = f"select docid, text, score as score from txtai where similar('{phrase}') "
+        query = (
+            f"select docid, text, score as score from txtai where similar('{phrase}') "
+        )
         if min_score:
             query += f" and score >= {min_score}"
 
-        res = self.search_sql(query, limit=limit*1000)
+        res = self.search_sql(query, limit=limit * 1000)
         found = {}
         for r in res:
-            if r['docid'] in found:
+            if r["docid"] in found:
                 continue
-            found[r['docid']] = 1
-            ret.append({
-                'id': r['docid'],
-                'text': r['text'],
-                'score': r['score']
-            })
+            found[r["docid"]] = 1
+            ret.append({"id": r["docid"], "text": r["text"], "score": r["score"]})
             if len(ret) >= limit:
                 break
         return ret
@@ -289,9 +289,7 @@ class SemIndexSent(SemIndexDoc):
         for sent in sents:
             self.sent_idx += 1
             embeddings.append(
-                self.upsert(
-                    [(self.sent_idx, {"text": sent, "docid": row.id}, None)]
-                )
+                self.upsert([(self.sent_idx, {"text": sent, "docid": row.id}, None)])
             )
 
         # average embeddings
@@ -335,10 +333,11 @@ class LexicalIndexDoc(SemIndexDoc):
     def search_phrase(self, phrase, limit=None, min_score=settings.SEARCH_MIN_SCORE):
         fields = "id, text"
         if self.highlight_before:
-            fields += ", snippet(txtsql, 0, '{}', '{}', '...', 64) as highlighted".format(
-                self.highlight_before, self.highlight_after
+            fields += (
+                ", snippet(txtsql, 0, '{}', '{}', '...', 64) as highlighted".format(
+                    self.highlight_before, self.highlight_after
+                )
             )
-
 
         query = f"""
             select {fields}, 1.0 as score
@@ -352,7 +351,7 @@ class LexicalIndexDoc(SemIndexDoc):
 
     def clean_search_phrase(self, phrase):
         # king's returns Runtime error: fts5: syntax error near "'"
-        phrase = phrase.replace("'", ' ')
+        phrase = phrase.replace("'", " ")
         return phrase
 
     def search_sql(self, query, limit=None, parameters=None):
@@ -388,26 +387,12 @@ class LexicalIndexDoc(SemIndexDoc):
         counts = self.search_sql("select count(*) as count from txtsql")
 
         ret = {
-            'class': type(self).__name__,
-            'filepath': self.get_index_path(),
-            'type': 'sqlite3',
-            'config': {
-                'backend': 'FTS5'
-            },
-            'schema': {
-                'cols': {col['name']: '' for col in columns}
-            },
-            'size': counts[0]["count"],
+            "class": type(self).__name__,
+            "filepath": self.get_index_path(),
+            "type": "sqlite3",
+            "config": {"backend": "FTS5"},
+            "schema": {"cols": {col["name"]: "" for col in columns}},
+            "size": counts[0]["count"],
         }
 
         return ret
-
-"""
-TODO:
-M: index the text (not just summary)
-    S: snippets
-    S: optimise
-S: check caching
-C: additional fields
-S: fix lexical score (all 1.0...)
-"""

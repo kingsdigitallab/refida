@@ -84,9 +84,9 @@ SEARCH_TRANSFORMER = "sentence-transformers/all-MiniLM-L6-v2"
 SEARCH_TRANSFORMER = "sentence-transformers/paraphrase-MiniLM-L3-v2"
 # SEARCH_TRANSFORMER = "sentence-transformers/all-mpnet-base-v2"
 # SEARCH_TRANSFORMER = "sentence-transformers/msmarco-MiniLM-L6-cos-v5"
-SEARCH_MODE_SEMDOC = 'Semantic (documents)'
-SEARCH_MODE_SEMSENT = 'Semantic (sentences)'
-SEARCH_MODE_LEXICAL = 'Lexical'
+SEARCH_MODE_SEMDOC = "Semantic (documents)"
+SEARCH_MODE_SEMSENT = "Semantic (sentences)"
+SEARCH_MODE_LEXICAL = "Lexical"
 SEARCH_MODES = [SEARCH_MODE_SEMDOC, SEARCH_MODE_SEMSENT, SEARCH_MODE_LEXICAL]
 
 # =====================================================================================
@@ -726,7 +726,7 @@ Designed, developed and maintained by
 """
 
 DASHBOARD_HELP_QUERY_TIP_NO_OR = """
-Tip: by default only documents that contain all the terms in your query 
+Tip: by default only documents that contain all the terms in your query
 will be returned by the lexical search.
 `health OR medical` will return documents that contain any of those words.
 """

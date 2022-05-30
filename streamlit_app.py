@@ -945,7 +945,11 @@ def text_search(data: pd.DataFrame):
 
 def get_search_mode():
     # return st.session_state.search_mode
-    return _s.SEARCH_MODE_SEMDOC if st.session_state.is_search_semantic else _s.SEARCH_MODE_LEXICAL
+    return (
+        _s.SEARCH_MODE_SEMDOC
+        if st.session_state.is_search_semantic
+        else _s.SEARCH_MODE_LEXICAL
+    )
 
 
 def filter_data_by_text_search(data):
