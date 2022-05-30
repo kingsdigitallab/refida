@@ -649,7 +649,7 @@ to classify the data according to different perspectives:
     REF-defined areas of impact;
 - **Fields of research (FoR)**, extracted from the section *Underpinning research*
     based on the [Australian and New Zealand Standard Research Classification](https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/latest-release#data-downloads) FoR classification;
-- **Types of impact**, extracted from the sections *Summary*, *Details of the impact*
+- **Outputs**, extracted from the sections *Summary*, *Details of the impact*
     based on the list of outcomes/outputs used by the impact data collection tool
     adopted by UKRI [Researchfish](https://researchfish.com/).
 """  # noqa
