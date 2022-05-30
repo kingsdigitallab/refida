@@ -70,12 +70,22 @@ DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD = 0.5
 # which column we search on
 SEARCH_COLUMN = "text"
 # strat used to explain the results (see search_index.py)
-SEARCH_EXPLAIN_STRATEGY = 2
+# 2: top sentence embeddings using txtai similarity() : SLOW
+# 3: top sentence embeddings using txtai search() over ANN
+SEARCH_EXPLAIN_STRATEGY = 3
+SEARCH_MAX_SNIPPETS = 2
 SEARCH_LIMIT_OPTIONS = [10, 20, 50, 100, 500]
 SEARCH_LIMIT_INDEX = SEARCH_LIMIT_OPTIONS.index(20)
 # minimum score for a match to be part of the results with semsearch
 SEARCH_MIN_SCORE = 0.15
 SEARCH_TRANSFORMER = "sentence-transformers/all-MiniLM-L6-v2"
+SEARCH_TRANSFORMER = "sentence-transformers/paraphrase-MiniLM-L3-v2"
+# SEARCH_TRANSFORMER = "sentence-transformers/all-mpnet-base-v2"
+# SEARCH_TRANSFORMER = "sentence-transformers/msmarco-MiniLM-L6-cos-v5"
+SEARCH_MODE_SEMDOC = 'Semantic (documents)'
+SEARCH_MODE_SEMSENT = 'Semantic (sentences)'
+SEARCH_MODE_LEXICAL = 'Lexical'
+SEARCH_MODES = [SEARCH_MODE_SEMDOC, SEARCH_MODE_SEMSENT, SEARCH_MODE_LEXICAL]
 
 # =====================================================================================
 # etl module settings
