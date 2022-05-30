@@ -12,7 +12,7 @@ import settings as _s
 from refida import data as dm
 from refida import visualize as vm
 from refida.__init__ import __version__
-from refida.search_index import LexicalIndexDoc, SemIndexDoc
+from refida.search_index import LexicalIndexDoc, SemIndexDoc, SemIndexSent
 
 STYLE_RADIO_INLINE = ""
 
@@ -142,6 +142,11 @@ def filters_sidebar():
 
     with st.expander("Text search", expanded=bool(get_search_phrase())):
         st.session_state.search_phrase = st.text_input("Search phrase")
+        # st.session_state.search_mode = st.selectbox(
+        #     "Search mode",
+        #     _s.SEARCH_MODES,
+        #     help=_s.DASHBOARD_HELP_SEARCH_MODE,
+        # )
         st.session_state.is_search_semantic = st.checkbox(
             "Semantic search",
             True,
@@ -933,13 +938,14 @@ def text_search(data: pd.DataFrame):
 
     if phrase:
         index = get_search_index()
-        hits = index.search_phrase(phrase, limit=st.session_state.search_limit)
+        hits = index.search_docs(phrase, limit=st.session_state.search_limit)
 
     st.session_state.search_hits = hits
 
 
-def is_search_semantic():
-    return st.session_state.is_search_semantic
+def get_search_mode():
+    # return st.session_state.search_mode
+    return _s.SEARCH_MODE_SEMDOC if st.session_state.is_search_semantic else _s.SEARCH_MODE_LEXICAL
 
 
 def filter_data_by_text_search(data):
@@ -950,10 +956,13 @@ def filter_data_by_text_search(data):
 
 
 def get_search_index():
-    if is_search_semantic():
-        ret = SemIndexDoc()
+    if get_search_mode() == _s.SEARCH_MODE_SEMDOC:
+        Index = SemIndexDoc
+    elif get_search_mode() == _s.SEARCH_MODE_SEMSENT:
+        Index = SemIndexSent
     else:
-        ret = LexicalIndexDoc()
+        Index = LexicalIndexDoc
+    ret = Index(session_state=st.session_state)
     ret.set_highlight_format(
         '<span style="background-color: rgb(255, 255, 128);">', "</span>"
     )
@@ -983,15 +992,14 @@ def show_search_results(data: pd.DataFrame):
     st.header(f"Search results ({len(hits)})")
 
     multiple_terms_without_and = len(phrase.split()) > 1 and "OR" not in phrase
-    if not is_search_semantic() and multiple_terms_without_and:
-        st.info(
-            "Tip: by default only documents that contain all the terms"
-            " in your query will be returned by the lexical search."
-            " `health OR medical` will return documents"
-            " that contain any of those words. "
-        )
+    if get_search_mode() == "Lexical" and multiple_terms_without_and:
+        st.info(_s.DASHBOARD_HELP_QUERY_TIP_NO_OR)
 
     for hit_idx, hit in enumerate(hits):
+        # TODO: remove this cdt
+        if 0 and hit_idx != 0:
+            continue
+
         rows = data[data["id"] == hit["id"]]
         title = hit["id"]
         if len(rows):
@@ -1008,13 +1016,12 @@ def show_search_results(data: pd.DataFrame):
             unsafe_allow_html=True,
         )
 
+        message = ""
         if len(rows):
             show_doc(row, True)
-
-            message = ""
-
             explanation = index.get_highlighted_text_from_hit(hit, phrase)
-
+            # No way to prevent streamlit from reformatting the supplied html.
+            # It will expand $ into latex, etc.
             st.write(explanation, unsafe_allow_html=True)
 
         st.write(f"(score: {hit['score']:.2f}, id: {repr(hit['id'])}) {message}")

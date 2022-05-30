@@ -67,15 +67,27 @@ FEATURE_GEO_GEOJSON = "geojson"
 
 DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD = 0.5
 
+# =====================================================================================
+# search module settings
 # which column we search on
-SEARCH_COLUMN = "summary"
-# strat used to explain the results (see streamlit_app.py)
-SEARCH_EXPLAIN_STRATEGY = 2
+SEARCH_COLUMN = "text"
+# strat used to explain the results (see search_index.py)
+# 2: top sentence embeddings using txtai similarity() : SLOW
+# 3: top sentence embeddings using txtai search() over ANN
+SEARCH_EXPLAIN_STRATEGY = 3
+SEARCH_MAX_SNIPPETS = 2
 SEARCH_LIMIT_OPTIONS = [10, 20, 50, 100, 500]
 SEARCH_LIMIT_INDEX = SEARCH_LIMIT_OPTIONS.index(20)
-# minimum score for a match to be part of the results
+# minimum score for a match to be part of the results with semsearch
 SEARCH_MIN_SCORE = 0.15
 SEARCH_TRANSFORMER = "sentence-transformers/all-MiniLM-L6-v2"
+SEARCH_TRANSFORMER = "sentence-transformers/paraphrase-MiniLM-L3-v2"
+# SEARCH_TRANSFORMER = "sentence-transformers/all-mpnet-base-v2"
+# SEARCH_TRANSFORMER = "sentence-transformers/msmarco-MiniLM-L6-cos-v5"
+SEARCH_MODE_SEMDOC = 'Semantic (documents)'
+SEARCH_MODE_SEMSENT = 'Semantic (sentences)'
+SEARCH_MODE_LEXICAL = 'Lexical'
+SEARCH_MODES = [SEARCH_MODE_SEMDOC, SEARCH_MODE_SEMSENT, SEARCH_MODE_LEXICAL]
 
 # =====================================================================================
 # etl module settings
@@ -711,4 +723,10 @@ DASHBOARD_FOOTER: str = """
 Designed, developed and maintained by
 <a href="https://kdl.kcl.ac.uk">King's Digital Lab</a>
 </div>
+"""
+
+DASHBOARD_HELP_QUERY_TIP_NO_OR = """
+Tip: by default only documents that contain all the terms in your query 
+will be returned by the lexical search.
+`health OR medical` will return documents that contain any of those words.
 """
