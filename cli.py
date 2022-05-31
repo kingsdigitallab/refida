@@ -1,7 +1,9 @@
 import pickle
+from collections import OrderedDict
 from enum import Enum
 
 import typer
+import json
 
 from refida import data as dm
 from refida import etl as em
@@ -220,34 +222,43 @@ def geolocate(
 
 
 @app.command()
-def reindex(datadir: str = DATA_DIR.name):
+def index(action: str = "build", datadir: str = DATA_DIR.name):
     """
-    indexation of full text of the cases using txtai.
+    reindex full text of the cases using txtai & sqlite fts5.
 
     :param datadir: Path to the data directory.
     """
 
-    data = dm.get_etl_data(datadir)
-    if data is None:
-        error("No data found. Run the `etl` command first.")
+    if action == "ls":
+        res = OrderedDict()
+        for Index in [SemIndexDoc, SemIndexSent, LexicalIndexDoc]:
+            index = Index(datadir)
+            res[Index.__name__] = index.get_info()
+        print(json.dumps(res, indent=2))
 
-    index = SemIndexDoc(datadir)
-    with typer.progressbar(
-        length=len(data), label="Semantic indexing docs..."
-    ) as progressbar:
-        index.reindex(data, SEARCH_COLUMN, progressbar)
+    if action == "build":
+        # TODO: remove truncation
+        data = dm.get_etl_data(datadir)
+        if data is None:
+            error("No data found. Run the `etl` command first.")
 
-    index = SemIndexSent(datadir)
-    with typer.progressbar(
-        length=len(data), label="Semantic indexing sents..."
-    ) as progressbar:
-        index.reindex(data, SEARCH_COLUMN, progressbar)
+        # index = SemIndexDoc(datadir)
+        # with typer.progressbar(
+        #     length=len(data), label="Semantic indexing docs..."
+        # ) as progressbar:
+        #     index.reindex(data, SEARCH_COLUMN, progressbar)
 
-    index = LexicalIndexDoc(datadir)
-    with typer.progressbar(
-        length=len(data), label="Lexical indexing docs..."
-    ) as progressbar:
-        index.reindex(data, SEARCH_COLUMN, progressbar)
+        index = SemIndexSent(datadir)
+        with typer.progressbar(
+            length=len(data), label="Semantic indexing sentences (and documents)..."
+        ) as progressbar:
+            index.reindex_sentences_and_docs(data, SEARCH_COLUMN, progressbar)
+
+        index = LexicalIndexDoc(datadir)
+        with typer.progressbar(
+            length=len(data), label="Lexical indexing docs..."
+        ) as progressbar:
+            index.reindex(data, SEARCH_COLUMN, progressbar)
 
 
 if __name__ == "__main__":
