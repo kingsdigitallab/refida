@@ -661,9 +661,9 @@ mentions of Organisations, Places and Products.
 - ORG: Companies, agencies, institutions, etc.
 - PRODUCT: Objects, vehicles, foods, etc. (not services)
 
-Entities extracted from the sections *Summary*, *Details of the impact* are grouped
-together in the **Partners** view. Entities extracted from the section *Details of the
-impact* appear in the **Beneficiaries** view.
+Entities extracted from the sections *Summary*, *Sources to corroborate the impact* are
+grouped together in the **Partners** view. Entities extracted from the section
+*Details of the impact* appear in the **Beneficiaries** view.
 """
 DASHBOARD_HELP_LOCATIONS: str = f"""
 Entity extraction has been applied to the documents to extract Places mentions
