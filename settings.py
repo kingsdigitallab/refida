@@ -642,6 +642,10 @@ intereactive and allows you to filter the data by selecting rows and columns:
 - when the selection on the grid changes, all the visualisations in the current view
     are updated.
 """
+DASHBOAD_HELP_SUMMARIES: str = """
+[Abstractive text summarisation](https://en.wikipedia.org/wiki/Automatic_summarization#Abstraction-based_summarization)
+as been applied to the text of the documents to create summaries of the text.
+"""  # noqa
 DASHBOARD_HELP_TOPICS: str = """
 Topic classification has been applied to the documents using different authority lists
 to classify the data according to different perspectives:

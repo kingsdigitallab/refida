@@ -332,15 +332,15 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):  # noqa
     doc = None
     doc_idx = None
 
-    if show_about_data_view():
-        st.header("About the data")
-        show_about_data(data)
-
     if n_rows == 1 and not show_text_search_view():
         doc = selection.iloc[0]
         doc_idx = data[data[_s.FIELD_ID] == selection[_s.FIELD_ID].iloc[0]].index[0]
 
         show_first_doc(selection)
+
+    if show_about_data_view():
+        st.header("About the data")
+        show_about_data(data)
 
     if show_impact_categories_view():
         show_topics("Impact categories", selection)
@@ -538,6 +538,8 @@ def show_doc(doc: pd.Series, hide_summary=False):
     if not hide_summary:
         summary = get_summary(tuple([doc[_s.FIELD_ID]]))
         if summary is not None:
+            with st.expander("About the summary", expanded=False):
+                st.markdown(_s.DASHBOAD_HELP_SUMMARIES)
             st.write(summary)
         else:
             st.write(doc[_s.DATA_SUMMARY])

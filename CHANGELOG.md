@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+
+- Explanation about text summarisation.
+
+### Changed
+
+- Display selected document under the about the data section.
+
 ## [0.4.0] - 2022-05-30
 
 ### Added
