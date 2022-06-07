@@ -20,8 +20,15 @@ STYLE_RADIO_INLINE = ""
 def streamlit():
     st.set_page_config(page_title=_s.PROJECT_TITLE, layout="wide")
     st.error(_s.DASHBOARD_DEVELOPMENT)
-    st.title(_s.PROJECT_TITLE)
-    st.write(f"v{__version__}")
+
+    col_title, col_version = st.columns([10, 2])
+    with col_title:
+        st.title(_s.PROJECT_TITLE)
+    with col_version:
+        markdown(
+            f'<div class="css-183lzff" style="text-align: right">v{__version__}</div>'
+        )
+
     st.warning(_s.DASHBOARD_DISCLAIMER)
 
     with st.sidebar:
@@ -30,6 +37,10 @@ def streamlit():
     data_section()
 
     st.markdown(_s.DASHBOARD_FOOTER, unsafe_allow_html=True)
+
+
+def markdown(text):
+    st.markdown(text, unsafe_allow_html=True)
 
 
 def sidebar():
