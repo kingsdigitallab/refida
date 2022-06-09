@@ -44,10 +44,10 @@ def markdown(text):
 
 
 def sidebar():
-    st.title("Insights")
+    st.subtitle("Views")
 
     st.session_state.view = st.radio(
-        "Choose insights",
+        "Choose views",
         (
             "About the data",
             "Impact categories",
