@@ -1013,35 +1013,31 @@ def show_search_results(data: pd.DataFrame):
         st.info(_s.DASHBOARD_HELP_QUERY_TIP_NO_OR)
 
     for hit_idx, hit in enumerate(hits):
-        # TODO: remove this cdt
-        if 0 and hit_idx != 0:
-            continue
-
         rows = data[data["id"] == hit["id"]]
+        row = None
         title = hit["id"]
         if len(rows):
             row = rows.iloc[0]
             title = row["title"]
 
-        st.subheader(f"{hit_idx+1}. {title}")
+        st.subheader(f"{hit_idx + 1}. {title}")
 
+        st.write(f"Score: {hit['score']:.2f}, ID: {hit['id']}")
         indicator_width = min(1.0, hit["score"]) * 100
         st.write(
-            "<div style='border-bottom:1px solid black; "
-            f"width:{indicator_width}%'></div>"
-            "",
+            "<div style='border-bottom: 2px solid black;"
+            f"width:{indicator_width}%'></div>",
             unsafe_allow_html=True,
         )
 
-        message = ""
         if len(rows):
-            show_doc(row, True)
+            if row is not None:
+                show_doc(row, True)
+
             explanation = index.get_highlighted_text_from_hit(hit, phrase)
             # No way to prevent streamlit from reformatting the supplied html.
             # It will expand $ into latex, etc.
             st.write(explanation, unsafe_allow_html=True)
-
-        st.write(f"(score: {hit['score']:.2f}, id: {repr(hit['id'])}) {message}")
 
 
 def get_search_phrase():
