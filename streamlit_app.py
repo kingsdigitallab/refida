@@ -56,7 +56,7 @@ def sidebar():
             "Partners",
             "Beneficiaries",
             "Locations",
-            "Search results",
+            "Text search",
         ),
     )
 
@@ -109,7 +109,7 @@ def show_geo_view():
 
 
 def show_text_search_view():
-    return get_session_view() == "Search results"
+    return get_session_view() == "Text search"
 
 
 def topics_sidebar():
@@ -999,14 +999,17 @@ def show_search_results(data: pd.DataFrame):
     hits = st.session_state.search_hits
 
     if hits is None:
-        st.warning("Use the 'Text search' in the side bar to start a search.")
+        st.warning(
+            "No text search results found, "
+            "please use the **Text search** filter in the side bar to start a search."
+        )
         return
 
     index = get_search_index()
 
     phrase = st.session_state.search_phrase.strip()
 
-    st.header(f"Search results ({len(hits)})")
+    st.header(f"Text search results ({len(hits)})")
 
     multiple_terms_without_and = len(phrase.split()) > 1 and "OR" not in phrase
     if get_search_mode() == "Lexical" and multiple_terms_without_and:
