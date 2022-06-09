@@ -44,7 +44,7 @@ def markdown(text):
 
 
 def sidebar():
-    st.subtitle("Views")
+    st.header("Views")
 
     st.session_state.view = st.radio(
         "Choose views",
@@ -149,7 +149,7 @@ def geo_sidebar():
 
 
 def filters_sidebar():
-    st.subheader("Filter the data")
+    st.header("Filter the data")
 
     with st.expander("Text search", expanded=bool(get_search_phrase())):
         st.session_state.search_phrase = st.text_input("Search phrase")
