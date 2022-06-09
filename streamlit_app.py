@@ -151,7 +151,8 @@ def geo_sidebar():
 def filters_sidebar():
     st.header("Filters")
 
-    with st.expander("Text search", expanded=bool(get_search_phrase())):
+    expanded = bool(get_search_phrase())
+    with st.expander("Text search", expanded=expanded):
         st.session_state.search_phrase = st.text_input("Enter a keyword or phrase")
         st.session_state.search_mode = st.radio(
             "Search mode",
@@ -161,40 +162,43 @@ def filters_sidebar():
 
         st.session_state.search_limit = st.slider(
             "Maximum number of results",
-            *_s.SEARCH_LIMIT_OPTIONS,
+            _s.SEARCH_LIMIT_OPTIONS[0],
+            _s.SEARCH_LIMIT_OPTIONS[1],
             _s.SEARCH_LIMIT_DEFAULT,
             5,
             help=_s.DASHBOARD_HELP_SEARCH_LIMIT,
         )
 
-    with st.expander("Filter by panel", expanded=True):
+    expanded = bool(get_session_filter_panel() or get_session_filter_uoa())
+    with st.expander("Filter by panel and UoA", expanded=expanded):
         st.session_state.filter_panel = st.multiselect("Panel", _s.PANELS)
-
-    with st.expander("Filter by unit of assessment", expanded=True):
         st.session_state.filter_uoa = st.multiselect(
             "Unit of assessment", _s.UOA.values()
         )
 
-    st.session_state.filter_topics_score_threshold = st.slider(
-        "Topics classification minimum score/confidence",
-        0.0,
-        1.0,
-        0.5,
-        0.05,
-        help=_s.DASHBOARD_HELP_TOPICS_SCORE_THRESHOLD,
+    expanded = bool(
+        get_session_filter_impact_categories()
+        or get_session_filter_outputs()
+        or get_session_filter_fields_of_research()
     )
-    impact_categories = sorted(_s.TOPIC_CLASSIFICATION_TOPICS)
-    with st.expander("Filter by impact categories", expanded=True):
+    with st.expander("Filter by impact", expanded=expanded):
+        st.session_state.filter_topics_score_threshold = st.slider(
+            "Topics classification minimum score/confidence",
+            0.0,
+            1.0,
+            0.5,
+            0.05,
+            help=_s.DASHBOARD_HELP_TOPICS_SCORE_THRESHOLD,
+        )
+        impact_categories = sorted(_s.TOPIC_CLASSIFICATION_TOPICS)
         st.session_state.filter_impact_categories = st.multiselect(
             "Impact categories", impact_categories
         )
 
-    outputs = sorted(_s.get_outputs()[1])
-    with st.expander("Filter by outputs", expanded=True):
+        outputs = sorted(_s.get_outputs()[1])
         st.session_state.filter_outputs = st.multiselect("Outputs", outputs)
 
-    fields_of_research = sorted(_s.get_fields_of_research()[1])
-    with st.expander("Filter by fields of research", expanded=True):
+        fields_of_research = sorted(_s.get_fields_of_research()[1])
         st.session_state.filter_fields_of_research = st.multiselect(
             "Fields of research", fields_of_research
         )
@@ -203,7 +207,8 @@ def filters_sidebar():
     if entities is not None:
         entities = entities[_s.FEATURE_ENTITY_ENTITY]
         entities = entities.drop_duplicates()
-    with st.expander("Filter by entities", expanded=True):
+    expanded = bool(get_session_filter_entities())
+    with st.expander("Filter by entities", expanded=expanded):
         st.session_state.filter_entities = st.multiselect("Entities", entities)
 
 
