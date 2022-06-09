@@ -49,7 +49,7 @@ def sidebar():
     st.session_state.view = st.radio(
         "Choose views",
         (
-            "About the data",
+            "Overview",
             "Impact categories",
             "Outputs",
             "Fields of research",
@@ -77,11 +77,11 @@ def sidebar():
 
 
 def show_about_data_view():
-    return get_session_view() == "About the data"
+    return get_session_view() == "Overview"
 
 
 def get_session_view() -> str:
-    return st.session_state.get("view", "About the data")
+    return st.session_state.get("view", "Overview")
 
 
 def show_impact_categories_view():
@@ -350,7 +350,7 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):  # noqa
         show_first_doc(selection)
 
     if show_about_data_view():
-        st.header("About the data")
+        st.header("Data overview")
         show_about_data(data)
 
     if show_impact_categories_view():
