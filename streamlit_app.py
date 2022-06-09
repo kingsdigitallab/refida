@@ -149,7 +149,7 @@ def geo_sidebar():
 
 
 def filters_sidebar():
-    st.header("Filter the data")
+    st.header("Filters")
 
     with st.expander("Text search", expanded=bool(get_search_phrase())):
         st.session_state.search_phrase = st.text_input("Search phrase")
