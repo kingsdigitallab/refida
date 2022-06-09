@@ -152,21 +152,18 @@ def filters_sidebar():
     st.header("Filters")
 
     with st.expander("Text search", expanded=bool(get_search_phrase())):
-        st.session_state.search_phrase = st.text_input("Search phrase")
-        # st.session_state.search_mode = st.selectbox(
-        #     "Search mode",
-        #     _s.SEARCH_MODES,
-        #     help=_s.DASHBOARD_HELP_SEARCH_MODE,
-        # )
-        st.session_state.is_search_semantic = st.checkbox(
-            "Semantic search",
-            True,
+        st.session_state.search_phrase = st.text_input("Enter a keyword or phrase")
+        st.session_state.search_mode = st.radio(
+            "Search mode",
+            _s.SEARCH_MODES,
             help=_s.DASHBOARD_HELP_SEARCH_MODE,
         )
-        st.session_state.search_limit = st.selectbox(
+
+        st.session_state.search_limit = st.slider(
             "Maximum number of results",
-            [10, 20, 50, 100, 500],
-            _s.SEARCH_LIMIT_INDEX,
+            *_s.SEARCH_LIMIT_OPTIONS,
+            _s.SEARCH_LIMIT_DEFAULT,
+            5,
             help=_s.DASHBOARD_HELP_SEARCH_LIMIT,
         )
 
@@ -957,12 +954,7 @@ def text_search(data: pd.DataFrame):
 
 
 def get_search_mode():
-    # return st.session_state.search_mode
-    return (
-        _s.SEARCH_MODE_SEMDOC
-        if st.session_state.is_search_semantic
-        else _s.SEARCH_MODE_LEXICAL
-    )
+    return st.session_state.search_mode
 
 
 def filter_data_by_text_search(data):
@@ -1012,7 +1004,7 @@ def show_search_results(data: pd.DataFrame):
     st.header(f"Text search results ({len(hits)})")
 
     multiple_terms_without_and = len(phrase.split()) > 1 and "OR" not in phrase
-    if get_search_mode() == "Lexical" and multiple_terms_without_and:
+    if get_search_mode() == _s.SEARCH_MODE_LEXICAL and multiple_terms_without_and:
         st.info(_s.DASHBOARD_HELP_QUERY_TIP_NO_OR)
 
     for hit_idx, hit in enumerate(hits):
