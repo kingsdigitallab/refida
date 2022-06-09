@@ -612,6 +612,26 @@ DASHBOARD_PLOT_MIN_HEIGHT: int = 500
 DASHBOARD_PLOT_RATIO: float = 5
 
 
+DASHBOARD_ABOUT_THE_PROJECT: str = """
+This project was set up as a way to help the impact team produce analytical work of the
+REF 2021 impact case studies and environment statements, and to help address the
+questions:
+- What are the main types of impact KCL has delivered? Which pathways have been used to
+  deliver those impacts?
+- Who are our key partners and beneficiaries of our impacts?
+- Where are they - local (London), National or Global?
+- Is there a correlation between discipline and types of impact or pathways to impact
+  used?
+- What are the areas identified as strengths, areas for development and future plans?
+"""
+DASHBOARD_USER_GUIDE: str = """
+This dashboard is divided in three sections, *Views*, *Filters*, and *Data*:
+- *Views*: this section allows you to choose which data dimensions to analyse;
+- *Filters*: can be used to search and filter the data by original document data, and
+  by fields that were created during the data processing;
+- *Data*: the main section of the dashboard, displays the content related to each of
+  the views.
+"""
 DASHBOARD_DEVELOPMENT: str = """
 This dashboard is under development, please expect *breaking* changes between versions.
 """

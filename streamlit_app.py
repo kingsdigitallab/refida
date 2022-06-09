@@ -29,7 +29,12 @@ def streamlit():
             f'<div class="css-183lzff" style="text-align: right">v{__version__}</div>'
         )
 
-    st.warning(_s.DASHBOARD_DISCLAIMER)
+    with st.expander("About the project", expanded=False):
+        markdown(_s.DASHBOARD_ABOUT_THE_PROJECT)
+        st.warning(_s.DASHBOARD_DISCLAIMER)
+
+    with st.expander("User guide", expanded=False):
+        markdown(_s.DASHBOARD_USER_GUIDE)
 
     with st.sidebar:
         sidebar()
