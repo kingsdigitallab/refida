@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "refida"
-version = "0.4.0"
+version = "0.5.0"
 description = ""
 authors = ["King's Digital Lab"]
 license = "MPL-2.0"
