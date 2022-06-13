@@ -56,7 +56,7 @@ def sidebar():
         (
             "Overview",
             "Impact categories",
-            "Outputs",
+            "Pathways' outputs",
             "Fields of research",
             "Partners",
             "Beneficiaries",
@@ -94,7 +94,7 @@ def show_impact_categories_view():
 
 
 def show_outputs_view():
-    return get_session_view() == "Outputs"
+    return get_session_view() == "Pathways' outputs"
 
 
 def show_fields_of_research_view():
@@ -201,7 +201,7 @@ def filters_sidebar():
         )
 
         outputs = sorted(_s.get_outputs()[1])
-        st.session_state.filter_outputs = st.multiselect("Outputs", outputs)
+        st.session_state.filter_outputs = st.multiselect("Pathways' outputs", outputs)
 
         fields_of_research = sorted(_s.get_fields_of_research()[1])
         st.session_state.filter_fields_of_research = st.multiselect(
@@ -214,7 +214,9 @@ def filters_sidebar():
         entities = entities.drop_duplicates()
     expanded = bool(get_session_filter_entities())
     with st.expander("Filter by entities", expanded=expanded):
-        st.session_state.filter_entities = st.multiselect("Entities", entities)
+        st.session_state.filter_entities = st.multiselect(
+            "Partners/beneficiaries/locations", entities
+        )
 
 
 def data_section():
@@ -365,7 +367,7 @@ def show_data(data: pd.DataFrame, selection: pd.DataFrame):  # noqa
         return
 
     if show_outputs_view():
-        show_topics("Outputs", selection, [_s.DATA_SUMMARY, _s.DATA_DETAILS])
+        show_topics("Pathways' outputs", selection, [_s.DATA_SUMMARY, _s.DATA_DETAILS])
         return
 
     if show_fields_of_research_view():
