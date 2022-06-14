@@ -271,10 +271,7 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
         topics=get_session_filter_fields_of_research(),
     )
     if fields_of_research is not None:
-        data = data[
-            data[_s.DATA_RESEARCH].isnull()
-            | data[_s.FIELD_ID].isin(fields_of_research[_s.FIELD_ID])
-        ]
+        data = data[data[_s.FIELD_ID].isin(fields_of_research[_s.FIELD_ID])]
 
     entities = get_entities(
         [_s.DATA_SUMMARY, _s.DATA_DETAILS, _s.DATA_SOURCES],
