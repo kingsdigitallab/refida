@@ -637,7 +637,7 @@ def show_topics(
         use_container_width=True,
     )
 
-    colour_df = topics[_s.DATA_PANEL].copy()
+    colour_df = topics[_s.FEATURE_TOPIC_GROUP].copy()
     palette = px.colors.qualitative.Plotly
     palette_len = len(palette)
     colours = colour_df.map(
