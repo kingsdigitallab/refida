@@ -638,10 +638,12 @@ def show_topics(
     )
 
     colour_df = topics[_s.FEATURE_TOPIC_GROUP].copy()
+    colour_index = colour_df.unique()
+    colour_index.sort()
     palette = px.colors.qualitative.Plotly
     palette_len = len(palette)
     colours = colour_df.map(
-        {v: palette[i % palette_len] for i, v in enumerate(colour_df.unique())}
+        {v: palette[i % palette_len] for i, v in enumerate(colour_index)}
     )
 
     st.subheader(f"Connections between {title.lower()} and unit of assessment")
