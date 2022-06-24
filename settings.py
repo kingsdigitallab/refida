@@ -65,7 +65,7 @@ FEATURE_GEO_PLACE_LAT = "place_lat"
 FEATURE_GEO_PLACE_LON = "place_lon"
 FEATURE_GEO_GEOJSON = "geojson"
 
-DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD = 0.5
+DEFAULT_FILTER_TOPICS_SCORE_THRESHOLD = 0.75
 
 # =====================================================================================
 # search module settings
