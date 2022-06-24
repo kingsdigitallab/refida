@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Changed
+
+- Colour the parallel diagram by topic group.
+- Colours match between the different topics visualisations.
+- Increase the default topics threshold to 0.75.
+
 ## [0.5.1] - 2022-06-14
 
 ### Fixed
