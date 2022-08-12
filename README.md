@@ -52,9 +52,48 @@ the results of the data processing.
 
 The results of the machine learning processes can be explored and visualised via a
 [web-based dashboard](docs/dashboard.png). Via the dashboard it is also possible to
-search and filter the data to get more specific insights.
+search and filter the data to get more specific insights, either for single or multiple
+documents at the same time.
 The [landing page](docs/dashboard.png) of the dashboard displays a table with all the
 data and also overview information about the data.
+
+### Impact categories
+
+![Connection between impact categories and units of assessment](docs/dashboard_impact_categories.png)
+
+Visualisation displaying the output of topic classification to extract impact categories
+(topic) and their connections to the documents unit of assessment (uoa).
+
+### Pathways' outputs
+
+Pathways' outputs are the pathways or outputs created by the researchers to achieve
+impact.
+
+![Connection between pathways' outputs and units of assessment](docs/dashboard_pathways_outputs.png)
+
+Visualisation displaying the output of topic classification to extract pathways' outputs
+(topic) for panel B (sciences and engineering) and their connections to the uoa.
+
+### Entities
+
+![Entities extracted for the COVID-19 Symptom Study App](docs/dashboard_entities.png)
+
+Visualisation displaying the output of entity extraction, showing places (GPE) and
+organisations (ORG), extracted from the
+[COVID-19 Symptom Stydy App impact case study](https://results2021.ref.ac.uk/impact/c897ad2d-9af3-456b-9749-73e0ce3cf626?page=1).
+
+### Locations
+
+![Map showing locations extracted from the documents](docs/dashboard_map.png)
+
+Map displaying the output of entity extration and geolocation of place entities,
+aggregated by count.
+
+### Search
+
+It is possible to search the documents in the dashboard using either a lexical search,
+that matches documents that contain the exact search terms, or by semantic search, that
+matches documents that contain content similar in meaning to the search terms.
 
 ## Set up
 
@@ -62,11 +101,17 @@ Install [poetry](https://python-poetry.org/docs/#installation) and the requireme
 
     poetry install
 
-Configure the settings by editing the file `settings.py`.
+Configure the settings by editing the file `settings.py` and add
+[REF impact case studies](https://results2021.ref.ac.uk/impact) and/or
+[environment statements](https://results2021.ref.ac.uk/environment) into the
+`data/0_raw` directory.
 
 ## Run the cli
 
     poetry run python cli.py
+
+> **Warning**: The `topics` command is extremely slow to run in a computer without
+> GPU access.
 
 ### Cli workflow
 
