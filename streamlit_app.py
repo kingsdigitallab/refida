@@ -19,7 +19,6 @@ STYLE_RADIO_INLINE = ""
 
 def streamlit():
     st.set_page_config(page_title=_s.PROJECT_TITLE, layout="wide")
-    st.error(_s.DASHBOARD_DEVELOPMENT)
 
     col_title, col_version = st.columns([10, 2])
     with col_title:
