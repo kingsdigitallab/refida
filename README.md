@@ -48,6 +48,34 @@ the results of the data processing.
 - And an indexing process indexes all the text both to perform keyword and semantic
   searches.
 
+### Technologies
+
+The project uses the following Python packages:
+
+- [Typer](https://typer.tiangolo.com/) - to build the command line interface
+  application;
+- [pandas](https://pandas.pydata.org/) - to load and manipulate the data;
+- [txtai](https://neuml.github.io/txtai/) - a library to build AI applications, it is
+  used to [extract text](https://neuml.github.io/txtai/pipeline/text/extractor/) from the
+  PDF documents, for [topic classification](https://neuml.github.io/txtai/pipeline/text/labels/),
+  for [abstractive text summarisation](https://neuml.github.io/txtai/pipeline/text/summary/),
+  and for [semantic and lexical search](https://neuml.github.io/txtai/embeddings/).
+- [spaCy](https://spacy.io/) - natural language processing library used for entity
+  extraction;
+- [GeoPy](https://geopy.readthedocs.io/) - to geolocate the extracted places using the
+  OpenStreetMap [Nominatin](https://nominatim.org/) service;
+- [Streamlit](https://streamlit.io/) - to build the dashboard;
+- [Plotly](https://plotly.com/python/) - to create the charts and visualisations.
+
+> **Info**: Due to time constraints most of these are set up with the default settings.
+
+### Models
+
+- [Topic classification model](https://huggingface.co/joeddav/bart-large-mnli-yahoo-answers)
+- [Summarisation model](https://huggingface.co/sshleifer/distilbart-cnn-12-6)
+- [Entity extraction](https://spacy.io/models/en#en_core_web_trf)
+- [Semantic search](https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2)
+
 ## Dashboard
 
 The results of the machine learning processes can be explored and visualised via a
@@ -80,7 +108,12 @@ Visualisation displaying the output of topic classification to extract pathways'
 
 Visualisation displaying the output of entity extraction, showing places (GPE) and
 organisations (ORG), extracted from the
-[COVID-19 Symptom Stydy App impact case study](https://results2021.ref.ac.uk/impact/c897ad2d-9af3-456b-9749-73e0ce3cf626?page=1).
+[COVID-19 Symptom Study App impact case study](https://results2021.ref.ac.uk/impact/c897ad2d-9af3-456b-9749-73e0ce3cf626?page=1).
+
+![context](docs/dashboard_entities_context.png)
+
+It is also possible to see the extracted entites in the context they were extracted
+from.
 
 ### Locations
 
@@ -93,7 +126,7 @@ aggregated by count.
 
 It is possible to search the documents in the dashboard using either a lexical search,
 that matches documents that contain the exact search terms, or by semantic search, that
-matches documents that contain content similar in meaning to the search terms.
+matches
 
 ## Set up
 
