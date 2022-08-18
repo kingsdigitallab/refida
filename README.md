@@ -72,9 +72,9 @@ mentions of Organisations, Places and Products.
 - ORG: Companies, agencies, institutions, etc.
 - PRODUCT: Objects, vehicles, foods, etc. (not services).
 
-Entities extracted from the sections *Summary*, *Sources to corroborate the impact* are
+Entities extracted from the sections _Summary_, _Sources to corroborate the impact_ are
 grouped together in the **Partners** view. Entities extracted from the section
-*Details of the impact* appear in the **Beneficiaries** view.
+_Details of the impact_ appear in the **Beneficiaries** view.
 
 #### About locations
 
@@ -179,6 +179,27 @@ Configure the settings by editing the file `settings.py` and add
 
 > **Warning**: The `topics` command is extremely slow to run in a computer without
 > GPU access.
+
+To see a list of all the available commands and options, run the cli with the `--help`
+option:
+
+    Usage: cli.py [OPTIONS] COMMAND [ARGS]...
+
+    Options:
+      --install-completion [bash|zsh|fish|powershell|pwsh]
+                                      Install completion for the specified shell.
+      --show-completion [bash|zsh|fish|powershell|pwsh]
+                                      Show completion for the specified shell, to
+                                      copy it or customize the installation.
+      --help                          Show this message and exit.
+
+    Commands:
+      entities   Extract entities from the data of the text of the given column.
+      etl        Extract, transform and load data.
+      geolocate  Geolocate the location entities in the data.
+      index      reindex full text of the cases using txtai & sqlite fts5.
+      summaries  Summarise the text of in the data.
+      topics     Apply topic classification to the data.
 
 ### Cli workflow
 
