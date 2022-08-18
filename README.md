@@ -39,7 +39,7 @@ the results of the data processing.
 - The process starts with extracting data from relevant sections of the documents into
   a single CSV file, which is then used by the different machine learning processes;
 - [Zero shot](https://en.wikipedia.org/wiki/Zero-shot_learning) topic classification
-  is applied to extract impact categories, fields of research and impact outputs;
+  is applied to extract impact categories, fields of research and impact pathways's outputs;
 - A [transformers](<https://en.wikipedia.org/wiki/Transformer_(machine_learning_model)>)-based
   language model is used to extract entities (mainly organisations and locations) from
   the data. The location data is further enriched by applying geocoding to gather
@@ -47,6 +47,19 @@ the results of the data processing.
 - Abstractive text summarisation is used to create summaries of the documents;
 - And an indexing process indexes all the text both to perform keyword and semantic
   searches.
+
+### Topic classification
+
+Topic classification has been applied to the documents using different authority lists
+to classify the data according to different perspectives:
+
+- **Impact categories**, extracted from the whole text of the document based on the nine
+  REF-defined areas of impact;
+- **Fields of research (FoR)**, extracted from the section _Underpinning research_ based on the
+  [Australian and New Zealand Standard Research Classification FoR classification](https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/latest-release#data-downloads);
+- **Pathways' outputs**, extracted from the sections _Summary_, _Details of the impact_,
+  based on the list of [outcomes/outputs](https://www.creds.ac.uk/how-to-prepare-a-pathways-to-impact-statement/)
+  used by the impact data collection tool adopted by UKRI [Researchfish](https://researchfish.com/).
 
 ### Technologies
 
