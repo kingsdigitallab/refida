@@ -26,7 +26,7 @@ The project was set up to help the impact team's address the questions:
 
 ## Architecture
 
-![Architecture](docs/architecture.jpg)
+![Architecture](docs/architecture.pdf)
 
 The project has two main components, a Python command line tool to do the data
 processing and to run the machine learning processes, and a web-dashboard to present
@@ -34,7 +34,7 @@ the results of the data processing.
 
 ## Workflow
 
-![Workflow](docs/workflow.jpg)
+![Workflow](docs/workflow.pdf)
 
 - The process starts with extracting data from relevant sections of the documents into
   a single CSV file, which is then used by the different machine learning processes;
