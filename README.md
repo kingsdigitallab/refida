@@ -48,7 +48,7 @@ the results of the data processing.
 - And an indexing process indexes all the text both to perform keyword and semantic
   searches.
 
-### Topic classification
+### About topic classification
 
 Topic classification has been applied to the documents using different authority lists
 to classify the data according to different perspectives:
@@ -60,6 +60,27 @@ to classify the data according to different perspectives:
 - **Pathways' outputs**, extracted from the sections _Summary_, _Details of the impact_,
   based on the list of [outcomes/outputs](https://www.creds.ac.uk/how-to-prepare-a-pathways-to-impact-statement/)
   used by the impact data collection tool adopted by UKRI [Researchfish](https://researchfish.com/).
+
+### About entity extraction
+
+Entity extraction has been applied to different sections of the case studies to extract
+mentions of Organisations, Places and Products.
+
+- GPE: Geo-political entities, countries, cities, states
+- LOC: Non-GPE locations, mountain ranges, bodies of water
+- NORP: Nationalities or religious or political groups
+- ORG: Companies, agencies, institutions, etc.
+- PRODUCT: Objects, vehicles, foods, etc. (not services).
+
+Entities extracted from the sections *Summary*, *Sources to corroborate the impact* are
+grouped together in the **Partners** view. Entities extracted from the section
+*Details of the impact* appear in the **Beneficiaries** view.
+
+#### About locations
+
+Entity extraction has been applied to the documents to extract Places mentions (GPE, LOC).
+The extracted entities were geocoded and classified according to the categories local
+(to London), national (UK) and global (rest of the world).
 
 ### Technologies
 
