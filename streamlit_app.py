@@ -253,7 +253,7 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
         get_session_filter_topics_score_threshold(),
         topics=get_session_filter_impact_categories(),
     )
-    if impact_categories is not None:
+    if get_session_filter_impact_categories() and impact_categories is not None:
         data = data[data[_s.FIELD_ID].isin(impact_categories[_s.FIELD_ID])]
 
     outputs = get_topics(
@@ -261,7 +261,7 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
         get_session_filter_topics_score_threshold(),
         topics=get_session_filter_outputs(),
     )
-    if outputs is not None:
+    if get_session_filter_outputs() and outputs is not None:
         data = data[data[_s.FIELD_ID].isin(outputs[_s.FIELD_ID])]
 
     fields_of_research = get_topics(
@@ -269,18 +269,18 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
         get_session_filter_topics_score_threshold(),
         topics=get_session_filter_fields_of_research(),
     )
-    if fields_of_research is not None:
+    if get_session_filter_fields_of_research() and fields_of_research is not None:
         data = data[data[_s.FIELD_ID].isin(fields_of_research[_s.FIELD_ID])]
 
     entities = get_entities(
         [_s.DATA_SUMMARY, _s.DATA_DETAILS, _s.DATA_SOURCES],
         entities=get_session_filter_entities(),
     )
-    if entities is not None:
+    if get_session_filter_entities() and entities is not None:
         data = data[data[_s.FIELD_ID].isin(entities[_s.FIELD_ID])]
 
-    text_search(data)
-    data = filter_data_by_text_search(data)
+    # text_search(data)
+    # data = filter_data_by_text_search(data)
 
     return data
 
@@ -421,15 +421,15 @@ def show_about_data(data: pd.DataFrame):
         research[_s.DATA_IMPACT_START] - research[_s.DATA_RESEARCH_START]
     )
 
-    research_duration_avg = research["research_duration"].mean().round(decimals=1)
+    research_duration_avg = round(research["research_duration"].mean(), 2)
     if "metric_research_duration_avg" not in st.session_state:
         st.session_state.metric_research_duration_avg = research_duration_avg
 
-    impact_duration_avg = research["impact_duration"].mean().round(decimals=1)
+    impact_duration_avg = round(research["impact_duration"].mean(), 2)
     if "metric_impact_duration_avg" not in st.session_state:
         st.session_state.metric_impact_duration_avg = impact_duration_avg
 
-    research_to_impact_avg = research["research_to_impact"].mean().round(decimals=1)
+    research_to_impact_avg = round(research["research_to_impact"].mean(), 2)
     if "metric_research_to_impact_avg" not in st.session_state:
         st.session_state.metric_research_to_impact_avg = research_to_impact_avg
 
