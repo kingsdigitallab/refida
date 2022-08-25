@@ -34,7 +34,7 @@ def extract(files: Iterator[Path], sort_by: list[str] = ETL_SORT_BY) -> pd.DataF
         if data is not None:
             extracted = pd.concat([data, extracted], ignore_index=True)
 
-    return extracted.sort_values(by=ETL_SORT_BY)  # type: ignore
+    return extracted.sort_values(by=sort_by)  # type: ignore
 
 
 def extract_file(textractor: Textractor, file: Path) -> Optional[pd.DataFrame]:
