@@ -6,12 +6,14 @@ For the list of changes to the project see the [Changelog](CHANGELOG.md).
 
 The REF 2021 Impact Data Analysis was a small project, between
 [King's Digital Lab (KDL)](https://kdl.kcl.ac.uk/) and colleagues in the
-[King's College London (KCL)](https://kcl.ac.uk/) Research Management & Innovation Directorate (RMID), to support the analysis of the college's [REF 2021](https://results2021.ref.ac.uk/) impact case studies and
-environment statements.
+[King's College London (KCL)](https://kcl.ac.uk/) Research Management & Innovation
+Directorate (RMID), to support the analysis of the college's
+[REF 2021](https://results2021.ref.ac.uk/) impact case studies and environment statements.
 
-The data includes 158 impact case studies and environment statements, in PDF
-(5-10 pages of text each), which follow standard templates but are expressed
-with heterogenous descriptions and language.
+The data used during the development of this project includes 158 impact case studies
+and environment statements, in PDF (5-10 pages of text each), which follow standard
+[templates](https://ref.ac.uk/publications-and-reports/guidance-on-submissions-201901/)
+but are expressed with heterogenous descriptions and language.
 
 The project was set up to help RMID and research impact leads to address the questions:
 
@@ -50,7 +52,7 @@ Topic classification has been applied to the documents using different authority
 to classify the data according to different perspectives:
 
 - **Impact categories**, extracted from the whole text of the document based on the nine
-  REF-defined areas of impact;
+  [REF-defined areas of impact](https://ref.ac.uk/guidance-on-results/impact-case-study-database-faqs/);
 - **Fields of research (FoR)**, extracted from the section _Underpinning research_ based on the
   [Australian and New Zealand Standard Research Classification FoR classification](https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/latest-release#data-downloads);
 - **Pathways' outputs**, extracted from the sections _Summary_, _Details of the impact_,
@@ -163,8 +165,8 @@ matches documents that contain words with meaning supposedly related to the sear
 The dashboard remains a tool with an exploratory function with the caveats that:
 
 - All of the insights provided in the dashboard should not be accepted as final answers
-  and should be reviewed; needless to say, the output requires further interpretation and analysis
-  outside the system;
+  and should be reviewed; needless to say, the output requires further interpretation
+  and analysis outside the system;
 - Due to the time-frame and amount of data there was no provision to train/fine tune
   the algorithms/models used; this means that some results may be more accurate than
   expected while others will be worse than expected and could even be useless.
@@ -174,7 +176,10 @@ The topic classification model used has an out of the box
 labels). In our evaluation the F1 score for the impact categories was 0.6 for topics
 assigned with a confidence value of 0.5 or higher.
 
-RMID organised a series of workshops to discuss the analysis of the REF impact documents with the support of the dashboard. Final analysis is not available to KDL yet but feedback has been very positive with intention to build on and possibly expand functionalities in the future.
+RMID organised a series of workshops to discuss the analysis of the REF impact documents
+with the support of the dashboard. Final analysis is not available to KDL yet but feedback
+has been very positive with intention to build on and possibly expand functionalities in
+the future.
 
 
 ## Set up
