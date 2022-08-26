@@ -5,21 +5,20 @@
 For the list of changes to the project see the [Changelog](CHANGELOG.md).
 
 The REF 2021 Impact Data Analysis was a small project, between
-[King's Digital Lab (KDL)](https://kdl.kcl.ac.uk/) and the
-[King's College London (KCL)](https://kcl.ac.uk/) impact team, to produce analytical
-work of the college's [REF 2021](https://results2021.ref.ac.uk/) impact case studies and
+[King's Digital Lab (KDL)](https://kdl.kcl.ac.uk/) and colleagues in the
+[King's College London (KCL)](https://kcl.ac.uk/) Research Management & Innovation Directorate (RMID), to support the analysis of the college's [REF 2021](https://results2021.ref.ac.uk/) impact case studies and
 environment statements.
 
 The data includes 158 impact case studies and environment statements, in PDF
 (5-10 pages of text each), which follow standard templates but are expressed
 with heterogenous descriptions and language.
 
-The project was set up to help the impact team's address the questions:
+The project was set up to help RMID and research impact leads to address the questions:
 
 > - What are the main types of impact KCL has delivered? Which pathways have been used
 >   to deliver those impacts?
 > - Who are our key partners and beneficiaries of our impacts?
-> - Where are they - local (London), National or Global?
+> - Where are they - local (London), national or global?
 > - Is there a correlation between discipline and types of impact or pathways to impact
 >   used?
 > - What are the areas identified as strengths, areas for development and future plans?
@@ -27,7 +26,7 @@ The project was set up to help the impact team's address the questions:
 ## Architecture and workflow
 
 The project has two main components, a Python command line tool to do the data
-processing and to run the machine learning processes, and a web-dashboard to present
+processing including running the machine learning processes, and a web-dashboard to present
 the results of the data processing.
 
 ![Architecture and workflow](docs/workflow.jpg)
@@ -56,7 +55,7 @@ to classify the data according to different perspectives:
   [Australian and New Zealand Standard Research Classification FoR classification](https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/latest-release#data-downloads);
 - **Pathways' outputs**, extracted from the sections _Summary_, _Details of the impact_,
   based on the list of [outcomes/outputs](https://www.creds.ac.uk/how-to-prepare-a-pathways-to-impact-statement/)
-  used by the impact data collection tool adopted by UKRI [Researchfish](https://researchfish.com/).
+  used by [Researchfish](https://researchfish.com/), the impact data collection tool adopted by UKRI.
 
 ### About entity extraction
 
@@ -69,7 +68,7 @@ mentions of Organisations, Places and Products.
 - ORG: Companies, agencies, institutions, etc.
 - PRODUCT: Objects, vehicles, foods, etc. (not services).
 
-Entities extracted from the sections _Summary_, _Sources to corroborate the impact_ are
+In the dashboard, entities extracted from the sections _Summary_, _Sources to corroborate the impact_ are
 grouped together in the **Partners** view. Entities extracted from the section
 _Details of the impact_ appear in the **Beneficiaries** view.
 
@@ -98,7 +97,7 @@ The project uses the following Python packages:
 - [Streamlit](https://streamlit.io/) - to build the dashboard;
 - [Plotly](https://plotly.com/python/) - to create the charts and visualisations.
 
-> **Info**: Due to time constraints most of these are set up with the default settings.
+> **Note**: Due to time constraints most of these are set up with the default settings.
 
 ### Models
 
@@ -120,8 +119,8 @@ data and also overview information about the data.
 
 ![Connection between impact categories and units of assessment](docs/dashboard_impact_categories.png)
 
-Visualisation displaying the output of topic classification to extract impact categories
-(topic) and their connections to the documents unit of assessment (UoA).
+Visualisation displaying the output of topic classification following extraction of REF impact categories
+(topic) and their connections to the unit of assessment (UoA) documents grouped by associated REF panel.
 
 ### Pathways' outputs
 
@@ -130,8 +129,8 @@ impact.
 
 ![Connection between pathways' outputs and units of assessment](docs/dashboard_pathways_outputs.png)
 
-Visualisation displaying the output of topic classification to extract pathways' outputs
-(topic) for panel D (arts and humanities) per UoA coloured by pathways' outputs groups.
+Visualisation displaying the output of topic classification following extraction of pathways' outputs
+(topic) for panel D (Arts and humanities) per selected UoA coloured by pathways' outputs groups.
 
 ### Entities
 
@@ -151,13 +150,13 @@ from.
 ![Map showing locations extracted from the documents](docs/dashboard_map.png)
 
 Map displaying the output of entity extration and geolocation of place entities,
-aggregated by count.
+aggregated by count, across all documents.
 
 ### Search
 
 It is possible to search the documents in the dashboard using either a lexical search,
 that matches documents that contain the exact search terms, or by semantic search, that
-matches documents wht contain words with meaning related to the search term.
+matches documents that contain words with meaning supposedly related to the search term.
 
 ## Evaluation and next steps
 
