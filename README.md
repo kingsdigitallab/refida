@@ -5,8 +5,8 @@
 For the list of changes to the project see the [Changelog](CHANGELOG.md).
 
 The REF 2021 Impact Data Analysis was a small project, between
-[King's Digital Lab (KDL)](https://kdl.kcl.ac.uk/) and the
-[King's College London (KCL)](https://kcl.ac.uk/) impact team, to produce analytical
+[King's Digital Lab (KDL)](https://kdl.kcl.ac.uk/) and members of the
+[King's College London (KCL)](https://kcl.ac.uk/) Research Management & Innovation Directorate, to produce analytical
 work of the college's [REF 2021](https://results2021.ref.ac.uk/) impact case studies and
 environment statements.
 
