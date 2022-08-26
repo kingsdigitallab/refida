@@ -36,8 +36,9 @@ the results of the data processing.
 
 ![Workflow](docs/workflow.pdf)
 
-- The process starts with extracting data from relevant sections of the documents into
-  a single CSV file, which is then used by the different machine learning processes;
+- The process starts with extracting data from relevant sections (mainly the summary of
+  the impact, details of the impact, sources to corroborate the impact) of the documents
+  into a single CSV file, which is then used by the different machine learning processes;
 - [Zero shot](https://en.wikipedia.org/wiki/Zero-shot_learning) topic classification
   is applied to extract impact categories, fields of research and impact pathways's outputs;
 - A [transformers](<https://en.wikipedia.org/wiki/Transformer_(machine_learning_model)>)-based
@@ -161,6 +162,23 @@ aggregated by count.
 It is possible to search the documents in the dashboard using either a lexical search,
 that matches documents that contain the exact search terms, or by semantic search, that
 matches
+
+## Evaluation and next steps
+
+We have identified the potential caveats when using the tool:
+
+- All of the insights provided in the dashboard should not be accepted as final answers
+  and should be reviewed; the output requires further interpretation and analysis
+  outside the system;
+- Due to the time-frame and amount of data there was no provision to train/fine tune
+  the algorithms/models used, this means that some results may be more accurate than
+  expected while others will be worse than expected and could even be useless;
+
+The topic classification model used has an out of the box
+[F1 score](https://en.wikipedia.org/wiki/F-score) of 0.68 - 0.72 (for unseen and seen
+labels). In our evaluation the F1 score for the impact categories was 0.6 for topics
+assigned with a confidence value of 0.5 or higher.
+
 
 ## Set up
 
