@@ -160,21 +160,21 @@ matches documents that contain words with meaning supposedly related to the sear
 
 ## Evaluation and next steps
 
-We have identified the potential caveats when using the tool:
+The dashboard remains a tool with an exploratory function with the caveats that:
 
 - All of the insights provided in the dashboard should not be accepted as final answers
-  and should be reviewed; the output requires further interpretation and analysis
+  and should be reviewed; needless to say, the output requires further interpretation and analysis
   outside the system;
 - Due to the time-frame and amount of data there was no provision to train/fine tune
-  the algorithms/models used, this means that some results may be more accurate than
-  expected while others will be worse than expected and could even be useless;
+  the algorithms/models used; this means that some results may be more accurate than
+  expected while others will be worse than expected and could even be useless.
 
 The topic classification model used has an out of the box
 [F1 score](https://en.wikipedia.org/wiki/F-score) of 0.68 - 0.72 (for unseen and seen
 labels). In our evaluation the F1 score for the impact categories was 0.6 for topics
 assigned with a confidence value of 0.5 or higher.
 
-
+RMID organised a series of workshops to discuss the analysis of the REF impact documents with the support of the dashboard. Final analysis is not available to KDL yet but feedback has been very positive with intention to build on and possibly expand functionalities in the future.
 
 
 ## Set up
