@@ -24,17 +24,13 @@ The project was set up to help the impact team's address the questions:
 >   used?
 > - What are the areas identified as strengths, areas for development and future plans?
 
-## Architecture
-
-<img src="docs/architecture.pdf" alt="Architecture">
+## Architecture and workflow
 
 The project has two main components, a Python command line tool to do the data
 processing and to run the machine learning processes, and a web-dashboard to present
 the results of the data processing.
 
-## Workflow
-
-<img src="docs/workflow.pdf" alt="Workflow">
+![Architecture and workflow](docs/workflow.jpg)
 
 - The process starts with extracting data from relevant sections (mainly the summary of
   the impact, details of the impact, sources to corroborate the impact) of the documents
