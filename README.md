@@ -125,7 +125,7 @@ data and also overview information about the data.
 ![Connection between impact categories and units of assessment](docs/dashboard_impact_categories.png)
 
 Visualisation displaying the output of topic classification to extract impact categories
-(topic) and their connections to the documents unit of assessment (uoa).
+(topic) and their connections to the documents unit of assessment (UoA).
 
 ### Pathways' outputs
 
@@ -135,7 +135,7 @@ impact.
 ![Connection between pathways' outputs and units of assessment](docs/dashboard_pathways_outputs.png)
 
 Visualisation displaying the output of topic classification to extract pathways' outputs
-(topic) for panel B (sciences and engineering) and their connections to the uoa.
+(topic) for panel D (arts and humanities) per UoA coloured by pathways' outputs groups.
 
 ### Entities
 
