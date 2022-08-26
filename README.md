@@ -109,10 +109,10 @@ The project uses the following Python packages:
 ## Dashboard
 
 The results of the machine learning processes can be explored and visualised via a
-[web-based dashboard](docs/dashboard.png). Via the dashboard it is also possible to
+[web-based dashboard](docs/dashboard.jpg). Via the dashboard it is also possible to
 search and filter the data to get more specific insights, either for single or multiple
 documents at the same time.
-The [landing page](docs/dashboard.png) of the dashboard displays a table with all the
+The [landing page](docs/dashboard.jpg) of the dashboard displays a table with all the
 data and also overview information about the data.
 
 ### Impact categories
