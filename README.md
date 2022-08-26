@@ -161,7 +161,7 @@ aggregated by count.
 
 It is possible to search the documents in the dashboard using either a lexical search,
 that matches documents that contain the exact search terms, or by semantic search, that
-matches
+matches documents wht contain words with meaning related to the search term.
 
 ## Evaluation and next steps
 
@@ -178,6 +178,8 @@ The topic classification model used has an out of the box
 [F1 score](https://en.wikipedia.org/wiki/F-score) of 0.68 - 0.72 (for unseen and seen
 labels). In our evaluation the F1 score for the impact categories was 0.6 for topics
 assigned with a confidence value of 0.5 or higher.
+
+
 
 
 ## Set up
