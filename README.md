@@ -174,14 +174,14 @@ The dashboard remains a tool with an exploratory function with the caveats that:
 
 The topic classification model used has an out of the box
 [F1 score](https://en.wikipedia.org/wiki/F-score) of 0.68 - 0.72 (for unseen and seen
-labels). In our evaluation the F1 score for the impact categories was 0.6 for topics
-assigned with a confidence value of 0.5 or higher.
+labels). In our evaluation the F1 score for the impact categories was 0.61
+(0.74 precision, 0.52 recall) for topics assigned with a  minimum confidence value of
+0.5 or higher.
 
 RMID organised a series of workshops to discuss the analysis of the REF impact documents
 with the support of the dashboard. Final analysis is not available to KDL yet but feedback
 has been very positive with intention to build on and possibly expand functionalities in
 the future.
-
 
 ## Set up
 
