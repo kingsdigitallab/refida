@@ -6,14 +6,15 @@ For the list of changes to the project see the [Changelog](CHANGELOG.md).
 
 The REF 2021 Impact Data Analysis was a small project, between
 [King's Digital Lab (KDL)](https://kdl.kcl.ac.uk/) and colleagues in the
-[King's College London (KCL)](https://kcl.ac.uk/) Research Management & Innovation
-Directorate (RMID), to support the analysis of the college's
-[REF 2021](https://results2021.ref.ac.uk/) impact case studies and environment statements.
+[King's College London (KCL)](https://kcl.ac.uk/)
+[Research Management & Innovation Directorate (RMID)](https://www.kcl.ac.uk/aboutkings/orgstructure/ps/rmid/about-us),
+to support the analysis of the college's [REF 2021](https://results2021.ref.ac.uk/)
+impact case studies and environment statements.
 
 The data used during the development of this project includes 158 impact case studies
 and environment statements, in PDF (5-10 pages of text each), which follow standard
 [templates](https://ref.ac.uk/publications-and-reports/guidance-on-submissions-201901/)
-but are expressed with heterogenous descriptions and language.
+but are expressed with heterogeneous descriptions and language.
 
 The project was set up to help RMID and research impact leads to address the questions:
 
@@ -37,7 +38,7 @@ the results of the data processing.
   the impact, details of the impact, sources to corroborate the impact) of the documents
   into a single CSV file, which is then used by the different machine learning processes;
 - [Zero shot](https://en.wikipedia.org/wiki/Zero-shot_learning) topic classification
-  is applied to extract impact categories, fields of research and impact pathways's outputs;
+  is applied to extract impact categories, fields of research and impact pathways' outputs;
 - A [transformers](<https://en.wikipedia.org/wiki/Transformer_(machine_learning_model)>)-based
   language model is used to extract entities (mainly organisations and locations) from
   the data. The location data is further enriched by applying geocoding to gather
@@ -132,7 +133,7 @@ impact.
 ![Connection between pathways' outputs and units of assessment](docs/dashboard_pathways_outputs.png)
 
 Visualisation displaying the output of topic classification following extraction of pathways' outputs
-(topic) for panel D (Arts and humanities) per selected UoA coloured by pathways' outputs groups.
+(topic) for panel D (arts and humanities) per selected UoA coloured by pathways' outputs groups.
 
 ### Entities
 
@@ -144,14 +145,14 @@ organisations (ORG), extracted from the
 
 ![context](docs/dashboard_entities_context.png)
 
-It is also possible to see the extracted entites in the context they were extracted
+It is also possible to see the extracted entities in the context they were extracted
 from.
 
 ### Locations
 
 ![Map showing locations extracted from the documents](docs/dashboard_map.png)
 
-Map displaying the output of entity extration and geolocation of place entities,
+Map displaying the output of entity extraction and geolocation of place entities,
 aggregated by count, across all documents.
 
 ### Search
