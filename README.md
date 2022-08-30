@@ -11,7 +11,7 @@ The REF 2021 Impact Data Analysis was a small project, between
 to support the analysis of the college's [REF 2021](https://results2021.ref.ac.uk/)
 impact case studies and environment statements.
 
-The data used during the development of this project includes 158 impact case studies
+The data used during the development of this project includes 153 impact case studies
 and environment statements, in PDF (5-10 pages of text each), which follow standard
 [templates](https://ref.ac.uk/publications-and-reports/guidance-on-submissions-201901/)
 but are expressed with heterogeneous descriptions and language.
@@ -182,6 +182,10 @@ RMID organised a series of workshops to discuss the analysis of the REF impact d
 with the support of the dashboard. Final analysis is not available to KDL yet but feedback
 has been very positive with intention to build on and possibly expand functionalities in
 the future.
+
+- Convert the dashboard to multi-page
+- Add more automated testing
+- Experiment with different models and/or settings
 
 ## Set up
 
