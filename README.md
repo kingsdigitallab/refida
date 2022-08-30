@@ -52,7 +52,7 @@ the results of the data processing.
 Topic classification has been applied to the documents using different authority lists
 to classify the data according to different perspectives:
 
-- **Impact categories**, extracted from the whole text of the document based on the nine
+- **Impact categories**, extracted from the whole text of the documents based on the nine
   [REF-defined areas of impact](https://ref.ac.uk/guidance-on-results/impact-case-study-database-faqs/);
 - **Fields of research (FoR)**, extracted from the section _Underpinning research_ based on the
   [Australian and New Zealand Standard Research Classification FoR classification](https://www.abs.gov.au/statistics/classifications/australian-and-new-zealand-standard-research-classification-anzsrc/latest-release#data-downloads);
@@ -111,8 +111,8 @@ The project uses the following Python packages:
 
 ## Dashboard
 
-The results of the machine learning processes can be explored and visualised via a
-[web-based dashboard](docs/dashboard.jpg). Via the dashboard it is also possible to
+The results of the machine learning processes can be explored by the project team and visualised via a
+web-based dashboard [screenshot](docs/dashboard.jpg). Via the dashboard it is also possible to
 search and filter the data to get more specific insights, either for single or multiple
 documents at the same time.
 The [landing page](docs/dashboard.jpg) of the dashboard displays a table with all the
@@ -168,7 +168,7 @@ The dashboard remains a tool with an exploratory function with the caveats that:
 - All of the insights provided in the dashboard should not be accepted as final answers
   and should be reviewed; needless to say, the output requires further interpretation
   and analysis outside the system;
-- Due to the time-frame and amount of data there was no provision to train/fine tune
+- Due to the time-frame and amount of data, there was no provision to train/fine tune
   the algorithms/models used; this means that some results may be more accurate than
   expected while others will be worse than expected and could even be useless.
 
