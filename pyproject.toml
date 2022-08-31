@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "refida"
-version = "0.5.3"
+version = "0.6.0"
 description = ""
 authors = ["King's Digital Lab"]
 license = "MPL-2.0"
@@ -23,6 +23,7 @@ joblib = "^1.1.0"
 geojson = "^2.5.0"
 shap = "^0.40.0"
 matplotlib = "^3.5.2"
+kaleido = "0.2.1"
 
 [tool.poetry.dev-dependencies]
 autoflake = "*"
