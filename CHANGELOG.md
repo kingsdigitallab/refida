@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [RSECon 2020](https://rsecon2022.society-rse.org/) poster and slide.
 
+### Fixed
+
+- Issue with the latest version of Poetry (1.2.0)
+  [failing to install fasttext 0.9.2](https://github.com/facebookresearch/fastText/issues/1295).
+
 ## [0.6.0] - 2022-08-31
 
 ### Added
