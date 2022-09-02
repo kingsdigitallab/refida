@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+
+- [RSECon 2020](https://rsecon2022.society-rse.org/) poster and slide.
+
 ## [0.6.0] - 2022-08-31
 
 ### Added
