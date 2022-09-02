@@ -187,6 +187,8 @@ the future.
 - Add more automated testing
 - Experiment with different models and/or settings
 
+> **Note**: This work was accepted to be presented in a poster format at the [sixth annual conference of the UK Society for Research Softare Engineering](https://rsecon2022.society-rse.org/). See [poster](docs/RSEconf2022.jpg) and presentation [slide](docs/RSEconf2022slide.pdf). It can be cited as Vieira, Ciula, Noël, Ong. _Research Excellence Framework 2021 Impact Data Analysis_, poster presented at the Sixth annual conference of the UK Society for Research Softare Engineering, Newcastle University, Newcastle upon Tyne, September 2022. 
+
 ## Set up
 
 Install [poetry](https://python-poetry.org/docs/#installation) and the requirements:
