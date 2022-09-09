@@ -998,7 +998,7 @@ def show_search_results(data: pd.DataFrame):
     # 3: fast but inexplicable results: some docs with no sentences
     # others not relevant
 
-    hits = st.session_state.search_hits
+    hits = st.session_state.get("search_hits", None)
 
     if hits is None:
         st.warning(
