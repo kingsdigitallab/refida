@@ -1,12 +1,12 @@
 # build stage
-FROM python:3.9-slim as build
+FROM python:3.9-slim-buster as build
 
 ARG poetry="poetry>=1.1,<1.2"
 ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update \
   # dependencies for building Python packages
-  && apt-get install --no-install-recommends -y build-essential openjdk-11-jdk \
+  && apt-get install --no-install-recommends -y build-essential ca-certificates-java openjdk-11-jdk \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -26,7 +26,7 @@ RUN . /venv/bin/activate \
     && python -c "import nltk; nltk.download('punkt');"
 
 # base image
-FROM python:3.9-slim as base
+FROM python:3.9-slim-buster as base
 
 RUN addgroup --system refida \
   && adduser --system --ingroup refida refida

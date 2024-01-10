@@ -137,3 +137,8 @@ dask-worker-space
 
 # Docker compose
 docker-compose.override.yml
+
+# local dev folders
+/tmp
+/server
+/venv
