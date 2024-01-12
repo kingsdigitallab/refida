@@ -279,8 +279,8 @@ def filter_data(data: pd.DataFrame) -> Optional[pd.DataFrame]:
     if get_session_filter_entities() and entities is not None:
         data = data[data[_s.FIELD_ID].isin(entities[_s.FIELD_ID])]
 
-    # text_search(data)
-    # data = filter_data_by_text_search(data)
+    text_search(data)
+    data = filter_data_by_text_search(data)
 
     return data
 
