@@ -15,7 +15,7 @@ services:
       context: ..
       dockerfile: ./compose/Dockerfile
       target: prod
-    image: refida:0.6.3
+    image: refida:0.7.0
     restart: unless-stopped
     expose:
       - 8000
