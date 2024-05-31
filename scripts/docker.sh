@@ -1,1 +1,1 @@
-docker-compose up --build
+cd compose && docker-compose up --build

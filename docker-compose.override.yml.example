@@ -1,9 +1,0 @@
-services:
-  streamlit:
-    build:
-      target: dev
-    volumes:
-      - .:/app
-      - ./data:/app/data
-    ports:
-      - "8000:8000"

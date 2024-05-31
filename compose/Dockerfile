@@ -15,15 +15,15 @@ RUN pip install ${poetry}
 
 WORKDIR /tmp
 
-COPY poetry.lock pyproject.toml /tmp/
+COPY ../poetry.lock ../pyproject.toml /tmp/
 
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
 RUN python -m venv /venv
 
 RUN . /venv/bin/activate \
-    && pip install --no-cache-dir --upgrade -r requirements.txt \
-    && python -c "import nltk; nltk.download('punkt');"
+  && pip install --no-cache-dir --upgrade -r requirements.txt \
+  && python -c "import nltk; nltk.download('punkt');"
 
 # base image
 FROM python:3.9-slim-buster as base
@@ -51,6 +51,6 @@ CMD ["streamlit_app.py"]
 # production image
 FROM base as prod
 
-COPY --chown=refida:refida . /app/
+COPY --chown=refida:refida .. /app/
 
 CMD ["streamlit_app.py"]

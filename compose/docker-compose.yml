@@ -1,0 +1,28 @@
+name: refida
+
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:${NGINX_PROXY_VERSION:-1.4}
+    restart: unless-stopped
+    ports:
+      - 80:80
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  streamlit:
+    platform: linux/amd64
+    build:
+      context: ..
+      dockerfile: ./compose/Dockerfile
+      target: prod
+    image: refida:0.6.3
+    restart: unless-stopped
+    expose:
+      - 8000
+    volumes:
+      - ../data:/app/data
+    environment:
+      VIRTUAL_HOST: "refida.kdl.kcl.ac.uk,refida-os.kdl.kcl.ac.uk,localhost,127.0.0.1}}"
+      VIRTUAL_PATH: "/"
+      VIRTUAL_PROTO: "http"
+      VIRTUAL_PORT: 8000
